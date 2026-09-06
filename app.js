@@ -176,6 +176,12 @@ function alternarTransmissaoGps() {
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
+  const statusTxt = document.getElementById("txt-status-gps-admin");
+  const containerMapa = document.getElementById("mapa-admin-container");
+  
+  if (!containerMapa) return;
+
+  // Busca a última posição registrada no banco de dados
   const { data } = await supabaseClient
     .from('alertas')
     .select('*')
@@ -183,32 +189,47 @@ async function carregarGpsAdmin() {
     .order('id', { ascending: false })
     .limit(1);
 
-  const statusTxt = document.getElementById("txt-status-gps-admin");
+  // COORDENADAS PADRÃO: Campo Alegre / Cabuçu - Nova Iguaçu (RJ)
+  let lat = -22.7681; 
+  let lng = -43.5591;
+  let temSinal = false;
 
   if (data && data.length > 0 && data[0].mensagem) {
     const coords = data[0].mensagem.split(',');
-    const lat = parseFloat(coords[0]);
-    const lng = parseFloat(coords[1]);
-
-    if (statusTxt) statusTxt.innerText = "🟢 Sinal ao Vivo Detectado";
-
-    if (!mapAdmin && window.L) {
-      mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 16);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-      }).addTo(mapAdmin);
-      
-      markerVanAdmin = L.marker([lat, lng]).addTo(mapAdmin).bindPopup("🚐 Mini Van Tia Rafa").openPopup();
-    } else if (mapAdmin && markerVanAdmin) {
-      markerVanAdmin.setLatLng([lat, lng]);
-      mapAdmin.setView([lat, lng]);
+    if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+      lat = parseFloat(coords[0]);
+      lng = parseFloat(coords[1]);
+      temSinal = true;
     }
-    
-    if (mapAdmin) mapAdmin.invalidateSize();
-  } else {
-    if (statusTxt) statusTxt.innerText = "⚪ Aguardando primeiro sinal da Van...";
   }
+
+  if (statusTxt) {
+    statusTxt.innerText = temSinal 
+      ? "🟢 Sinal ao Vivo Detectado (Em Movimento)" 
+      : "⚪ Van Offline (Exibindo Campo Alegre / Cabuçu)";
+  }
+
+  // CRIA OU ATUALIZA O MAPA NO PAINEL ADMIN
+  if (!mapAdmin && window.L) {
+    mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(mapAdmin);
+
+    markerVanAdmin = L.marker([lat, lng]).addTo(mapAdmin).bindPopup("🚐 Mini Van Tia Rafa").openPopup();
+  } else if (mapAdmin && markerVanAdmin) {
+    markerVanAdmin.setLatLng([lat, lng]);
+    mapAdmin.setView([lat, lng]);
+  }
+
+  // REAJUSTA AS DIMENSÕES DO MAPA
+  setTimeout(() => {
+    if (mapAdmin) {
+      mapAdmin.invalidateSize();
+    }
+  }, 300);
 }
 
 // EMERGÊNCIA
