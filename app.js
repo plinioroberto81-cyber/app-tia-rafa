@@ -2,11 +2,9 @@
 const SUPABASE_URL = "https://sxrexcmtanpwljimfqpk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_NM0fvyA5X1zlFVy39gvrYA_pyTXBisb";
 
-let supabase = null;
+let supabaseClient = null;
 if (window.supabase && window.supabase.createClient) {
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} else {
-  console.error("SDK do Supabase não foi carregado corretamente.");
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
 let passRafa = "rafa123";
@@ -43,12 +41,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!supabase) {
+    if (!supabaseClient) {
       alert("Erro de conexão com o banco de dados.");
       return;
     }
 
-    await supabase.from('alunos').insert([{
+    await supabaseClient.from('alunos').insert([{
       nome: document.getElementById("add-nome").value,
       escola: document.getElementById("add-escola").value,
       responsavel: document.getElementById("add-responsavel").value,
@@ -109,12 +107,12 @@ async function carregarDadosPais() {
   if (pixDisplay) pixDisplay.innerText = pixChave;
   if (!container) return;
 
-  if (!supabase) {
+  if (!supabaseClient) {
     container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o Supabase.</p>`;
     return;
   }
 
-  const { data, error } = await supabase.from('alunos').select('*');
+  const { data, error } = await supabaseClient.from('alunos').select('*');
   if (error || !data || data.length === 0) {
     container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Nenhum aluno cadastrado.</p>`;
     return;
@@ -154,12 +152,12 @@ async function carregarDadosRafa() {
   const container = document.getElementById("lista-chamada-rafa");
   if (!container) return;
 
-  if (!supabase) {
+  if (!supabaseClient) {
     container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o Supabase.</p>`;
     return;
   }
 
-  const { data, error } = await supabase.from('alunos').select('*');
+  const { data, error } = await supabaseClient.from('alunos').select('*');
   if (error || !data || data.length === 0) {
     container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Nenhum aluno para chamada.</p>`;
     return;
@@ -186,8 +184,8 @@ async function carregarDadosRafa() {
 }
 
 async function atualizarStatus(id, novoStatus) {
-  if (!supabase) return;
-  await supabase.from('alunos').update({ status: novoStatus }).eq('id', id);
+  if (!supabaseClient) return;
+  await supabaseClient.from('alunos').update({ status: novoStatus }).eq('id', id);
   carregarDadosRafa();
 }
 
@@ -196,12 +194,12 @@ async function carregarDadosAdmin() {
   const container = document.getElementById("lista-alunos-admin");
   if (!container) return;
 
-  if (!supabase) {
+  if (!supabaseClient) {
     container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o Supabase.</p>`;
     return;
   }
 
-  const { data, error } = await supabase.from('alunos').select('*');
+  const { data, error } = await supabaseClient.from('alunos').select('*');
   if (error || !data || data.length === 0) {
     container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Nenhum aluno cadastrado.</p>`;
     return;
@@ -221,9 +219,9 @@ async function carregarDadosAdmin() {
 }
 
 async function deletarAluno(id) {
-  if (!supabase) return;
+  if (!supabaseClient) return;
   if (confirm("Deseja apagar este aluno?")) {
-    await supabase.from('alunos').delete().eq('id', id);
+    await supabaseClient.from('alunos').delete().eq('id', id);
     carregarDadosAdmin();
   }
 }
