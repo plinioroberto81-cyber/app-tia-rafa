@@ -341,6 +341,14 @@ function entrarPerfil(role) {
   } else if (role === "admin") {
     document.getElementById("dashboard-admin")?.classList.remove("hidden");
     carregarDadosAdmin();
+
+    // FORÇA O MAPA A CARREGAR SEUS QUADROS CORRETAMENTE QUANDO A TELA FICA VISÍVEL
+    setTimeout(() => {
+      carregarGpsAdmin();
+      if (mapAdmin) {
+        mapAdmin.invalidateSize();
+      }
+    }, 400);
   }
 }
 
