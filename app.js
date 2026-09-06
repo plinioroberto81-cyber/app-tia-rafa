@@ -120,6 +120,8 @@ function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
     if ("geolocation" in navigator) {
+      btn.innerHTML = "🟡 Obtendo Sinal...";
+      
       gpsWatchId = navigator.geolocation.watchPosition(
         async (pos) => {
           const lat = pos.coords.latitude;
@@ -127,17 +129,22 @@ function alternarTransmissaoGps() {
           if (supabaseClient) {
             await supabaseClient.from('alertas').upsert([{ id: 9999, tipo: 'GPS_VAN', mensagem: `${lat},${lng}`, ativo: true }]);
           }
+          isGpsTransmitting = true;
+          if (btn) {
+            btn.innerHTML = "🟢 GPS Transmitindo";
+            btn.className = "px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg transition-all animate-pulse";
+          }
         },
-        (err) => alert("Erro ao acessar GPS do celular: " + err.message),
-        { enableHighAccuracy: true, timeout: 5000 }
+        (err) => {
+          alert("Não foi possível obter a localização. Verifique se o GPS do celular está ligado e com permissão ativa.");
+          btn.innerHTML = "⚪ GPS Desligado";
+          btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
+          isGpsTransmitting = false;
+        },
+        { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 } // Aumentado timeout para evitar erro
       );
-      isGpsTransmitting = true;
-      if (btn) {
-        btn.innerHTML = "🟢 GPS Transmitindo";
-        btn.className = "px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg transition-all animate-pulse";
-      }
     } else {
-      alert("Seu celular não suporta geolocalização.");
+      alert("Seu navegador não suporta geolocalização.");
     }
   } else {
     if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
