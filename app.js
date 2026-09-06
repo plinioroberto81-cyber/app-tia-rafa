@@ -126,17 +126,26 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // TRANSMISSÃO GPS DA TIA RAFA
+// TRANSMISSÃO GPS DA TIA RAFA (VERSÃO ALTA PRECISÃO E CALIBRADA)
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
     if ("geolocation" in navigator) {
-      btn.innerHTML = "🟡 Obtendo Sinal...";
+      btn.innerHTML = "🟡 Calibrando GPS...";
       
       gpsWatchId = navigator.geolocation.watchPosition(
         async (pos) => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
-          
+          const precisao = pos.coords.accuracy; // Precisão em metros enviada pelo sensor do celular
+
+          // FILTRO DE CALIBRAÇÃO:
+          // Se a margem de erro por causa da chuva for maior que 80 metros, ignora a leitura ruim
+          if (precisao > 80) {
+            console.log(`Sinal ignorado por baixa precisão (${Math.round(precisao)}m de erro devido ao tempo)`);
+            return;
+          }
+
           if (supabaseClient) {
             await supabaseClient.from('alertas').insert([{ 
               tipo: 'GPS_VAN', 
@@ -147,17 +156,21 @@ function alternarTransmissaoGps() {
           
           isGpsTransmitting = true;
           if (btn) {
-            btn.innerHTML = "🟢 GPS Transmitindo";
+            btn.innerHTML = `🟢 GPS Ativo (Precisão: ~${Math.round(precisao)}m)`;
             btn.className = "px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg transition-all animate-pulse";
           }
         },
         (err) => {
-          alert("Aviso: Ligue a localização (GPS) do celular e selecione 'Permitir ao usar o app'.");
+          alert("Aviso: Ligue o GPS do celular e ative o modo 'Precisão Alta'.");
           btn.innerHTML = "⚪ GPS Desligado";
           btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
           isGpsTransmitting = false;
         },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        { 
+          enableHighAccuracy: true,  // Força o celular a usar antena GPS + Torres 4G/Wi-Fi juntas
+          timeout: 20000,            // Dá tempo suficiente para o satélite responder sob tempestade
+          maximumAge: 1000           // Garante que o sinal lido seja SEMPRE em tempo real, sem cache antigo
+        }
       );
     } else {
       alert("Seu celular não possui suporte a geolocalização.");
