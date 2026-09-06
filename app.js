@@ -25,6 +25,12 @@ document.addEventListener("DOMContentLoaded", () => {
   bottomBar = document.getElementById("bottom-bar");
   statusLive = document.getElementById("status-live");
 
+  // APLICAR TEMA SALVO
+  inicializarTema();
+
+  // EVENTO DO BOTÃO DE TEMA
+  document.getElementById("btn-theme-toggle")?.addEventListener("click", alternarTema);
+
   // EVENTOS DE NAVEGACAO
   document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
@@ -59,6 +65,34 @@ document.addEventListener("DOMContentLoaded", () => {
     carregarDadosAdmin();
   });
 });
+
+// LOGICA DE TEMA CLARO / ESCURO
+function inicializarTema() {
+  const temaSalvo = localStorage.getItem("theme");
+  const themeIcon = document.getElementById("theme-icon");
+  if (temaSalvo === "light") {
+    document.documentElement.classList.add("light-mode");
+    if (themeIcon) themeIcon.className = "fa-solid fa-moon";
+  } else {
+    document.documentElement.classList.remove("light-mode");
+    if (themeIcon) themeIcon.className = "fa-solid fa-sun";
+  }
+}
+
+function alternarTema() {
+  const htmlEl = document.documentElement;
+  const themeIcon = document.getElementById("theme-icon");
+  
+  if (htmlEl.classList.contains("light-mode")) {
+    htmlEl.classList.remove("light-mode");
+    localStorage.setItem("theme", "dark");
+    if (themeIcon) themeIcon.className = "fa-solid fa-sun";
+  } else {
+    htmlEl.classList.add("light-mode");
+    localStorage.setItem("theme", "light");
+    if (themeIcon) themeIcon.className = "fa-solid fa-moon";
+  }
+}
 
 function mostrarFormLogin(role) {
   currentRole = role;
