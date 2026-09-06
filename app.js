@@ -15,6 +15,8 @@ let currentRole = null;
 let alunosCache = [];
 let filtroTurnoAtual = "Todos";
 let filtroFinStatus = "Todos";
+let audioContext = null;
+let audioOscillator = null;
 
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
@@ -29,6 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   inicializarTema();
   verificarAlertaGlobal();
+  
+  // MONITORAMENTO CONTINUO DE EMERGENCIA (A CADA 3 SEGUNDOS)
+  setInterval(verificarEmergenciaAdmin, 3000);
 
   // BOTÕES VOLTAR E LOGOUT
   btnTopBack?.addEventListener("click", voltarHome);
@@ -52,6 +57,10 @@ document.addEventListener("DOMContentLoaded", () => {
     else alert("Senha incorreta!");
   });
 
+  // BOTÃO DE DISPARO DE EMERGÊNCIA (TIA RAFA)
+  document.getElementById("btn-disparar-emergencia")?.addEventListener("click", dispararEmergenciaRafa);
+  document.getElementById("btn-desativar-emergencia")?.addEventListener("click", atenderEmergenciaAdmin);
+
   // ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
@@ -67,12 +76,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
   });
 
-  // FILTROS DE TURNO
+  // FILTROS
   document.getElementById("btn-filtro-todos")?.addEventListener("click", () => aplicarFiltroTurno("Todos"));
   document.getElementById("btn-filtro-manha")?.addEventListener("click", () => aplicarFiltroTurno("Manhã"));
   document.getElementById("btn-filtro-tarde")?.addEventListener("click", () => aplicarFiltroTurno("Tarde"));
 
-  // FILTROS FINANCEIROS RAFA
   document.getElementById("btn-fin-filtro-todos")?.addEventListener("click", () => aplicarFiltroFin("Todos"));
   document.getElementById("btn-fin-filtro-pendentes")?.addEventListener("click", () => aplicarFiltroFin("Pendente"));
   document.getElementById("btn-fin-filtro-pagos")?.addEventListener("click", () => aplicarFiltroFin("Pago"));
@@ -97,6 +105,77 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
+
+// SISTEMA DE SIRENE E EMERGÊNCIA
+function tocarSomSirene() {
+  if (audioContext) return;
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    audioOscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    audioOscillator.type = 'sawtooth';
+    audioOscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    audioOscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.5);
+
+    audioOscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    audioOscillator.start();
+  } catch (e) {
+    console.log("Erro áudio", e);
+  }
+}
+
+function pararSomSirene() {
+  if (audioOscillator) {
+    audioOscillator.stop();
+    audioOscillator.disconnect();
+    audioOscillator = null;
+  }
+  if (audioContext) {
+    audioContext.close();
+    audioContext = null;
+  }
+}
+
+async function dispararEmergenciaRafa() {
+  if (!supabaseClient) return;
+  const motivo = prompt("Digite o motivo da emergência (Ex: Problema Mecânico / Saúde / Pneu Furado):", "Emergência Mecânica / Saúde na Rota");
+  if (!motivo) return;
+
+  await supabaseClient.from('alertas').insert([{
+    tipo: 'EMERGENCIA_ADMIN',
+    mensagem: `🚨 EMERGÊNCIA RAFAELA: ${motivo}`,
+    ativo: true
+  }]);
+
+  alert("Alerta de Emergência enviado com sucesso ao Administrador!");
+}
+
+async function verificarEmergenciaAdmin() {
+  if (!supabaseClient) return;
+  const { data } = await supabaseClient.from('alertas').select('*').eq('tipo', 'EMERGENCIA_ADMIN').eq('ativo', true).order('id', { ascending: false }).limit(1);
+
+  const modal = document.getElementById("modal-emergencia-admin");
+  const detalhes = document.getElementById("detalhes-emergencia-admin");
+
+  if (data && data.length > 0) {
+    if (detalhes) detalhes.innerText = data[0].mensagem;
+    modal?.classList.remove("hidden");
+    tocarSomSirene();
+  } else {
+    modal?.classList.add("hidden");
+    pararSomSirene();
+  }
+}
+
+async function atenderEmergenciaAdmin() {
+  if (!supabaseClient) return;
+  await supabaseClient.from('alertas').update({ ativo: false }).eq('tipo', 'EMERGENCIA_ADMIN');
+  pararSomSirene();
+  document.getElementById("modal-emergencia-admin")?.classList.add("hidden");
+  alert("Emergência atendida e desativada.");
+}
 
 // NAVEGAÇÃO E TEMA
 function inicializarTema() {
@@ -172,7 +251,7 @@ function entrarPerfil(role) {
 // ALERTAS
 async function verificarAlertaGlobal() {
   if (!supabaseClient) return;
-  const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).order('id', { ascending: false }).limit(1);
+  const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).neq('tipo', 'EMERGENCIA_ADMIN').order('id', { ascending: false }).limit(1);
   const banner = document.getElementById("banner-alerta-global");
   const txt = document.getElementById("texto-alerta-global");
   
@@ -186,7 +265,7 @@ async function verificarAlertaGlobal() {
 
 async function dispararAviso(msg) {
   if (!supabaseClient) return;
-  await supabaseClient.from('alertas').update({ ativo: false }).eq('ativo', true);
+  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN');
   await supabaseClient.from('alertas').insert([{ tipo: 'Aviso', mensagem: msg, ativo: true }]);
   alert("Aviso publicado na tela dos pais!");
   verificarAlertaGlobal();
@@ -194,7 +273,7 @@ async function dispararAviso(msg) {
 
 async function limparAvisos() {
   if (!supabaseClient) return;
-  await supabaseClient.from('alertas').update({ ativo: false }).eq('ativo', true);
+  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN');
   alert("Avisos encerrados!");
   verificarAlertaGlobal();
 }
