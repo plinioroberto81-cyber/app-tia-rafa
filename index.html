@@ -14,7 +14,7 @@
 </head>
 <body class="h-full font-['Plus_Jakarta_Sans'] text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-white">
 
-  <!-- CABEÇALHO COM MASCOTE DESENHO ZAFIRA -->
+  <!-- CABEÇALHO COM MASCOTE ZAFIRA E BOTÃO DE TEMA -->
   <header class="relative overflow-hidden bg-gradient-to-b from-amber-500 via-amber-600 to-amber-700 pt-7 pb-9 px-6 rounded-b-[36px] shadow-2xl shadow-amber-500/20">
     <div class="max-w-md mx-auto flex items-center justify-between relative z-10">
       <div class="flex items-center gap-3.5">
@@ -28,6 +28,11 @@
           </p>
         </div>
       </div>
+
+      <!-- BOTÃO DE ALTERNÂNCIA DE TEMA (CLARO/ESCURO) -->
+      <button id="btn-theme-toggle" class="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center text-lg active:scale-95 transition-all shadow-md">
+        <i id="theme-icon" class="fa-solid fa-sun"></i>
+      </button>
     </div>
   </header>
 
@@ -149,7 +154,7 @@
 
   </main>
 
-  <!-- BARRA DE NAVEGAÇÃO INFERIOR NATIVA -->
+  <!-- BARRA DE NAVEGAÇÃO INFERIOR -->
   <nav id="bottom-bar" class="hidden fixed bottom-0 inset-x-0 bg-slate-900/90 backdrop-blur-2xl border-t border-slate-800 z-50 px-6 py-3">
     <div class="max-w-md mx-auto flex items-center justify-around">
       <button id="nav-btn-home" class="flex flex-col items-center gap-1 text-amber-400">
@@ -163,7 +168,7 @@
     </div>
   </nav>
 
-  <!-- BIBLIOTECAS JS (O SUPABASE DEVE VIR PRIMEIRO) -->
+  <!-- BIBLIOTECAS JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="app.js"></script>
 </body>
