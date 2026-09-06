@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>App Tia Rafa</title>
+  <title>App Tia Rafa - Super Admin</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
@@ -43,7 +43,7 @@
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="max-w-md mx-auto w-full px-4 flex-1 z-20 pb-28">
 
-    <!-- BANNER DE ALERTA GLOBAL (PAIS) -->
+    <!-- BANNER DE ALERTA GLOBAL -->
     <div id="banner-alerta-global" class="hidden mb-4 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-3 shadow-lg animate-pulse">
       <i class="fa-solid fa-triangle-exclamation text-lg text-rose-400"></i>
       <span id="texto-alerta-global">Aviso de rota ativo</span>
@@ -58,9 +58,6 @@
         <h2 class="text-xl font-extrabold text-white">🚨 ALERTA DE EMERGÊNCIA!</h2>
         <p id="detalhes-emergencia-admin" class="text-xs text-rose-200 font-medium">A Rafaela disparou um alerta de emergência na rota.</p>
 
-        <!-- MAPA NO MODAL DE EMERGÊNCIA -->
-        <div id="mapa-emergencia-container" class="w-full h-40 rounded-xl overflow-hidden border border-rose-500/50 bg-slate-950 my-2"></div>
-        
         <div class="space-y-2 pt-2">
           <a id="btn-rota-maps-emergencia" href="#" target="_blank" class="block w-full py-2.5 bg-emerald-600 text-white font-bold rounded-xl text-xs">
             📍 Abrir Rota de Socorro no Google Maps
@@ -69,6 +66,79 @@
             🔕 Atender / Ciente da Emergência
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE EDIÇÃO DE ALUNO (ADMIN) -->
+    <div id="modal-editar-aluno" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[90] flex items-center justify-center p-4 overflow-y-auto">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 max-w-md w-full space-y-3 my-8 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-2">
+          <h3 class="text-sm font-bold text-amber-400">✏️ Editar Cadastro do Passageiro</h3>
+          <button id="btn-fechar-modal-edit" class="text-slate-400 hover:text-white text-base">✕</button>
+        </div>
+
+        <form id="form-editar-aluno" class="space-y-2.5">
+          <input type="hidden" id="edit-id">
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">Nome da Criança</label>
+            <input type="text" id="edit-nome" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Turno</label>
+              <select id="edit-turno" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">WhatsApp</label>
+              <input type="text" id="edit-wsp" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Horário Busca</label>
+              <input type="text" id="edit-horario-busca" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Horário Escola</label>
+              <input type="text" id="edit-horario-escola" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+            </div>
+          </div>
+
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">Endereço Residencial</label>
+            <input type="text" id="edit-endereco-casa" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+          </div>
+
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">Escola</label>
+            <input type="text" id="edit-escola" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+          </div>
+
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">E-mail do Responsável</label>
+            <input type="email" id="edit-email-mae" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Mensalidade (R$)</label>
+              <input type="number" id="edit-valor" step="10" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-400 uppercase">Dia Vencimento</label>
+              <input type="number" id="edit-vencimento" min="1" max="31" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-xs text-white">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg mt-2">
+            Salvar Alterações
+          </button>
+        </form>
       </div>
     </div>
 
@@ -150,7 +220,6 @@
 
     <!-- DASHBOARD TIA RAFA -->
     <section id="dashboard-rafa" class="hidden space-y-5">
-      <!-- TRANSMISSÃO GPS E BOTÃO DE EMERGÊNCIA -->
       <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
         <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
           <div class="flex items-center gap-2">
@@ -252,21 +321,33 @@
       </div>
     </section>
 
-    <!-- DASHBOARD ADMIN -->
+    <!-- PAINEL SUPER ADMIN -->
     <section id="dashboard-admin" class="hidden space-y-4">
       <!-- RASTREAMENTO GPS DO ADMIN -->
       <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-center">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-location-crosshairs"></i> Localização da Van ao Vivo
+            <i class="fa-solid fa-location-crosshairs"></i> Rastreamento GPS ao Vivo
           </h3>
-          <span id="txt-status-gps-admin" class="text-[10px] text-slate-400 font-semibold">Buscando sinal...</span>
+          <span id="txt-status-gps-admin" class="text-[10px] text-slate-400 font-semibold">Buscando...</span>
         </div>
         
-        <div id="mapa-admin-container" class="w-full h-52 rounded-xl overflow-hidden border border-slate-700 bg-slate-950"></div>
+        <div id="mapa-admin-container" class="w-full h-56 rounded-xl overflow-hidden border border-slate-700 bg-slate-950 relative z-10"></div>
+        <button id="btn-forcar-gps-test" class="w-full py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-xl transition-all">
+          📍 Atualizar Posição Agora
+        </button>
       </div>
 
-      <!-- FORMULÁRIO CADASTRO -->
+      <!-- GERENCIAMENTO COMPLETO DE ALUNOS -->
+      <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Gestão Total de Passageiros</h3>
+          <span id="count-admin-alunos" class="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-300 font-bold">0</span>
+        </div>
+        <div id="lista-alunos-admin" class="space-y-2.5"></div>
+      </div>
+
+      <!-- FORMULÁRIO NOVO CADASTRO -->
       <form id="form-cadastrar-aluno" class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-3">
         <h3 class="text-sm font-bold text-white mb-1 flex items-center gap-2">
           <i class="fa-solid fa-user-plus text-amber-400"></i> Cadastrar Novo Passageiro
@@ -289,7 +370,6 @@
 
         <input type="text" id="add-endereco-casa" placeholder="Endereço Residencial" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white">
         <input type="text" id="add-escola" placeholder="Nome da Escola" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white">
-        <input type="text" id="add-endereco-escola" placeholder="Endereço da Escola" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white">
         <input type="email" id="add-email-mae" placeholder="E-mail do Responsável" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white">
         
         <div class="grid grid-cols-2 gap-2">
@@ -302,9 +382,29 @@
         </button>
       </form>
 
+      <!-- CONFIGURAÇÕES DO SISTEMA DA ADMIN -->
       <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Passageiros Cadastrados</h3>
-        <div id="lista-alunos-admin" class="space-y-2"></div>
+        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">⚙️ Configurações Globais</h3>
+        
+        <div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase">Chave PIX Global</label>
+          <input type="text" id="cfg-pix" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white mt-1">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">Senha Tia Rafa</label>
+            <input type="text" id="cfg-pass-rafa" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white mt-1">
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-400 uppercase">Senha Admin</label>
+            <input type="text" id="cfg-pass-admin" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-white mt-1">
+          </div>
+        </div>
+
+        <button id="btn-salvar-configs" class="w-full py-2.5 bg-slate-700 hover:bg-slate-600 text-amber-400 font-bold text-xs rounded-xl transition-all">
+          Atualizar Configurações Globais
+        </button>
       </div>
     </section>
 
