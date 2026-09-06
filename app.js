@@ -37,11 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
   inicializarTema();
   verificarAlertaGlobal();
   
-  // CHECAGEM DE EMERGENCIA E GPS (A CADA 3 SEG)
+  // CHECAGEM AUTOMÁTICA
   setInterval(verificarEmergenciaAdmin, 3000);
-  setInterval(carregarGpsAdmin, 4000);
+  setInterval(carregarGpsAdmin, 5000);
 
-  // BOTÕES NAVEGAÇÃO
+  // NAVEGAÇÃO
   btnTopBack?.addEventListener("click", voltarHome);
   document.getElementById("nav-btn-home")?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
@@ -65,10 +65,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // GPS TOGGLE (TIA RAFA)
   document.getElementById("btn-toggle-gps")?.addEventListener("click", alternarTransmissaoGps);
+  document.getElementById("btn-forcar-gps-test")?.addEventListener("click", carregarGpsAdmin);
 
   // EMERGÊNCIA
   document.getElementById("btn-disparar-emergencia")?.addEventListener("click", dispararEmergenciaRafa);
   document.getElementById("btn-desativar-emergencia")?.addEventListener("click", atenderEmergenciaAdmin);
+
+  // MODAL EDIÇÃO
+  document.getElementById("btn-fechar-modal-edit")?.addEventListener("click", () => {
+    document.getElementById("modal-editar-aluno")?.classList.add("hidden");
+  });
+  document.getElementById("form-editar-aluno")?.addEventListener("submit", salvarEdicaoAlunoAdmin);
+
+  // CONFIGS GLOBAIS
+  document.getElementById("btn-salvar-configs")?.addEventListener("click", salvarConfigsGlobais);
 
   // ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
@@ -115,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
-// FUNÇÕES DE GPS EM TEMPO REAL
+// TRANSMISSÃO GPS DA TIA RAFA
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
@@ -126,9 +136,15 @@ function alternarTransmissaoGps() {
         async (pos) => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
+          
           if (supabaseClient) {
-            await supabaseClient.from('alertas').upsert([{ id: 9999, tipo: 'GPS_VAN', mensagem: `${lat},${lng}`, ativo: true }]);
+            await supabaseClient.from('alertas').insert([{ 
+              tipo: 'GPS_VAN', 
+              mensagem: `${lat},${lng}`, 
+              ativo: true 
+            }]);
           }
+          
           isGpsTransmitting = true;
           if (btn) {
             btn.innerHTML = "🟢 GPS Transmitindo";
@@ -136,15 +152,15 @@ function alternarTransmissaoGps() {
           }
         },
         (err) => {
-          alert("Não foi possível obter a localização. Verifique se o GPS do celular está ligado e com permissão ativa.");
+          alert("Aviso: Ligue a localização (GPS) do celular e selecione 'Permitir ao usar o app'.");
           btn.innerHTML = "⚪ GPS Desligado";
           btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
           isGpsTransmitting = false;
         },
-        { enableHighAccuracy: false, timeout: 15000, maximumAge: 0 } // Aumentado timeout para evitar erro
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
-      alert("Seu navegador não suporta geolocalização.");
+      alert("Seu celular não possui suporte a geolocalização.");
     }
   } else {
     if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
@@ -156,10 +172,17 @@ function alternarTransmissaoGps() {
   }
 }
 
+// BUSCAR GPS NO PAINEL ADMIN
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
-  const { data } = await supabaseClient.from('alertas').select('*').eq('id', 9999).limit(1);
+  const { data } = await supabaseClient
+    .from('alertas')
+    .select('*')
+    .eq('tipo', 'GPS_VAN')
+    .order('id', { ascending: false })
+    .limit(1);
+
   const statusTxt = document.getElementById("txt-status-gps-admin");
 
   if (data && data.length > 0 && data[0].mensagem) {
@@ -167,22 +190,28 @@ async function carregarGpsAdmin() {
     const lat = parseFloat(coords[0]);
     const lng = parseFloat(coords[1]);
 
-    if (statusTxt) statusTxt.innerText = "🟢 Sinal Atualizado";
+    if (statusTxt) statusTxt.innerText = "🟢 Sinal ao Vivo Detectado";
 
     if (!mapAdmin && window.L) {
-      mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapAdmin);
+      mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 16);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(mapAdmin);
+      
       markerVanAdmin = L.marker([lat, lng]).addTo(mapAdmin).bindPopup("🚐 Mini Van Tia Rafa").openPopup();
     } else if (mapAdmin && markerVanAdmin) {
       markerVanAdmin.setLatLng([lat, lng]);
       mapAdmin.setView([lat, lng]);
     }
+    
+    if (mapAdmin) mapAdmin.invalidateSize();
   } else {
-    if (statusTxt) statusTxt.innerText = "⚪ Van sem sinal de GPS";
+    if (statusTxt) statusTxt.innerText = "⚪ Aguardando primeiro sinal da Van...";
   }
 }
 
-// EMERGÊNCIA E SIRENE
+// EMERGÊNCIA
 function tocarSomSirene() {
   if (audioContext) return;
   try {
@@ -216,10 +245,9 @@ function pararSomSirene() {
 
 async function dispararEmergenciaRafa() {
   if (!supabaseClient) return;
-  const motivo = prompt("Digite o motivo da emergência (Ex: Problema Mecânico / Saúde):", "Emergência Mecânica / Saúde");
+  const motivo = prompt("Digite o motivo da emergência:", "Problema Mecânico / Saúde na Rota");
   if (!motivo) return;
 
-  // Pegar posição exata para enviar junto com a emergência
   navigator.geolocation.getCurrentPosition(async (pos) => {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
@@ -230,7 +258,7 @@ async function dispararEmergenciaRafa() {
       ativo: true
     }]);
 
-    alert("Alerta de Emergência enviado ao Admin com sua posição exata!");
+    alert("Alerta enviado ao Admin com sua localização!");
   }, async () => {
     await supabaseClient.from('alertas').insert([{
       tipo: 'EMERGENCIA_ADMIN',
@@ -250,13 +278,10 @@ async function verificarEmergenciaAdmin() {
 
   if (data && data.length > 0) {
     if (detalhes) detalhes.innerText = data[0].mensagem;
-    
-    // Extrai posição se houver
     if (data[0].mensagem.includes("Pos:")) {
       const posPart = data[0].mensagem.split("Pos:")[1].trim();
       if (btnMaps) btnMaps.href = `https://www.google.com/maps/search/?api=1&query=${posPart}`;
     }
-
     modal?.classList.remove("hidden");
     tocarSomSirene();
   } else {
@@ -273,7 +298,124 @@ async function atenderEmergenciaAdmin() {
   alert("Emergência desativada.");
 }
 
-// RESTANTE DO CÓDIGO E NAVEGAÇÃO
+// SUPER ADMIN - GESTÃO TOTAL DE ALUNOS
+async function carregarDadosAdmin() {
+  if (!supabaseClient) return;
+
+  document.getElementById("cfg-pix").value = pixChaveGlobal;
+  document.getElementById("cfg-pass-rafa").value = passRafa;
+  document.getElementById("cfg-pass-admin").value = passAdmin;
+
+  const { data } = await supabaseClient.from('alunos').select('*').order('nome', { ascending: true });
+  const container = document.getElementById("lista-alunos-admin");
+  const countEl = document.getElementById("count-admin-alunos");
+  if (!container || !data) return;
+
+  alunosCache = data;
+  if (countEl) countEl.innerText = `${data.length} Alunos`;
+
+  container.innerHTML = data.map(a => {
+    const st = a.status || 'Em Casa';
+    const stP = a.status_pagamento || 'Pendente';
+    const val = parseFloat(a.valor || 180);
+
+    return `
+      <div class="bg-slate-900/80 border border-slate-700/80 p-3.5 rounded-2xl space-y-2.5">
+        <div class="flex justify-between items-start">
+          <div>
+            <h4 class="text-xs font-bold text-white">${a.nome}</h4>
+            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | Mensalidade: R$ ${val.toFixed(2)} (Venc: Dia ${a.vencimento || 10})</p>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
+            <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️ Deletar</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+          <div>
+            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Rota</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+              <option value="Em Casa" ${st === 'Em Casa' ? 'selected' : ''}>🏡 Em Casa</option>
+              <option value="Na Van" ${st === 'Na Van' ? 'selected' : ''}>🚌 Na Van</option>
+              <option value="Na Escola" ${st === 'Na Escola' ? 'selected' : ''}>🏫 Na Escola</option>
+            </select>
+          </div>
+
+          <div>
+            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Financeiro</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+              <option value="Pendente" ${stP === 'Pendente' ? 'selected' : ''}>🔴 Pendente</option>
+              <option value="Pago" ${stP === 'Pago' ? 'selected' : ''}>🟢 Quitado (Pago)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  carregarGpsAdmin();
+}
+
+async function alterarStatusAdmin(id, campo, valor) {
+  if (!supabaseClient) return;
+  let updateObj = {};
+  updateObj[campo] = valor;
+  await supabaseClient.from('alunos').update(updateObj).eq('id', id);
+  carregarDadosAdmin();
+}
+
+function abrirModalEditarAluno(id) {
+  const aluno = alunosCache.find(a => a.id == id);
+  if (!aluno) return;
+
+  document.getElementById("edit-id").value = aluno.id;
+  document.getElementById("edit-nome").value = aluno.nome || '';
+  document.getElementById("edit-turno").value = aluno.turno || 'Manhã';
+  document.getElementById("edit-wsp").value = aluno.whatsapp || '';
+  document.getElementById("edit-horario-busca").value = aluno.horario_busca || '';
+  document.getElementById("edit-horario-escola").value = aluno.horario_escola || '';
+  document.getElementById("edit-endereco-casa").value = aluno.endereco_casa || '';
+  document.getElementById("edit-escola").value = aluno.escola || '';
+  document.getElementById("edit-email-mae").value = aluno.email_mae || '';
+  document.getElementById("edit-valor").value = aluno.valor || 180;
+  document.getElementById("edit-vencimento").value = aluno.vencimento || 10;
+
+  document.getElementById("modal-editar-aluno")?.classList.remove("hidden");
+}
+
+async function salvarEdicaoAlunoAdmin(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const id = document.getElementById("edit-id").value;
+  const updateData = {
+    nome: document.getElementById("edit-nome").value,
+    turno: document.getElementById("edit-turno").value,
+    whatsapp: document.getElementById("edit-wsp").value,
+    horario_busca: document.getElementById("edit-horario-busca").value,
+    horario_escola: document.getElementById("edit-horario-escola").value,
+    endereco_casa: document.getElementById("edit-endereco-casa").value,
+    escola: document.getElementById("edit-escola").value,
+    email_mae: document.getElementById("edit-email-mae").value,
+    valor: parseFloat(document.getElementById("edit-valor").value),
+    vencimento: parseInt(document.getElementById("edit-vencimento").value)
+  };
+
+  await supabaseClient.from('alunos').update(updateData).eq('id', id);
+  alert("Dados do passageiro atualizados!");
+  document.getElementById("modal-editar-aluno")?.classList.add("hidden");
+  carregarDadosAdmin();
+}
+
+function salvarConfigsGlobais() {
+  pixChaveGlobal = document.getElementById("cfg-pix").value;
+  passRafa = document.getElementById("cfg-pass-rafa").value;
+  passAdmin = document.getElementById("cfg-pass-admin").value;
+  alert("Configurações salvas para esta sessão!");
+}
+
+// NAVEGAÇÕES E INTERFACE
 function inicializarTema() {
   const temaSalvo = localStorage.getItem("theme");
   const themeIcon = document.getElementById("theme-icon");
@@ -342,7 +484,6 @@ function entrarPerfil(role) {
     document.getElementById("dashboard-admin")?.classList.remove("hidden");
     carregarDadosAdmin();
 
-    // FORÇA O MAPA A CARREGAR SEUS QUADROS CORRETAMENTE QUANDO A TELA FICA VISÍVEL
     setTimeout(() => {
       carregarGpsAdmin();
       if (mapAdmin) {
@@ -668,28 +809,6 @@ async function encerrarMesFinanceiro() {
   }
 }
 
-// ADMIN
-async function carregarDadosAdmin() {
-  if (!supabaseClient) return;
-  const { data } = await supabaseClient.from('alunos').select('*');
-  const container = document.getElementById("lista-alunos-admin");
-  if (!container || !data) return;
-
-  container.innerHTML = data.map(a => `
-    <div class="bg-slate-900/60 border border-slate-700/60 p-3 rounded-xl flex items-center justify-between">
-      <div>
-        <p class="text-xs font-bold text-white">${a.nome} (${a.turno || 'Manhã'})</p>
-        <p class="text-[10px] text-slate-400">Escola: ${a.escola || '-'} | E-mail: ${a.email_mae || '-'}</p>
-      </div>
-      <button onclick="deletarAlunoAdmin('${a.id}')" class="text-rose-400 text-xs p-2">
-        <i class="fa-solid fa-trash"></i>
-      </button>
-    </div>
-  `).join('');
-
-  carregarGpsAdmin();
-}
-
 async function cadastrarAlunoAdmin(e) {
   e.preventDefault();
   if (!supabaseClient) return;
@@ -702,7 +821,6 @@ async function cadastrarAlunoAdmin(e) {
     horario_escola: document.getElementById("add-horario-escola").value,
     endereco_casa: document.getElementById("add-endereco-casa").value,
     escola: document.getElementById("add-escola").value,
-    endereco_escola: document.getElementById("add-endereco-escola").value,
     email_mae: document.getElementById("add-email-mae").value,
     valor: parseFloat(document.getElementById("add-valor").value),
     vencimento: parseInt(document.getElementById("add-vencimento").value),
