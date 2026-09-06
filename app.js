@@ -13,9 +13,9 @@ let pixChaveGlobal = "11999998888";
 let linkCartaoGlobal = "https://mpago.la/";
 let currentRole = null;
 let alunosCache = [];
+let filtroTurnoAtual = "Todos";
 
-// ELEMENTOS GLOBAIS
-let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar;
+let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
 document.addEventListener("DOMContentLoaded", () => {
   loginSection = document.getElementById("login-section");
@@ -24,19 +24,26 @@ document.addEventListener("DOMContentLoaded", () => {
   inputPassword = document.getElementById("input-password");
   mainButtons = document.getElementById("main-buttons");
   bottomBar = document.getElementById("bottom-bar");
+  btnTopBack = document.getElementById("btn-top-back");
 
   inicializarTema();
   verificarAlertaGlobal();
 
-  // EVENTOS DE BOTÕES DE TEMA E NAVEGAÇÃO
-  document.getElementById("btn-theme-toggle")?.addEventListener("click", alternarTema);
-  document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
-  document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
-  document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
+  // BOTÕES VOLTAR
+  btnTopBack?.addEventListener("click", voltarHome);
+  document.getElementById("nav-btn-home")?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
   document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
 
-  // LOGIN SUBMIT
+  // BOTÃO DE TEMA
+  document.getElementById("btn-theme-toggle")?.addEventListener("click", alternarTema);
+
+  // SELEÇÃO DE PERFIL
+  document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
+  document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
+  document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
+
+  // LOGIN
   document.getElementById("btn-login-submit")?.addEventListener("click", () => {
     const pwd = inputPassword ? inputPassword.value : "";
     if (currentRole === "rafa" && pwd === passRafa) entrarPerfil("rafa");
@@ -59,7 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
   });
 
-  // AVISOS TIA RAFA
+  // FILTROS DE TURNO
+  document.getElementById("btn-filtro-todos")?.addEventListener("click", () => aplicarFiltroTurno("Todos"));
+  document.getElementById("btn-filtro-manha")?.addEventListener("click", () => aplicarFiltroTurno("Manhã"));
+  document.getElementById("btn-filtro-tarde")?.addEventListener("click", () => aplicarFiltroTurno("Tarde"));
+
+  // AVISOS
   document.getElementById("btn-aviso-10min")?.addEventListener("click", () => dispararAviso("⏱️ Pequeno atraso na rota (Aproximadamente 10 minutos). Crianças em segurança!"));
   document.getElementById("btn-aviso-transito")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
   document.getElementById("btn-aviso-chuva")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
@@ -72,14 +84,15 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("btn-limpar-aviso")?.addEventListener("click", limparAvisos);
 
-  // SELEÇÃO PAIS
+  // SELEÇÃO E-MAIL PAIS
   document.getElementById("select-email-pais")?.addEventListener("change", (e) => renderizarPaisFilho(e.target.value));
 
   // CADASTRO ADMIN
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
+  document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
-// LOGICA DE TEMA
+// FUNÇÕES DE NAVEGAÇÃO E TEMA
 function inicializarTema() {
   const temaSalvo = localStorage.getItem("theme");
   const themeIcon = document.getElementById("theme-icon");
@@ -119,18 +132,24 @@ function resetLogin() {
   if (inputPassword) inputPassword.value = "";
 }
 
-function logout() {
+function voltarHome() {
   document.getElementById("dashboard-pais")?.classList.add("hidden");
   document.getElementById("dashboard-rafa")?.classList.add("hidden");
   document.getElementById("dashboard-admin")?.classList.add("hidden");
-  if (bottomBar) bottomBar.classList.add("hidden");
-  if (loginSection) loginSection.classList.remove("hidden");
+  bottomBar?.classList.add("hidden");
+  btnTopBack?.classList.add("hidden");
+  loginSection?.classList.remove("hidden");
   resetLogin();
 }
 
+function logout() {
+  voltarHome();
+}
+
 function entrarPerfil(role) {
-  if (loginSection) loginSection.classList.add("hidden");
-  if (bottomBar) bottomBar.classList.remove("hidden");
+  loginSection?.classList.add("hidden");
+  bottomBar?.classList.remove("hidden");
+  btnTopBack?.classList.remove("hidden");
 
   if (role === "pais") {
     document.getElementById("dashboard-pais")?.classList.remove("hidden");
@@ -144,7 +163,7 @@ function entrarPerfil(role) {
   }
 }
 
-// ==================== ALERTAS GLOBAIS ====================
+// ALERTAS
 async function verificarAlertaGlobal() {
   if (!supabaseClient) return;
   const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).order('id', { ascending: false }).limit(1);
@@ -174,7 +193,7 @@ async function limparAvisos() {
   verificarAlertaGlobal();
 }
 
-// ==================== ESPAÇO DOS PAIS ====================
+// PAIS
 async function carregarDadosPais() {
   if (!supabaseClient) return;
   const select = document.getElementById("select-email-pais");
@@ -204,17 +223,17 @@ function renderizarPaisFilho(email) {
   const st = filho.status || 'Em Casa';
   let badgeColor = 'bg-slate-700/50 text-slate-300 border-slate-600';
   let icon = 'fa-house-user';
-  let desc = 'Aguardando embarque residencial.';
+  let desc = 'Aguardando busca residencial.';
 
   if (st === 'Na Van' || st === 'Embarcou') { 
     badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/30'; 
     icon = 'fa-van-shuttle'; 
-    desc = 'A caminho no transporte com a Tia Rafa!';
+    desc = 'A caminho com a Tia Rafa!';
   }
   if (st === 'Na Escola' || st === 'Desembarcou') { 
     badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'; 
     icon = 'fa-school'; 
-    desc = 'Entregue com segurança no destino.';
+    desc = 'Entregue no destino com segurança.';
   }
 
   const stPag = filho.status_pagamento || 'Pendente';
@@ -222,7 +241,6 @@ function renderizarPaisFilho(email) {
   const venc = filho.vencimento || 10;
 
   container.innerHTML = `
-    <!-- STATUS VIAGEM -->
     <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
       <div class="flex justify-between items-start">
         <div>
@@ -238,7 +256,6 @@ function renderizarPaisFilho(email) {
         ${desc}
       </div>
 
-      <!-- PRESENÇA HOJE -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
         <span class="text-xs font-bold text-slate-300">Vai no transporte hoje?</span>
         <button onclick="alternarPresenca('${filho.id}', ${!filho.vai_hoje})" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${filho.vai_hoje !== false ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
@@ -247,7 +264,6 @@ function renderizarPaisFilho(email) {
       </div>
     </div>
 
-    <!-- MENSALIDADE & PAGAMENTO -->
     <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
       <div class="flex justify-between items-center">
         <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mensalidade Escolar</h4>
@@ -261,25 +277,22 @@ function renderizarPaisFilho(email) {
 
       ${stPag !== 'Pago' ? `
         <div class="space-y-3 pt-2">
-          <!-- PIX -->
           <div class="p-3 bg-teal-950/40 border border-teal-500/30 rounded-xl space-y-1.5">
             <p class="text-xs font-bold text-teal-300"><i class="fa-brands fa-pix"></i> Pagamento via PIX</p>
             <p class="text-xs font-mono bg-slate-900 p-2 rounded border border-slate-700 text-teal-200 select-all">${pixChaveGlobal}</p>
           </div>
 
-          <!-- DINHEIRO EM MÃOS -->
           <div class="p-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-xs text-slate-400">
-            <i class="fa-solid fa-money-bill-wave text-amber-400"></i> <strong>Dinheiro:</strong> Entregar diretamente para a Tia Rafa no embarque.
+            <i class="fa-solid fa-money-bill-wave text-amber-400"></i> <strong>Dinheiro:</strong> Entregar para a Tia Rafa no embarque.
           </div>
 
-          <!-- CARTÃO DE CRÉDITO/DÉBITO -->
           <a href="${linkCartaoGlobal}" target="_blank" class="block w-full py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-bold text-xs rounded-xl transition-all">
             <i class="fa-solid fa-credit-card"></i> Pagar no Cartão de Crédito/Débito
           </a>
         </div>
       ` : `
         <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-semibold text-center">
-          ✓ Obrigado! A mensalidade deste mês está quitada.
+          ✓ Obrigado! Mensalidade deste mês quitada.
         </div>
       `}
     </div>
@@ -294,59 +307,101 @@ async function alternarPresenca(id, novoStatus) {
   carregarDadosPais();
 }
 
-// ==================== PAINEL TIA RAFA ====================
+// PAINEL TIA RAFA
 async function carregarDadosRafa() {
   if (!supabaseClient) return;
   const { data } = await supabaseClient.from('alunos').select('*');
   if (!data) return;
+  alunosCache = data;
 
-  // ROTA & CHAMADA
-  const containerChamada = document.getElementById("aba-chamada-rafa");
-  if (containerChamada) {
-    containerChamada.innerHTML = data.map(aluno => {
-      const st = aluno.status || 'Em Casa';
-      return `
-        <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl space-y-3">
-          <div class="flex justify-between items-start">
-            <div>
-              <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
-              <p class="text-xs text-slate-400">${aluno.escola || ''} • Turno: ${aluno.turno || 'Manhã'}</p>
-            </div>
-            ${aluno.vai_hoje === false ? '<span class="text-[10px] font-bold bg-rose-500/20 text-rose-400 px-2 py-0.5 rounded border border-rose-500/30">Não Vai Hoje</span>' : ''}
-          </div>
-          <div class="grid grid-cols-3 gap-2">
-            <button onclick="atualizarStatusRafa('${aluno.id}', 'Em Casa')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Em Casa' ? 'bg-slate-600 text-white' : 'bg-slate-900/60 text-slate-400'}">🏡 Casa</button>
-            <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Van')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Van' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🚌 Van</button>
-            <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Escola')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Escola' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🏫 Escola</button>
-          </div>
-        </div>
-      `;
-    }).join('');
+  renderizarRotaRafa();
+  renderizarFinanceiroRafa();
+}
+
+function aplicarFiltroTurno(turno) {
+  filtroTurnoAtual = turno;
+  document.getElementById("btn-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-filtro-tarde").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Tarde' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  renderizarRotaRafa();
+}
+
+function renderizarRotaRafa() {
+  const container = document.getElementById("lista-chamada-rafa-cards");
+  if (!container) return;
+
+  let filtrados = alunosCache;
+  if (filtroTurnoAtual !== "Todos") {
+    filtrados = alunosCache.filter(a => a.turno === filtroTurnoAtual);
   }
 
-  // FINANCEIRO RAFA
-  const containerFin = document.getElementById("aba-financeiro-rafa");
-  if (containerFin) {
-    containerFin.innerHTML = data.map(aluno => {
-      const stP = aluno.status_pagamento || 'Pendente';
-      return `
-        <div class="bg-slate-800/80 border border-slate-700 p-3.5 rounded-xl flex items-center justify-between">
+  container.innerHTML = filtrados.map(aluno => {
+    const st = aluno.status || 'Em Casa';
+    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
+
+    return `
+      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl space-y-3">
+        <div class="flex justify-between items-start">
+          <div>
+            <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
+            <p class="text-xs text-slate-400">${aluno.escola || ''} • ${aluno.turno || 'Manhã'}</p>
+          </div>
+          ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Em Casa')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Em Casa' ? 'bg-slate-600 text-white' : 'bg-slate-900/60 text-slate-400'}">🏡 Casa</button>
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Van')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Van' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🚌 Van</button>
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Escola')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Escola' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🏫 Escola</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderizarFinanceiroRafa() {
+  const container = document.getElementById("lista-financeiro-rafa-cards");
+  if (!container) return;
+
+  let recebido = 0;
+  let pendente = 0;
+
+  alunosCache.forEach(a => {
+    const val = parseFloat(a.valor || 180);
+    if (a.status_pagamento === "Pago") recebido += val;
+    else pendente += val;
+  });
+
+  const mRec = document.getElementById("metrica-recebido");
+  const mPen = document.getElementById("metrica-pendente");
+  if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
+  if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
+
+  container.innerHTML = alunosCache.map(aluno => {
+    const stP = aluno.status_pagamento || 'Pendente';
+    const val = parseFloat(aluno.valor || 180);
+
+    return `
+      <div class="bg-slate-800/80 border border-slate-700 p-3.5 rounded-2xl space-y-2">
+        <div class="flex justify-between items-center">
           <div>
             <p class="text-xs font-bold text-white">${aluno.nome}</p>
-            <p class="text-[10px] text-slate-400">R$ ${(aluno.valor || 180).toFixed(2)} | Venc: Dia ${aluno.vencimento || 10}</p>
+            <p class="text-[10px] text-slate-400">R$ ${val.toFixed(2)} | Venc: Dia ${aluno.vencimento || 10}</p>
           </div>
-          <div class="flex items-center gap-1">
-            ${stP === 'Pago' ? `
-              <span class="text-xs font-bold text-emerald-400 mr-1">✓ Pago</span>
-              <button onclick="darBaixaRafa('${aluno.id}', 'Pendente')" class="text-[10px] bg-slate-700 text-slate-300 p-1.5 rounded">Desfazer</button>
-            ` : `
-              <button onclick="darBaixaRafa('${aluno.id}', 'Pago')" class="text-xs bg-emerald-500 text-slate-950 font-bold px-2.5 py-1.5 rounded-lg">Dar Baixa</button>
-            `}
-          </div>
+          <span class="text-xs font-bold ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Pago' : '🔴 Pendente'}</span>
         </div>
-      `;
-    }).join('');
-  }
+
+        <div class="flex gap-2 pt-1 border-t border-slate-700/50">
+          ${stP === 'Pago' ? `
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pendente', null)" class="w-full py-1.5 text-xs bg-slate-700 text-slate-300 font-bold rounded-lg">Desfazer Pagamento</button>
+          ` : `
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'PIX')" class="flex-1 py-1.5 text-xs bg-teal-500 text-slate-950 font-bold rounded-lg">PIX</button>
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Dinheiro')" class="flex-1 py-1.5 text-xs bg-amber-500 text-slate-950 font-bold rounded-lg">Dinheiro</button>
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Cartão')" class="flex-1 py-1.5 text-xs bg-slate-600 text-white font-bold rounded-lg">Cartão</button>
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 async function atualizarStatusRafa(id, st) {
@@ -355,13 +410,37 @@ async function atualizarStatusRafa(id, st) {
   carregarDadosRafa();
 }
 
-async function darBaixaRafa(id, stP) {
+async function darBaixaRafa(id, stP, forma) {
   if (!supabaseClient) return;
-  await supabaseClient.from('alunos').update({ status_pagamento: stP }).eq('id', id);
+  await supabaseClient.from('alunos').update({ status_pagamento: stP, forma_pagamento: forma }).eq('id', id);
   carregarDadosRafa();
 }
 
-// ==================== PAINEL ADMIN ====================
+async function encerrarMesFinanceiro() {
+  if (!supabaseClient) return;
+  if (confirm("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?")) {
+    const mesAno = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' });
+    
+    for (let a of alunosCache) {
+      await supabaseClient.from('historico_financeiro').insert([{
+        aluno_id: a.id,
+        mes_ano: mesAno,
+        valor: a.valor || 180,
+        status_pagamento: a.status_pagamento || 'Pendente'
+      }]);
+
+      await supabaseClient.from('alunos').update({
+        status_pagamento: 'Pendente',
+        forma_pagamento: null
+      }).eq('id', a.id);
+    }
+
+    alert("Mês encerrado com sucesso!");
+    carregarDadosRafa();
+  }
+}
+
+// ADMIN
 async function carregarDadosAdmin() {
   if (!supabaseClient) return;
   const { data } = await supabaseClient.from('alunos').select('*');
