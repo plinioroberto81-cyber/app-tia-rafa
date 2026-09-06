@@ -180,7 +180,8 @@ function alternarTransmissaoGps() {
     }
   }
 }
-// BUSCAR GPS NO PAINEL ADMIN
+
+// BUSCAR GPS NO PAINEL ADMIN (MARCADOR PERSONALIZADO ZAFIRA)
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -217,6 +218,18 @@ async function carregarGpsAdmin() {
       : "⚪ Van Offline (Exibindo Campo Alegre / Cabuçu)";
   }
 
+  // ÍCONE PERSONALIZADO DA ZAFIRA DA TIA RAFA PARA O MAPA
+  const iconeZafiraGps = L.divIcon({
+    className: 'custom-van-marker',
+    html: `
+      <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
+        <img src="https://i.ibb.co/8DjK8D2v/image.png" style="width:100%; height:100%; object-fit:contain;">
+      </div>
+    `,
+    iconSize: [50, 50],
+    iconAnchor: [25, 25]
+  });
+
   // CRIA OU ATUALIZA O MAPA NO PAINEL ADMIN
   if (!mapAdmin && window.L) {
     mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
@@ -226,7 +239,7 @@ async function carregarGpsAdmin() {
       attribution: '© OpenStreetMap'
     }).addTo(mapAdmin);
 
-    markerVanAdmin = L.marker([lat, lng]).addTo(mapAdmin).bindPopup("🚐 Mini Van Tia Rafa").openPopup();
+    markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin).bindPopup("🚐 Zafira Tia Rafa").openPopup();
   } else if (mapAdmin && markerVanAdmin) {
     markerVanAdmin.setLatLng([lat, lng]);
     mapAdmin.setView([lat, lng]);
