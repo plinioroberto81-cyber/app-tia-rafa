@@ -12,31 +12,36 @@
 </head>
 <body class="h-full font-['Plus_Jakarta_Sans'] text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-white">
 
-  <!-- CABEÇALHO -->
-  <header class="relative overflow-hidden bg-gradient-to-b from-amber-500 via-amber-600 to-amber-700 pt-7 pb-9 px-6 rounded-b-[36px] shadow-2xl shadow-amber-500/20">
+  <!-- CABEÇALHO COM BOTÃO TEMA E VOLTAR -->
+  <header class="relative overflow-hidden bg-gradient-to-b from-amber-500 via-amber-600 to-amber-700 pt-6 pb-8 px-6 rounded-b-[36px] shadow-2xl shadow-amber-500/20">
     <div class="max-w-md mx-auto flex items-center justify-between relative z-10">
-      <div class="flex items-center gap-3.5">
-        <div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/50 shadow-xl bg-slate-900 flex items-center justify-center p-1 shrink-0">
+      <div class="flex items-center gap-3">
+        <!-- BOTÃO VOLTAR GLOBAL NO TOPO (OCULTO NA HOME) -->
+        <button id="btn-top-back" class="hidden w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center text-sm active:scale-95 transition-all mr-1">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+
+        <div class="w-14 h-14 rounded-2xl overflow-hidden border-2 border-white/50 shadow-xl bg-slate-900 flex items-center justify-center p-1 shrink-0">
           <img src="zafira.jpg" alt="Zafira Tia Rafa" class="w-full h-full object-contain">
         </div>
         <div>
-          <h1 class="text-xl font-extrabold tracking-tight text-white leading-none">Tia Rafa</h1>
-          <p class="text-xs font-medium text-amber-100/90 mt-1 flex items-center gap-1">
+          <h1 class="text-lg font-extrabold tracking-tight text-white leading-none">Tia Rafa</h1>
+          <p class="text-[11px] font-medium text-amber-100/90 mt-1 flex items-center gap-1">
             <i class="fa-solid fa-van-shuttle text-amber-200"></i> Transporte Escolar
           </p>
         </div>
       </div>
 
-      <button id="btn-theme-toggle" class="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center text-lg active:scale-95 transition-all shadow-md">
+      <button id="btn-theme-toggle" class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 text-white flex items-center justify-center text-sm active:scale-95 transition-all shadow-md">
         <i id="theme-icon" class="fa-solid fa-sun"></i>
       </button>
     </div>
   </header>
 
   <!-- CONTEÚDO PRINCIPAL -->
-  <main class="max-w-md mx-auto w-full px-4 -mt-5 flex-1 z-20 pb-28">
+  <main class="max-w-md mx-auto w-full px-4 -mt-4 flex-1 z-20 pb-28">
 
-    <!-- BANNER DE ALERTA DE ROTA ATIVO -->
+    <!-- BANNER DE ALERTA GLOBAL -->
     <div id="banner-alerta-global" class="hidden mb-4 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold flex items-center gap-3 shadow-lg animate-pulse">
       <i class="fa-solid fa-triangle-exclamation text-lg text-rose-400"></i>
       <span id="texto-alerta-global">Aviso de rota ativo</span>
@@ -90,7 +95,7 @@
         </button>
       </div>
 
-      <!-- AUTH BOX (SENHA) -->
+      <!-- FORMULARIO DE SENHA -->
       <div id="auth-form" class="hidden space-y-4 pt-2">
         <div class="flex items-center gap-2 text-amber-400 text-sm font-semibold">
           <i class="fa-solid fa-shield-halved"></i>
@@ -101,7 +106,7 @@
           Entrar no App
         </button>
         <button id="btn-back" class="w-full py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
-          ← Voltar
+          ← Voltar para Escolha de Perfil
         </button>
       </div>
     </section>
@@ -109,8 +114,8 @@
     <!-- DASHBOARD PAIS -->
     <section id="dashboard-pais" class="hidden space-y-4">
       <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Selecione o E-mail Cadastrado:</label>
-        <select id="select-email-pais" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-amber-500">
+        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Selecione seu E-mail Cadastrado:</label>
+        <select id="select-email-pais" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500">
           <option value="">Carregando e-mails...</option>
         </select>
       </div>
@@ -120,7 +125,7 @@
 
     <!-- DASHBOARD TIA RAFA -->
     <section id="dashboard-rafa" class="hidden space-y-5">
-      <!-- CENTRAL DE AVISOS DE ROTA -->
+      <!-- CENTRAL DE AVISOS -->
       <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
         <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
           <i class="fa-solid fa-bullhorn"></i> Central de Avisos e Trânsito
@@ -137,14 +142,45 @@
         <button id="btn-limpar-aviso" class="w-full py-1.5 bg-slate-900/60 hover:bg-rose-500/20 text-rose-400 text-[11px] font-semibold rounded-lg border border-slate-700 transition-all">✅ Limpar Avisos Ativos</button>
       </div>
 
-      <!-- ABAS RAFA -->
+      <!-- NAVEGAÇÃO DE ABAS TIA RAFA -->
       <div class="flex border-b border-slate-700">
         <button id="tab-btn-chamada" class="flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400">📋 Rota & Chamada</button>
         <button id="tab-btn-financeiro" class="flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent">💰 Financeiro</button>
       </div>
 
-      <div id="aba-chamada-rafa" class="space-y-3"></div>
-      <div id="aba-financeiro-rafa" class="hidden space-y-3"></div>
+      <!-- CONTROLES DE ROTA -->
+      <div id="aba-chamada-rafa" class="space-y-3">
+        <div class="flex justify-between items-center bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/60">
+          <span class="text-xs font-bold text-slate-300">Filtrar Turno:</span>
+          <div class="flex gap-1">
+            <button id="btn-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950">Todos</button>
+            <button id="btn-filtro-manha" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-700 text-slate-300">Manhã</button>
+            <button id="btn-filtro-tarde" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-700 text-slate-300">Tarde</button>
+          </div>
+        </div>
+        <div id="lista-chamada-rafa-cards" class="space-y-3"></div>
+      </div>
+
+      <!-- PAINEL FINANCEIRO DA TIA RAFA -->
+      <div id="aba-financeiro-rafa" class="hidden space-y-4">
+        <!-- METRICAS DE RECEBIMENTO -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-2xl">
+            <p class="text-[10px] text-emerald-400 font-bold uppercase">Recebido Mês</p>
+            <p id="metrica-recebido" class="text-lg font-extrabold text-emerald-300 mt-0.5">R$ 0.00</p>
+          </div>
+          <div class="bg-rose-500/10 border border-rose-500/30 p-3 rounded-2xl">
+            <p class="text-[10px] text-rose-400 font-bold uppercase">Pendente Mês</p>
+            <p id="metrica-pendente" class="text-lg font-extrabold text-rose-300 mt-0.5">R$ 0.00</p>
+          </div>
+        </div>
+
+        <button id="btn-encerrar-mes" class="w-full py-2.5 bg-slate-800 border border-slate-700 text-amber-400 text-xs font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-slate-700 transition-all">
+          <i class="fa-solid fa-lock"></i> Encerrar Mês & Fechar Histórico
+        </button>
+
+        <div id="lista-financeiro-rafa-cards" class="space-y-3"></div>
+      </div>
     </section>
 
     <!-- DASHBOARD ADMIN -->
@@ -196,8 +232,8 @@
   <nav id="bottom-bar" class="hidden fixed bottom-0 inset-x-0 bg-slate-900/90 backdrop-blur-2xl border-t border-slate-800 z-50 px-6 py-3">
     <div class="max-w-md mx-auto flex items-center justify-around">
       <button id="nav-btn-home" class="flex flex-col items-center gap-1 text-amber-400">
-        <i class="fa-solid fa-house-user text-lg"></i>
-        <span class="text-[10px] font-bold">Início</span>
+        <i class="fa-solid fa-arrow-left text-lg"></i>
+        <span class="text-[10px] font-bold">Voltar Perfil</span>
       </button>
       <button id="nav-btn-logout" class="flex flex-col items-center gap-1 text-slate-500 hover:text-rose-400 transition-colors">
         <i class="fa-solid fa-right-from-bracket text-lg"></i>
