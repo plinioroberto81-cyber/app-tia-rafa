@@ -125,55 +125,51 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
-// TRANSMISSÃO GPS DA TIA RAFA
-// TRANSMISSÃO GPS DA TIA RAFA (VERSÃO ALTA PRECISÃO E CALIBRADA)
+
+// TRANSMISSÃO GPS COM TRATAMENTO DE ERROS DO SUPABASE
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
     if ("geolocation" in navigator) {
-      btn.innerHTML = "🟡 Calibrando GPS...";
+      btn.innerHTML = "🟡 Enviando ao Banco...";
       
       gpsWatchId = navigator.geolocation.watchPosition(
         async (pos) => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
-          const precisao = pos.coords.accuracy; // Precisão em metros enviada pelo sensor do celular
-
-          // FILTRO DE CALIBRAÇÃO:
-          // Se a margem de erro por causa da chuva for maior que 80 metros, ignora a leitura ruim
-          if (precisao > 80) {
-            console.log(`Sinal ignorado por baixa precisão (${Math.round(precisao)}m de erro devido ao tempo)`);
-            return;
-          }
+          const precisao = pos.coords.accuracy;
 
           if (supabaseClient) {
-            await supabaseClient.from('alertas').insert([{ 
+            const { error } = await supabaseClient.from('alertas').insert([{ 
               tipo: 'GPS_VAN', 
               mensagem: `${lat},${lng}`, 
               ativo: true 
             }]);
+
+            if (error) {
+              console.error("Erro ao gravar GPS no Supabase:", error);
+              btn.innerHTML = "🔴 Erro de Permissão no Banco";
+              btn.className = "px-3 py-1 bg-rose-600 text-white font-bold text-[11px] rounded-lg";
+              return;
+            }
           }
           
           isGpsTransmitting = true;
           if (btn) {
-            btn.innerHTML = `🟢 GPS Ativo (Precisão: ~${Math.round(precisao)}m)`;
+            btn.innerHTML = `🟢 GPS Transmitindo (~${Math.round(precisao)}m)`;
             btn.className = "px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg transition-all animate-pulse";
           }
         },
         (err) => {
-          alert("Aviso: Ligue o GPS do celular e ative o modo 'Precisão Alta'.");
+          alert("Aviso: Ative a localização (GPS) do seu celular.");
           btn.innerHTML = "⚪ GPS Desligado";
           btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
           isGpsTransmitting = false;
         },
-        { 
-          enableHighAccuracy: true,  // Força o celular a usar antena GPS + Torres 4G/Wi-Fi juntas
-          timeout: 20000,            // Dá tempo suficiente para o satélite responder sob tempestade
-          maximumAge: 1000           // Garante que o sinal lido seja SEMPRE em tempo real, sem cache antigo
-        }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      alert("Seu celular não possui suporte a geolocalização.");
+      alert("Seu celular não suporta geolocalização.");
     }
   } else {
     if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
@@ -184,7 +180,6 @@ function alternarTransmissaoGps() {
     }
   }
 }
-
 // BUSCAR GPS NO PAINEL ADMIN
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
