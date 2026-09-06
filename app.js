@@ -18,6 +18,11 @@ let filtroFinStatus = "Todos";
 let audioContext = null;
 let audioOscillator = null;
 
+let gpsWatchId = null;
+let isGpsTransmitting = false;
+let mapAdmin = null;
+let markerVanAdmin = null;
+
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -32,24 +37,25 @@ document.addEventListener("DOMContentLoaded", () => {
   inicializarTema();
   verificarAlertaGlobal();
   
-  // MONITORAMENTO CONTINUO DE EMERGENCIA (A CADA 3 SEGUNDOS)
+  // CHECAGEM DE EMERGENCIA E GPS (A CADA 3 SEG)
   setInterval(verificarEmergenciaAdmin, 3000);
+  setInterval(carregarGpsAdmin, 4000);
 
-  // BOTÕES VOLTAR E LOGOUT
+  // BOTÕES NAVEGAÇÃO
   btnTopBack?.addEventListener("click", voltarHome);
   document.getElementById("nav-btn-home")?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
   document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
 
-  // BOTÃO TEMA
+  // TEMA
   document.getElementById("btn-theme-toggle")?.addEventListener("click", alternarTema);
 
-  // SELEÇÃO DE PERFIL
+  // PERFIS
   document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
   document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
 
-  // LOGIN SUBMIT
+  // LOGIN
   document.getElementById("btn-login-submit")?.addEventListener("click", () => {
     const pwd = inputPassword ? inputPassword.value : "";
     if (currentRole === "rafa" && pwd === passRafa) entrarPerfil("rafa");
@@ -57,7 +63,10 @@ document.addEventListener("DOMContentLoaded", () => {
     else alert("Senha incorreta!");
   });
 
-  // BOTÃO DE DISPARO DE EMERGÊNCIA (TIA RAFA)
+  // GPS TOGGLE (TIA RAFA)
+  document.getElementById("btn-toggle-gps")?.addEventListener("click", alternarTransmissaoGps);
+
+  // EMERGÊNCIA
   document.getElementById("btn-disparar-emergencia")?.addEventListener("click", dispararEmergenciaRafa);
   document.getElementById("btn-desativar-emergencia")?.addEventListener("click", atenderEmergenciaAdmin);
 
@@ -101,12 +110,72 @@ document.addEventListener("DOMContentLoaded", () => {
   // SELEÇÃO E-MAIL PAIS
   document.getElementById("select-email-pais")?.addEventListener("change", (e) => renderizarPaisFilho(e.target.value));
 
-  // ACTIONS ADMIN E MÊS
+  // ADMIN
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
-// SISTEMA DE SIRENE E EMERGÊNCIA
+// FUNÇÕES DE GPS EM TEMPO REAL
+function alternarTransmissaoGps() {
+  const btn = document.getElementById("btn-toggle-gps");
+  if (!isGpsTransmitting) {
+    if ("geolocation" in navigator) {
+      gpsWatchId = navigator.geolocation.watchPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          if (supabaseClient) {
+            await supabaseClient.from('alertas').upsert([{ id: 9999, tipo: 'GPS_VAN', mensagem: `${lat},${lng}`, ativo: true }]);
+          }
+        },
+        (err) => alert("Erro ao acessar GPS do celular: " + err.message),
+        { enableHighAccuracy: true, timeout: 5000 }
+      );
+      isGpsTransmitting = true;
+      if (btn) {
+        btn.innerHTML = "🟢 GPS Transmitindo";
+        btn.className = "px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg transition-all animate-pulse";
+      }
+    } else {
+      alert("Seu celular não suporta geolocalização.");
+    }
+  } else {
+    if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
+    isGpsTransmitting = false;
+    if (btn) {
+      btn.innerHTML = "⚪ GPS Desligado";
+      btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
+    }
+  }
+}
+
+async function carregarGpsAdmin() {
+  if (currentRole !== "admin" || !supabaseClient) return;
+
+  const { data } = await supabaseClient.from('alertas').select('*').eq('id', 9999).limit(1);
+  const statusTxt = document.getElementById("txt-status-gps-admin");
+
+  if (data && data.length > 0 && data[0].mensagem) {
+    const coords = data[0].mensagem.split(',');
+    const lat = parseFloat(coords[0]);
+    const lng = parseFloat(coords[1]);
+
+    if (statusTxt) statusTxt.innerText = "🟢 Sinal Atualizado";
+
+    if (!mapAdmin && window.L) {
+      mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapAdmin);
+      markerVanAdmin = L.marker([lat, lng]).addTo(mapAdmin).bindPopup("🚐 Mini Van Tia Rafa").openPopup();
+    } else if (mapAdmin && markerVanAdmin) {
+      markerVanAdmin.setLatLng([lat, lng]);
+      mapAdmin.setView([lat, lng]);
+    }
+  } else {
+    if (statusTxt) statusTxt.innerText = "⚪ Van sem sinal de GPS";
+  }
+}
+
+// EMERGÊNCIA E SIRENE
 function tocarSomSirene() {
   if (audioContext) return;
   try {
@@ -140,16 +209,28 @@ function pararSomSirene() {
 
 async function dispararEmergenciaRafa() {
   if (!supabaseClient) return;
-  const motivo = prompt("Digite o motivo da emergência (Ex: Problema Mecânico / Saúde / Pneu Furado):", "Emergência Mecânica / Saúde na Rota");
+  const motivo = prompt("Digite o motivo da emergência (Ex: Problema Mecânico / Saúde):", "Emergência Mecânica / Saúde");
   if (!motivo) return;
 
-  await supabaseClient.from('alertas').insert([{
-    tipo: 'EMERGENCIA_ADMIN',
-    mensagem: `🚨 EMERGÊNCIA RAFAELA: ${motivo}`,
-    ativo: true
-  }]);
+  // Pegar posição exata para enviar junto com a emergência
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
 
-  alert("Alerta de Emergência enviado com sucesso ao Administrador!");
+    await supabaseClient.from('alertas').insert([{
+      tipo: 'EMERGENCIA_ADMIN',
+      mensagem: `🚨 EMERGÊNCIA: ${motivo} | Pos: ${lat},${lng}`,
+      ativo: true
+    }]);
+
+    alert("Alerta de Emergência enviado ao Admin com sua posição exata!");
+  }, async () => {
+    await supabaseClient.from('alertas').insert([{
+      tipo: 'EMERGENCIA_ADMIN',
+      mensagem: `🚨 EMERGÊNCIA: ${motivo}`,
+      ativo: true
+    }]);
+  });
 }
 
 async function verificarEmergenciaAdmin() {
@@ -158,9 +239,17 @@ async function verificarEmergenciaAdmin() {
 
   const modal = document.getElementById("modal-emergencia-admin");
   const detalhes = document.getElementById("detalhes-emergencia-admin");
+  const btnMaps = document.getElementById("btn-rota-maps-emergencia");
 
   if (data && data.length > 0) {
     if (detalhes) detalhes.innerText = data[0].mensagem;
+    
+    // Extrai posição se houver
+    if (data[0].mensagem.includes("Pos:")) {
+      const posPart = data[0].mensagem.split("Pos:")[1].trim();
+      if (btnMaps) btnMaps.href = `https://www.google.com/maps/search/?api=1&query=${posPart}`;
+    }
+
     modal?.classList.remove("hidden");
     tocarSomSirene();
   } else {
@@ -174,10 +263,10 @@ async function atenderEmergenciaAdmin() {
   await supabaseClient.from('alertas').update({ ativo: false }).eq('tipo', 'EMERGENCIA_ADMIN');
   pararSomSirene();
   document.getElementById("modal-emergencia-admin")?.classList.add("hidden");
-  alert("Emergência atendida e desativada.");
+  alert("Emergência desativada.");
 }
 
-// NAVEGAÇÃO E TEMA
+// RESTANTE DO CÓDIGO E NAVEGAÇÃO
 function inicializarTema() {
   const temaSalvo = localStorage.getItem("theme");
   const themeIcon = document.getElementById("theme-icon");
@@ -248,10 +337,10 @@ function entrarPerfil(role) {
   }
 }
 
-// ALERTAS
+// ALERTAS PAIS
 async function verificarAlertaGlobal() {
   if (!supabaseClient) return;
-  const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).neq('tipo', 'EMERGENCIA_ADMIN').order('id', { ascending: false }).limit(1);
+  const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN').order('id', { ascending: false }).limit(1);
   const banner = document.getElementById("banner-alerta-global");
   const txt = document.getElementById("texto-alerta-global");
   
@@ -265,7 +354,7 @@ async function verificarAlertaGlobal() {
 
 async function dispararAviso(msg) {
   if (!supabaseClient) return;
-  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN');
+  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
   await supabaseClient.from('alertas').insert([{ tipo: 'Aviso', mensagem: msg, ativo: true }]);
   alert("Aviso publicado na tela dos pais!");
   verificarAlertaGlobal();
@@ -273,7 +362,7 @@ async function dispararAviso(msg) {
 
 async function limparAvisos() {
   if (!supabaseClient) return;
-  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN');
+  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
   alert("Avisos encerrados!");
   verificarAlertaGlobal();
 }
@@ -392,7 +481,7 @@ async function alternarPresenca(id, novoStatus) {
   carregarDadosPais();
 }
 
-// PAINEL TIA RAFA
+// PAINEL RAFA
 async function carregarDadosRafa() {
   if (!supabaseClient) return;
   const { data } = await supabaseClient.from('alunos').select('*');
@@ -582,6 +671,8 @@ async function carregarDadosAdmin() {
       </button>
     </div>
   `).join('');
+
+  carregarGpsAdmin();
 }
 
 async function cadastrarAlunoAdmin(e) {
