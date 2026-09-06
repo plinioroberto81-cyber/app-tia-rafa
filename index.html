@@ -1,1 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-900">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>App Tia Rafa</title>
+  
+  <!-- Tailwind CSS & Fontes -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-full font-['Plus_Jakarta_Sans'] text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-white">
 
+  <!-- CABEÇALHO COM MASCOTE DESENHO ZAFIRA -->
+<header class="relative overflow-hidden bg-gradient-to-b from-amber-500 via-amber-600 to-amber-700 pt-7 pb-9 px-6 rounded-b-[36px] shadow-2xl shadow-amber-500/20">
+  <div class="max-w-md mx-auto flex items-center justify-between relative z-10">
+    <div class="flex items-center gap-3.5">
+      <!-- MASCATE ZAFIRA EM DESENHO -->
+      <div class="w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/50 shadow-xl bg-slate-900 flex items-center justify-center p-1 shrink-0">
+        <img src="zafira.jpg" alt="Zafira Tia Rafa" class="w-full h-full object-contain">
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold tracking-tight text-white leading-none">Tia Rafa</h1>
+        <p class="text-xs font-medium text-amber-100/90 mt-1 flex items-center gap-1">
+          <i class="fa-solid fa-van-shuttle text-amber-200"></i> Transporte Premium
+        </p>
+      </div>
+    </div>
+  </div>
+</header>
+
+  <!-- CONTEÚDO PRINCIPAL (DASHBOARD) -->
+  <main class="max-w-md mx-auto w-full px-4 -mt-5 flex-1 z-20 pb-28">
+
+    <!-- SELEÇÃO DE TELA DE LOGIN -->
+    <section id="login-section" class="bg-slate-800/90 backdrop-blur-xl border border-slate-700/60 rounded-3xl p-6 shadow-xl">
+      <div class="mb-6">
+        <h2 class="text-lg font-bold text-white">Selecione seu perfil 👋</h2>
+        <p class="text-xs text-slate-400 mt-0.5">Acesse as informações do transporte em tempo real</p>
+      </div>
+
+      <div id="main-buttons" class="space-y-3">
+        <!-- BOTÃO PAIS -->
+        <button id="btn-pais" class="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-800/60 border border-slate-700 hover:border-amber-500/50 transition-all active:scale-[0.98] group">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-children"></i>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-bold text-white">Acesso dos Pais</p>
+              <p class="text-xs text-slate-400">Acompanhar embarque dos filhos</p>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:text-amber-400 group-hover:translate-x-1 transition-all"></i>
+        </button>
+
+        <!-- BOTÃO MOTORISTA -->
+        <button id="btn-rafa" class="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-800/60 border border-slate-700 hover:border-teal-500/50 transition-all active:scale-[0.98] group">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-400 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-id-card-clip"></i>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-bold text-white">Painel Tia Rafa</p>
+              <p class="text-xs text-slate-400">Lista de chamada e presença</p>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:text-teal-400 group-hover:translate-x-1 transition-all"></i>
+        </button>
+
+        <!-- BOTÃO ADMIN -->
+        <button id="btn-admin" class="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-800/60 border border-slate-700 hover:border-slate-500 transition-all active:scale-[0.98] group">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-slate-700/40 border border-slate-600 text-slate-300 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-user-gear"></i>
+            </div>
+            <div class="text-left">
+              <p class="text-sm font-bold text-white">Administração</p>
+              <p class="text-xs text-slate-400">Cadastros e controle geral</p>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all"></i>
+        </button>
+      </div>
+
+      <!-- AUTH BOX (SENHA) -->
+      <div id="auth-form" class="hidden space-y-4 pt-2">
+        <div class="flex items-center gap-2 text-amber-400 text-sm font-semibold">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span id="auth-title">Digite sua senha</span>
+        </div>
+        <input type="password" id="input-password" placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors text-center text-lg tracking-widest">
+        <button id="btn-login-submit" class="w-full py-3.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-amber-500/25">
+          Entrar no App
+        </button>
+        <button id="btn-back" class="w-full py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors">
+          ← Voltar
+        </button>
+      </div>
+    </section>
+
+    <!-- DASHBOARD PAIS -->
+    <section id="dashboard-pais" class="hidden space-y-4">
+      <div class="flex items-center justify-between px-1">
+        <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider">Status das Crianças</h3>
+        <span class="text-xs text-amber-400 font-medium">Atualização em tempo real</span>
+      </div>
+      
+      <div id="lista-alunos-pais" class="space-y-3">
+        <!-- Skeleton Loading -->
+        <div class="animate-pulse bg-slate-800/60 h-20 rounded-2xl border border-slate-700/50"></div>
+      </div>
+
+      <!-- BANNER PIX -->
+      <div class="bg-gradient-to-br from-teal-950/60 to-slate-800/80 border border-teal-500/30 rounded-2xl p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-400 flex items-center justify-center text-lg">
+            <i class="fa-brands fa-pix"></i>
+          </div>
+          <div>
+            <p class="text-xs text-slate-400 font-medium">Pagamento via PIX</p>
+            <p id="pix-key-display" class="text-xs font-mono font-bold text-teal-300 mt-0.5">Carregando...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD TIA RAFA -->
+    <section id="dashboard-rafa" class="hidden space-y-4">
+      <div id="lista-chamada-rafa" class="space-y-3"></div>
+    </section>
+
+    <!-- DASHBOARD ADMIN -->
+    <section id="dashboard-admin" class="hidden space-y-4">
+      <form id="form-cadastrar-aluno" class="bg-slate-800/80 border border-slate-700 p-5 rounded-2xl space-y-3">
+        <h3 class="text-sm font-bold text-white mb-2">Cadastrar Novo Aluno</h3>
+        <input type="text" id="add-nome" placeholder="Nome do Aluno" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+        <input type="text" id="add-escola" placeholder="Escola" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+        <input type="text" id="add-responsavel" placeholder="Responsável" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+        <input type="text" id="add-telefone" placeholder="Telefone" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white">
+        <button type="submit" class="w-full py-3 bg-teal-500 text-slate-950 font-bold rounded-xl active:scale-[0.98]">
+          Cadastrar Aluno
+        </button>
+      </form>
+
+      <div id="lista-alunos-admin" class="space-y-3 pt-2"></div>
+    </section>
+
+  </main>
+
+  <!-- BARRA DE NAVEGAÇÃO INFERIOR NATIVA (ESTILO BOTTOM BAR) -->
+  <nav id="bottom-bar" class="hidden fixed bottom-0 inset-x-0 bg-slate-900/90 backdrop-blur-2xl border-t border-slate-800 z-50 px-6 py-3">
+    <div class="max-w-md mx-auto flex items-center justify-around">
+      <button id="nav-btn-home" class="flex flex-col items-center gap-1 text-amber-400">
+        <i class="fa-solid fa-house-user text-lg"></i>
+        <span class="text-[10px] font-bold">Início</span>
+      </button>
+      <button id="nav-btn-logout" class="flex flex-col items-center gap-1 text-slate-500 hover:text-rose-400 transition-colors">
+        <i class="fa-solid fa-right-from-bracket text-lg"></i>
+        <span class="text-[10px] font-bold">Sair</span>
+      </button>
+    </div>
+  </nav>
+
+  <script src="app.js"></script>
+</body>
+</html>
