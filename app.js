@@ -1,10 +1,12 @@
 // CONEXAO SUPABASE
-var SUPABASE_URL = "https://sxrexcmtanpwljimfqpk.supabase.co";
-var SUPABASE_KEY = "sb_publishable_NM0fvyA5X1zlFVy39gvrYA_pyTXBisb";
+const SUPABASE_URL = "https://sxrexcmtanpwljimfqpk.supabase.co";
+const SUPABASE_KEY = "sb_publishable_NM0fvyA5X1zlFVy39gvrYA_pyTXBisb";
 
-var supabase = null;
+let supabase = null;
 if (window.supabase && window.supabase.createClient) {
   supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} else {
+  console.error("SDK do Supabase não foi carregado corretamente.");
 }
 
 let passRafa = "rafa123";
@@ -12,39 +14,64 @@ let passAdmin = "admin123";
 let pixChave = "11999998888";
 let currentRole = null;
 
-// ELEMENTOS
-const loginSection = document.getElementById("login-section");
-const authForm = document.getElementById("auth-form");
-const authTitle = document.getElementById("auth-title");
-const inputPassword = document.getElementById("input-password");
-const mainButtons = document.getElementById("main-buttons");
-const bottomBar = document.getElementById("bottom-bar");
-const statusLive = document.getElementById("status-live");
+// ELEMENTOS GLOBAIS
+let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, statusLive;
 
-// EVENTOS DE NAVEGAÇÃO
-document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
-document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
-document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
-document.getElementById("btn-back")?.addEventListener("click", resetLogin);
-document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
+// INICIALIZACAO DOS EVENTOS APOS CARREGAMENTO DO HTML
+document.addEventListener("DOMContentLoaded", () => {
+  loginSection = document.getElementById("login-section");
+  authForm = document.getElementById("auth-form");
+  authTitle = document.getElementById("auth-title");
+  inputPassword = document.getElementById("input-password");
+  mainButtons = document.getElementById("main-buttons");
+  bottomBar = document.getElementById("bottom-bar");
+  statusLive = document.getElementById("status-live");
 
-document.getElementById("btn-login-submit")?.addEventListener("click", () => {
-  const pwd = inputPassword.value;
-  if (currentRole === "rafa" && pwd === passRafa) entrarPerfil("rafa");
-  else if (currentRole === "admin" && pwd === passAdmin) entrarPerfil("admin");
-  else alert("Senha incorreta!");
+  // EVENTOS DE NAVEGACAO
+  document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
+  document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
+  document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
+  document.getElementById("btn-back")?.addEventListener("click", resetLogin);
+  document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
+
+  document.getElementById("btn-login-submit")?.addEventListener("click", () => {
+    const pwd = inputPassword ? inputPassword.value : "";
+    if (currentRole === "rafa" && pwd === passRafa) entrarPerfil("rafa");
+    else if (currentRole === "admin" && pwd === passAdmin) entrarPerfil("admin");
+    else alert("Senha incorreta!");
+  });
+
+  document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!supabase) {
+      alert("Erro de conexão com o banco de dados.");
+      return;
+    }
+
+    await supabase.from('alunos').insert([{
+      nome: document.getElementById("add-nome").value,
+      escola: document.getElementById("add-escola").value,
+      responsavel: document.getElementById("add-responsavel").value,
+      telefone: document.getElementById("add-telefone").value,
+      status: 'Em Casa'
+    }]);
+
+    alert("Aluno cadastrado com sucesso!");
+    document.getElementById("form-cadastrar-aluno").reset();
+    carregarDadosAdmin();
+  });
 });
 
 function mostrarFormLogin(role) {
   currentRole = role;
-  authTitle.innerText = role === "rafa" ? "Senha Tia Rafa" : "Senha Admin";
-  authForm.classList.remove("hidden");
-  mainButtons.classList.add("hidden");
+  if (authTitle) authTitle.innerText = role === "rafa" ? "Senha Tia Rafa" : "Senha Admin";
+  if (authForm) authForm.classList.remove("hidden");
+  if (mainButtons) mainButtons.classList.add("hidden");
 }
 
 function resetLogin() {
-  authForm.classList.add("hidden");
-  mainButtons.classList.remove("hidden");
+  if (authForm) authForm.classList.add("hidden");
+  if (mainButtons) mainButtons.classList.remove("hidden");
   if (inputPassword) inputPassword.value = "";
 }
 
@@ -52,16 +79,16 @@ function logout() {
   document.getElementById("dashboard-pais")?.classList.add("hidden");
   document.getElementById("dashboard-rafa")?.classList.add("hidden");
   document.getElementById("dashboard-admin")?.classList.add("hidden");
-  bottomBar?.classList.add("hidden");
-  statusLive?.classList.add("hidden");
-  loginSection?.classList.remove("hidden");
+  if (bottomBar) bottomBar.classList.add("hidden");
+  if (statusLive) statusLive.classList.add("hidden");
+  if (loginSection) loginSection.classList.remove("hidden");
   resetLogin();
 }
 
 function entrarPerfil(role) {
-  loginSection?.classList.add("hidden");
-  bottomBar?.classList.remove("hidden");
-  statusLive?.classList.remove("hidden");
+  if (loginSection) loginSection.classList.add("hidden");
+  if (bottomBar) bottomBar.classList.remove("hidden");
+  if (statusLive) statusLive.classList.remove("hidden");
 
   if (role === "pais") {
     document.getElementById("dashboard-pais")?.classList.remove("hidden");
@@ -75,7 +102,7 @@ function entrarPerfil(role) {
   }
 }
 
-// RENDERIZAÇÃO PAIS
+// RENDERIZACAO PAIS
 async function carregarDadosPais() {
   const container = document.getElementById("lista-alunos-pais");
   const pixDisplay = document.getElementById("pix-key-display");
@@ -83,7 +110,7 @@ async function carregarDadosPais() {
   if (!container) return;
 
   if (!supabase) {
-    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o banco.</p>`;
+    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o Supabase.</p>`;
     return;
   }
 
@@ -122,13 +149,13 @@ async function carregarDadosPais() {
   }).join('');
 }
 
-// RENDERIZAÇÃO RAFA
+// RENDERIZACAO RAFA
 async function carregarDadosRafa() {
   const container = document.getElementById("lista-chamada-rafa");
   if (!container) return;
 
   if (!supabase) {
-    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o banco.</p>`;
+    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o Supabase.</p>`;
     return;
   }
 
@@ -164,13 +191,13 @@ async function atualizarStatus(id, novoStatus) {
   carregarDadosRafa();
 }
 
-// RENDERIZAÇÃO ADMIN
+// RENDERIZACAO ADMIN
 async function carregarDadosAdmin() {
   const container = document.getElementById("lista-alunos-admin");
   if (!container) return;
 
   if (!supabase) {
-    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o banco.</p>`;
+    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o Supabase.</p>`;
     return;
   }
 
@@ -192,23 +219,6 @@ async function carregarDadosAdmin() {
     </div>
   `).join('');
 }
-
-document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (!supabase) return;
-
-  await supabase.from('alunos').insert([{
-    nome: document.getElementById("add-nome").value,
-    escola: document.getElementById("add-escola").value,
-    responsavel: document.getElementById("add-responsavel").value,
-    telefone: document.getElementById("add-telefone").value,
-    status: 'Em Casa'
-  }]);
-  
-  alert("Aluno cadastrado!");
-  document.getElementById("form-cadastrar-aluno").reset();
-  carregarDadosAdmin();
-});
 
 async function deletarAluno(id) {
   if (!supabase) return;
