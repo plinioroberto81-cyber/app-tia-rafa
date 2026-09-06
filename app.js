@@ -1,13 +1,10 @@
-// CONEXÃO COM O SUPABASE
-const SUPABASE_URL = "https://sxrexcmtanpwljimfqpk.supabase.co"; 
-const SUPABASE_KEY = "sb_publishable_NM0fvyA5X1zlFVy39gvrYA_pyTXBisb"; 
+// CONEXAO SUPABASE
+var SUPABASE_URL = "https://sxrexcmtanpwljimfqpk.supabase.co";
+var SUPABASE_KEY = "sb_publishable_NM0fvyA5X1zlFVy39gvrYA_pyTXBisb";
 
-// Inicialização segura do cliente Supabase
-let supabase = null;
-if (window.supabase) {
+var supabase = null;
+if (window.supabase && window.supabase.createClient) {
   supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-} else {
-  console.error("SDK do Supabase não foi carregado no HTML!");
 }
 
 let passRafa = "rafa123";
