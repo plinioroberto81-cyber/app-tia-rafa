@@ -1,7 +1,14 @@
+// CONEXÃO COM O SUPABASE
 const SUPABASE_URL = "https://sxrexcmtanpwljimfqpk.supabase.co"; 
 const SUPABASE_KEY = "sb_publishable_NM0fvyA5X1zlFVy39gvrYA_pyTXBisb"; 
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Inicialização segura do cliente Supabase
+let supabase = null;
+if (window.supabase) {
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} else {
+  console.error("SDK do Supabase não foi carregado no HTML!");
+}
 
 let passRafa = "rafa123";
 let passAdmin = "admin123";
@@ -18,13 +25,13 @@ const bottomBar = document.getElementById("bottom-bar");
 const statusLive = document.getElementById("status-live");
 
 // EVENTOS DE NAVEGAÇÃO
-document.getElementById("btn-pais").addEventListener("click", () => entrarPerfil("pais"));
-document.getElementById("btn-rafa").addEventListener("click", () => mostrarFormLogin("rafa"));
-document.getElementById("btn-admin").addEventListener("click", () => mostrarFormLogin("admin"));
-document.getElementById("btn-back").addEventListener("click", resetLogin);
-document.getElementById("nav-btn-logout").addEventListener("click", logout);
+document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
+document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
+document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
+document.getElementById("btn-back")?.addEventListener("click", resetLogin);
+document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
 
-document.getElementById("btn-login-submit").addEventListener("click", () => {
+document.getElementById("btn-login-submit")?.addEventListener("click", () => {
   const pwd = inputPassword.value;
   if (currentRole === "rafa" && pwd === passRafa) entrarPerfil("rafa");
   else if (currentRole === "admin" && pwd === passAdmin) entrarPerfil("admin");
@@ -41,43 +48,50 @@ function mostrarFormLogin(role) {
 function resetLogin() {
   authForm.classList.add("hidden");
   mainButtons.classList.remove("hidden");
-  inputPassword.value = "";
+  if (inputPassword) inputPassword.value = "";
 }
 
 function logout() {
-  document.getElementById("dashboard-pais").classList.add("hidden");
-  document.getElementById("dashboard-rafa").classList.add("hidden");
-  document.getElementById("dashboard-admin").classList.add("hidden");
-  bottomBar.classList.add("hidden");
-  statusLive.classList.add("hidden");
-  loginSection.classList.remove("hidden");
+  document.getElementById("dashboard-pais")?.classList.add("hidden");
+  document.getElementById("dashboard-rafa")?.classList.add("hidden");
+  document.getElementById("dashboard-admin")?.classList.add("hidden");
+  bottomBar?.classList.add("hidden");
+  statusLive?.classList.add("hidden");
+  loginSection?.classList.remove("hidden");
   resetLogin();
 }
 
 function entrarPerfil(role) {
-  loginSection.classList.add("hidden");
-  bottomBar.classList.remove("hidden");
-  statusLive.classList.remove("hidden");
+  loginSection?.classList.add("hidden");
+  bottomBar?.classList.remove("hidden");
+  statusLive?.classList.remove("hidden");
 
   if (role === "pais") {
-    document.getElementById("dashboard-pais").classList.remove("hidden");
+    document.getElementById("dashboard-pais")?.classList.remove("hidden");
     carregarDadosPais();
   } else if (role === "rafa") {
-    document.getElementById("dashboard-rafa").classList.remove("hidden");
+    document.getElementById("dashboard-rafa")?.classList.remove("hidden");
     carregarDadosRafa();
   } else if (role === "admin") {
-    document.getElementById("dashboard-admin").classList.remove("hidden");
+    document.getElementById("dashboard-admin")?.classList.remove("hidden");
     carregarDadosAdmin();
   }
 }
 
-// RENDERIZAÇÃO PAIS (DESIGN NATIVO)
+// RENDERIZAÇÃO PAIS
 async function carregarDadosPais() {
   const container = document.getElementById("lista-alunos-pais");
-  document.getElementById("pix-key-display").innerText = pixChave;
+  const pixDisplay = document.getElementById("pix-key-display");
+  if (pixDisplay) pixDisplay.innerText = pixChave;
+  if (!container) return;
 
-  const { data } = await supabase.from('alunos').select('*');
-  if (!data || data.length === 0) {
+  if (!supabase) {
+    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o banco.</p>`;
+    return;
+  }
+
+  const { data, error } = await supabase.from('alunos').select('*');
+  if (error || !data || data.length === 0) {
     container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Nenhum aluno cadastrado.</p>`;
     return;
   }
@@ -111,10 +125,21 @@ async function carregarDadosPais() {
   }).join('');
 }
 
-// RENDERIZAÇÃO RAFA (BOTÕES DEDO FÁCIL)
+// RENDERIZAÇÃO RAFA
 async function carregarDadosRafa() {
   const container = document.getElementById("lista-chamada-rafa");
-  const { data } = await supabase.from('alunos').select('*');
+  if (!container) return;
+
+  if (!supabase) {
+    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o banco.</p>`;
+    return;
+  }
+
+  const { data, error } = await supabase.from('alunos').select('*');
+  if (error || !data || data.length === 0) {
+    container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Nenhum aluno para chamada.</p>`;
+    return;
+  }
 
   container.innerHTML = data.map(aluno => {
     const st = aluno.status || 'Em Casa';
@@ -123,7 +148,7 @@ async function carregarDadosRafa() {
         <div class="flex justify-between items-start">
           <div>
             <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
-            <p class="text-xs text-slate-400">${aluno.escola}</p>
+            <p class="text-xs text-slate-400">${aluno.escola || ''}</p>
           </div>
         </div>
         <div class="grid grid-cols-3 gap-2">
@@ -137,6 +162,7 @@ async function carregarDadosRafa() {
 }
 
 async function atualizarStatus(id, novoStatus) {
+  if (!supabase) return;
   await supabase.from('alunos').update({ status: novoStatus }).eq('id', id);
   carregarDadosRafa();
 }
@@ -144,13 +170,24 @@ async function atualizarStatus(id, novoStatus) {
 // RENDERIZAÇÃO ADMIN
 async function carregarDadosAdmin() {
   const container = document.getElementById("lista-alunos-admin");
-  const { data } = await supabase.from('alunos').select('*');
+  if (!container) return;
+
+  if (!supabase) {
+    container.innerHTML = `<p class="text-center text-xs text-rose-400 py-4">Erro de conexão com o banco.</p>`;
+    return;
+  }
+
+  const { data, error } = await supabase.from('alunos').select('*');
+  if (error || !data || data.length === 0) {
+    container.innerHTML = `<p class="text-center text-xs text-slate-500 py-4">Nenhum aluno cadastrado.</p>`;
+    return;
+  }
 
   container.innerHTML = data.map(aluno => `
     <div class="bg-slate-800/60 border border-slate-700/60 p-3.5 rounded-xl flex items-center justify-between">
       <div>
         <p class="text-xs font-bold text-white">${aluno.nome}</p>
-        <p class="text-[10px] text-slate-400">Escola: ${aluno.escola} | Resp: ${aluno.responsavel}</p>
+        <p class="text-[10px] text-slate-400">Escola: ${aluno.escola || '-'} | Resp: ${aluno.responsavel || '-'}</p>
       </div>
       <button onclick="deletarAluno('${aluno.id}')" class="text-rose-400 text-xs p-2">
         <i class="fa-solid fa-trash"></i>
@@ -161,6 +198,8 @@ async function carregarDadosAdmin() {
 
 document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (!supabase) return;
+
   await supabase.from('alunos').insert([{
     nome: document.getElementById("add-nome").value,
     escola: document.getElementById("add-escola").value,
@@ -168,12 +207,14 @@ document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", asyn
     telefone: document.getElementById("add-telefone").value,
     status: 'Em Casa'
   }]);
+  
   alert("Aluno cadastrado!");
   document.getElementById("form-cadastrar-aluno").reset();
   carregarDadosAdmin();
 });
 
 async function deletarAluno(id) {
+  if (!supabase) return;
   if (confirm("Deseja apagar este aluno?")) {
     await supabase.from('alunos').delete().eq('id', id);
     carregarDadosAdmin();
