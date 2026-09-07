@@ -4,21 +4,23 @@
       color: #f1f5f9 !important;
     }
 
-    /* MODO CLARO (LIGHT MODE) */
+    /* MODO CLARO (CINZA CONFORTÁVEL) */
     html.light-mode, 
     html.light-mode body {
-      background-color: #f1f5f9 !important;
-      color: #0f172a !important;
+      background-color: #cbd5e1 !important; /* Cinza-médio suave para tirar o excesso de brilho */
+      color: #020617 !important;
     }
 
     /* CABEÇALHO E NAVEGAÇÃO */
     html.light-mode header,
     html.light-mode nav#bottom-bar {
-      background-color: #ffffff !important;
-      border-color: #cbd5e1 !important;
+      background-color: #e2e8f0 !important;
+      border-color: #94a3b8 !important;
     }
 
-    /* TEXTOS E TÍTULOS VISÍVEIS NO MODO CLARO */
+    /* TEXTO DO "BEM-VINDO" E DEMAIS TÍTULOS COM DESTAQUE PRETO ESCURO */
+    html.light-mode #login-section h2,
+    html.light-mode #login-section p,
     html.light-mode h1,
     html.light-mode h2,
     html.light-mode h3,
@@ -31,32 +33,32 @@
     html.light-mode .text-slate-300,
     html.light-mode .text-slate-400,
     html.light-mode .text-slate-500 {
-      color: #0f172a !important;
+      color: #020617 !important; /* Força tom preto puro para contraste total */
     }
 
-    /* CARDS E CAIXAS DE CONTEÚDO */
+    /* CARDS E PAINÉIS EM CINZA CLARO FOSCO (SEM O BRANCO CEGANTE) */
     html.light-mode .bg-slate-900,
     html.light-mode .bg-slate-800,
     html.light-mode .bg-slate-900\/80,
     html.light-mode .bg-slate-800\/80,
     html.light-mode .bg-slate-800\/90 {
-      background-color: #ffffff !important;
-      border-color: #cbd5e1 !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      background-color: #f1f5f9 !important; /* Cinza suave fosco */
+      border-color: #94a3b8 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
-    /* CAMPOS DE TEXTO E SELEÇÃO */
+    /* INPUTS E SELECTS */
     html.light-mode input,
     html.light-mode select {
-      background-color: #f8fafc !important;
-      border-color: #cbd5e1 !important;
-      color: #0f172a !important;
+      background-color: #ffffff !important;
+      border-color: #94a3b8 !important;
+      color: #020617 !important;
     }
 
-    /* ELEMENTOS INTERNOS */
+    /* ELEMENTOS INTERNOS DE DESTAQUE */
     html.light-mode .bg-slate-950,
     html.light-mode .bg-slate-900\/60 {
       background-color: #e2e8f0 !important;
       border-color: #cbd5e1 !important;
-      color: #0f172a !important;
+      color: #020617 !important;
     }
