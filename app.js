@@ -13,6 +13,7 @@ let pixChaveGlobal = "11999998888";
 let linkCartaoGlobal = "https://mpago.la/";
 let currentRole = null;
 let alunosCache = [];
+let modoRotaAtual = "IDA"; // 'IDA' ou 'VOLTA'
 let filtroTurnoAtual = "Todos";
 let filtroFinStatus = "Todos";
 let filtroFinAdminStatus = "Todos";
@@ -107,6 +108,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btn-entrar-pais-pin")?.addEventListener("click", validarLoginPinPais);
 
+  // BOTÕES ALTERNAR ROTA (IDA vs VOLTA)
+  document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
+  document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
+
   // ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
@@ -176,6 +181,23 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
+// ALTERNAR ENTRE ROTA DA IDA E ROTA DA VOLTA
+function alternarModoRota(modo) {
+  modoRotaAtual = modo;
+  const btnIda = document.getElementById("btn-rota-ida");
+  const btnVolta = document.getElementById("btn-rota-volta");
+
+  if (modo === "IDA") {
+    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+  } else {
+    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+  }
+
+  renderizarRotaRafa();
+}
+
 // VALIDAR PIN 4 DÍGITOS DOS PAIS
 function validarLoginPinPais() {
   const emailSelect = document.getElementById("select-email-pais")?.value;
@@ -203,7 +225,7 @@ function validarLoginPinPais() {
   }
 }
 
-// SUBMETER AUTO-CADASTRO DOS PAIS COM PIN
+// SUBMETER AUTO-CADASTRO DOS PAIS (SEM O HORÁRIO DE BUSCA)
 async function enviarAutoCadastroPais(e) {
   e.preventDefault();
   if (!supabaseClient) return;
@@ -218,8 +240,8 @@ async function enviarAutoCadastroPais(e) {
     nome: document.getElementById("auto-nome").value,
     turno: document.getElementById("auto-turno").value,
     whatsapp: document.getElementById("auto-wsp").value,
-    horario_busca: document.getElementById("auto-horario-busca").value,
     horario_escola: document.getElementById("auto-horario-escola").value,
+    horario_busca: "", // Fica em branco para a Tia Rafa preencher ao aprovar
     endereco_casa: document.getElementById("auto-endereco-casa").value,
     escola: document.getElementById("auto-escola").value,
     email_mae: document.getElementById("auto-email-mae").value,
@@ -230,6 +252,7 @@ async function enviarAutoCadastroPais(e) {
     status_pagamento: 'Pendente',
     vai_hoje: true,
     vai_turno1_hoje: false,
+    levado_hoje: false, // Flag de controle para a rota dinâmica da volta
     pendente_aprovacao: true
   };
 
@@ -240,13 +263,13 @@ async function enviarAutoCadastroPais(e) {
     return;
   }
 
-  alert("Cadastro enviado com sucesso! A Tia Rafa irá revisar e aprovar o acesso em breve.");
+  alert("Cadastro enviado com sucesso! A Tia Rafa irá definir o horário da busca e aprovar o acesso.");
   document.getElementById("form-auto-cadastro-pais").reset();
   document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
   carregarDadosPais();
 }
 
-// RENDERIZAR CARDS DE APROVAÇÃO PENDENTE (RAFA E ADMIN)
+// RENDERIZAR CARDS DE APROVAÇÃO PENDENTE (RAFA E ADMIN DEFINEM O HORÁRIO DE BUSCA)
 function renderizarPendentesAprovacao() {
   const pendentes = alunosCache.filter(a => a.pendente_aprovacao === true);
 
@@ -273,27 +296,34 @@ function renderizarPendentesAprovacao() {
         <div>
           <h4 class="text-xs font-bold text-white">${a.nome}</h4>
           <p class="text-[10px] text-amber-300 font-semibold">${a.escola || '-'} • ${a.turno}</p>
-          <p class="text-[10px] text-slate-400 mt-0.5">Mãe/Pai: ${a.email_mae} (PIN: ${a.pin_pais || '1234'})</p>
+          <p class="text-[10px] text-slate-300 font-medium mt-0.5">🏫 Entrada na Escola: ${a.horario_escola || 'Não inf.'}</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">Responsável: ${a.email_mae} (${a.whatsapp || 'S/ Whats'})</p>
           <p class="text-[10px] text-slate-400">Endereço: ${a.endereco_casa || '-'}</p>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+      <div class="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
         <div>
-          <label class="text-[9px] text-slate-400 block font-bold">Mensalidade (R$)</label>
-          <input type="number" id="val-aprov-${a.id}" value="${a.valor || 180}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+          <label class="text-[10px] text-amber-400 block font-bold">⏰ Definir Horário que vai passar pra buscar:</label>
+          <input type="text" id="hor-busca-aprov-${a.id}" placeholder="Ex: 06:40" class="w-full bg-slate-900 border border-amber-500/50 rounded p-1.5 text-xs text-white font-bold">
         </div>
-        <div>
-          <label class="text-[9px] text-slate-400 block font-bold">Vencimento (Dia)</label>
-          <input type="number" id="venc-aprov-${a.id}" value="${a.vencimento || 10}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9px] text-slate-400 block font-bold">Mensalidade (R$)</label>
+            <input type="number" id="val-aprov-${a.id}" value="${a.valor || 180}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+          </div>
+          <div>
+            <label class="text-[9px] text-slate-400 block font-bold">Vencimento (Dia)</label>
+            <input type="number" id="venc-aprov-${a.id}" value="${a.vencimento || 10}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+          </div>
         </div>
       </div>
 
       <div class="flex gap-2">
-        <button onclick="aprovarCadastroAluno('${a.id}')" class="flex-1 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
-          ✓ Aprovar
+        <button onclick="aprovarCadastroAluno('${a.id}')" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+          ✓ Aprovar & Definir Horário
         </button>
-        <button onclick="deletarAlunoAdmin('${a.id}')" class="px-3 py-1.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg hover:bg-rose-600 hover:text-white transition-all">
+        <button onclick="deletarAlunoAdmin('${a.id}')" class="px-3 py-2 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg hover:bg-rose-600 hover:text-white transition-all">
           ✕ Recusar
         </button>
       </div>
@@ -310,8 +340,15 @@ function renderizarPendentesAprovacao() {
 async function aprovarCadastroAluno(id) {
   if (!supabaseClient) return;
 
+  const inputBusca = document.getElementById(`hor-busca-aprov-${id}`);
   const inputVal = document.getElementById(`val-aprov-${id}`);
   const inputVenc = document.getElementById(`venc-aprov-${id}`);
+
+  const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
+  if (!horarioBusca) {
+    alert("Por favor, informe o horário de busca da criança antes de aprovar!");
+    return;
+  }
 
   const val = inputVal ? parseFloat(inputVal.value) : 180;
   const venc = inputVenc ? parseInt(inputVenc.value) : 10;
@@ -320,6 +357,7 @@ async function aprovarCadastroAluno(id) {
     .from('alunos')
     .update({ 
       pendente_aprovacao: false,
+      horario_busca: horarioBusca,
       valor: val,
       vencimento: venc
     })
@@ -330,9 +368,106 @@ async function aprovarCadastroAluno(id) {
     return;
   }
 
-  alert("Cadastro aprovado com sucesso!");
+  alert("Cadastro aprovado e horário da rota definido!");
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
+}
+
+// RENDERIZAR ROTA DINÂMICA DA TIA RAFA (ORDENADA POR HORÁRIO DE BUSCA)
+function renderizarRotaRafa() {
+  const container = document.getElementById("lista-chamada-rafa-cards");
+  if (!container) return;
+
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+  let filtrados = aprovados;
+
+  // 1. FILTRAR POR ROTA DE IDA vs VOLTA
+  if (modoRotaAtual === "VOLTA") {
+    // Rota da Volta traz apenas quem foi LEVADO para a escola no dia ou marcado como presente
+    filtrados = aprovados.filter(a => a.levado_hoje === true || a.status === 'Na Escola' || a.status === 'Na Van');
+  }
+
+  // 2. FILTRAR POR TURNO
+  if (filtroTurnoAtual !== "Todos") {
+    filtrados = filtrados.filter(a => {
+      if (filtroTurnoAtual === 'Manhã (07h às 11h)' && a.vai_turno1_hoje) return true;
+      return a.turno === filtroTurnoAtual;
+    });
+  }
+
+  // 3. ORDENAR DINAMICAMENTE POR HORÁRIO DE BUSCA (Ex: 06:20 -> 06:40 -> 07:10)
+  filtrados.sort((a, b) => {
+    const hA = a.horario_busca || '99:99';
+    const hB = b.horario_busca || '99:99';
+    return hA.localeCompare(hB);
+  });
+
+  if (filtrados.length === 0) {
+    container.innerHTML = `
+      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2">
+        <i class="fa-solid fa-van-shuttle text-2xl text-amber-400"></i>
+        <p class="text-xs font-bold text-white">Nenhum passageiro nesta rota no momento.</p>
+        <p class="text-[10px] text-slate-400">${modoRotaAtual === 'VOLTA' ? 'Assim que você marcar as crianças como "Na Van" ou "Na Escola" no turno da ida, elas aparecerão na rota da volta automaticamente.' : 'Selecione outro filtro de turno.'}</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtrados.map(aluno => {
+    const st = aluno.status || 'Em Casa';
+    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
+    const vaiTurno1 = aluno.vai_turno1_hoje;
+
+    return `
+      <div class="bg-slate-800/80 border ${vaiTurno1 ? 'border-amber-400 bg-amber-500/5' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 bg-amber-500 text-slate-950 font-black text-xs rounded-lg">${aluno.horario_busca || 'S/ hor.'}</span>
+              <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">${aluno.escola || ''} (${aluno.turno || 'Manhã'}) • Entrada: ${aluno.horario_escola || '-'}</p>
+            <p class="text-[10px] text-slate-300 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Endereço não informado'}</p>
+          </div>
+          ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg shrink-0"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Em Casa')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Em Casa' ? 'bg-slate-600 text-white' : 'bg-slate-900/60 text-slate-400'}">🏡 Casa</button>
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Van')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Van' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🚌 Na Van</button>
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Escola')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Escola' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🏫 Na Escola</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function atualizarStatusRafa(id, st) {
+  if (!supabaseClient) return;
+
+  let updateData = { status: st };
+  
+  // Se marcou que está Na Van ou Na Escola, grava que a criança foi levada hoje
+  if (st === 'Na Van' || st === 'Na Escola') {
+    updateData.levado_hoje = true;
+  }
+
+  await supabaseClient.from('alunos').update(updateData).eq('id', id);
+  carregarDadosRafa();
+}
+
+async function resetarStatusDoDia() {
+  if (!supabaseClient) return;
+  if (confirm("Deseja resetar o status de todos os alunos para 'Em Casa' e limpar a rota do dia?")) {
+    await supabaseClient.from('alunos').update({
+      status: 'Em Casa',
+      levado_hoje: false,
+      vai_turno1_hoje: false
+    }).neq('id', '0');
+
+    alert("Dia resetado com sucesso!");
+    carregarDadosRafa();
+  }
 }
 
 // TRANSMISSÃO GPS
@@ -593,6 +728,7 @@ async function carregarDadosAdmin() {
           <div>
             <h4 class="text-xs font-bold text-white">${a.nome}</h4>
             <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã (07h às 11h)'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
+            <p class="text-[10px] text-amber-400 font-medium">📍 Busca Casa: ${a.horario_busca || '-'} | 🏫 Entrada Escola: ${a.horario_escola || '-'}</p>
           </div>
           <div class="flex gap-1 shrink-0">
             <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
@@ -787,12 +923,14 @@ function exportarRelatorioFinanceiroCSV() {
   }
 
   let csvContent = "\uFEFF";
-  csvContent += "Nome do Passageiro;Escola;Turno;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;Email Responsavel;WhatsApp;PIN Pais\n";
+  csvContent += "Nome do Passageiro;Escola;Turno;Horario Busca;Horario Entrada;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;Email Responsavel;WhatsApp;PIN Pais\n";
 
   aprovados.forEach(a => {
     const nome = (a.nome || "-").replace(/;/g, ",");
     const escola = (a.escola || "-").replace(/;/g, ",");
     const turno = a.turno || "Manhã";
+    const hBusca = a.horario_busca || "-";
+    const hEscola = a.horario_escola || "-";
     const valor = parseFloat(a.valor || 180).toFixed(2);
     const vencimento = a.vencimento || 10;
     const statusPag = a.status_pagamento || "Pendente";
@@ -801,7 +939,7 @@ function exportarRelatorioFinanceiroCSV() {
     const whats = a.whatsapp || "-";
     const pin = a.pin_pais || "1234";
 
-    csvContent += `${nome};${escola};${turno};R$ ${valor};Dia ${vencimento};${statusPag};${formaPag};${email};${whats};${pin}\n`;
+    csvContent += `${nome};${escola};${turno};${hBusca};${hEscola};R$ ${valor};Dia ${vencimento};${statusPag};${formaPag};${email};${whats};${pin}\n`;
   });
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -986,6 +1124,7 @@ function renderizarPaisFilho(email) {
         <div>
           <h3 class="text-base font-extrabold text-white">${filho.nome}</h3>
           <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-graduation-cap"></i> ${filho.escola || '-'} (${filho.turno || 'Manhã'})</p>
+          <p class="text-[11px] text-amber-400 font-medium mt-1"><i class="fa-regular fa-clock"></i> Horário de Busca: ${filho.horario_busca || 'A definir pela Tia Rafa'} | Entrada: ${filho.horario_escola || '-'}</p>
         </div>
         <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor} flex items-center gap-1.5">
           <i class="fa-solid ${icon}"></i> ${st}
@@ -1087,47 +1226,6 @@ function aplicarFiltroTurno(turno) {
   renderizarRotaRafa();
 }
 
-function renderizarRotaRafa() {
-  const container = document.getElementById("lista-chamada-rafa-cards");
-  if (!container) return;
-
-  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
-  let filtrados = aprovados;
-
-  if (filtroTurnoAtual !== "Todos") {
-    filtrados = aprovados.filter(a => {
-      if (filtroTurnoAtual === 'Manhã (07h às 11h)' && a.vai_turno1_hoje) return true;
-      return a.turno === filtroTurnoAtual;
-    });
-  }
-
-  container.innerHTML = filtrados.map(aluno => {
-    const st = aluno.status || 'Em Casa';
-    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
-    const vaiTurno1 = aluno.vai_turno1_hoje;
-
-    return `
-      <div class="bg-slate-800/80 border ${vaiTurno1 ? 'border-amber-400 bg-amber-500/5' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="flex items-center gap-2">
-              <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
-              ${vaiTurno1 ? '<span class="text-[9px] bg-amber-500 text-slate-950 font-extrabold px-1.5 py-0.5 rounded">⚡ Vai às 07h Hoje</span>' : ''}
-            </div>
-            <p class="text-xs text-slate-400">${aluno.escola || ''} • ${aluno.turno || 'Manhã (07h às 11h)'}</p>
-          </div>
-          ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
-        </div>
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Em Casa')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Em Casa' ? 'bg-slate-600 text-white' : 'bg-slate-900/60 text-slate-400'}">🏡 Casa</button>
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Van')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Van' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🚌 Van</button>
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Escola')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Escola' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🏫 Escola</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
 function aplicarFiltroFin(status) {
   filtroFinStatus = status;
   document.getElementById("btn-fin-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
@@ -1215,12 +1313,6 @@ function renderizarFinanceiroRafa() {
   }).join('');
 }
 
-async function atualizarStatusRafa(id, st) {
-  if (!supabaseClient) return;
-  await supabaseClient.from('alunos').update({ status: st }).eq('id', id);
-  carregarDadosRafa();
-}
-
 async function darBaixaRafa(id, stP, forma) {
   if (!supabaseClient) return;
   await supabaseClient.from('alunos').update({ status_pagamento: stP, forma_pagamento: forma }).eq('id', id);
@@ -1243,7 +1335,8 @@ async function encerrarMesFinanceiro() {
       await supabaseClient.from('alunos').update({
         status_pagamento: 'Pendente',
         forma_pagamento: null,
-        vai_turno1_hoje: false
+        vai_turno1_hoje: false,
+        levado_hoje: false
       }).eq('id', a.id);
     }
 
@@ -1272,6 +1365,7 @@ async function cadastrarAlunoAdmin(e) {
     status_pagamento: 'Pendente',
     vai_hoje: true,
     vai_turno1_hoje: false,
+    levado_hoje: false,
     pendente_aprovacao: false
   };
 
