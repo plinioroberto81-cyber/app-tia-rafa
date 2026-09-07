@@ -236,12 +236,14 @@ async function enviarAutoCadastroPais(e) {
     return;
   }
 
+  const turnoSelecionado = document.getElementById("auto-turno").value;
+
   const novoAluno = {
     nome: document.getElementById("auto-nome").value,
-    turno: document.getElementById("auto-turno").value,
+    turno: turnoSelecionado,
     whatsapp: document.getElementById("auto-wsp").value,
-    horario_escola: document.getElementById("auto-horario-escola").value,
-    horario_busca: "",
+    horario_escola: turnoSelecionado, // O próprio turno define o horário escolar
+    horario_busca: "", // A Tia Rafa preenche o horário da busca ao aprovar
     endereco_casa: document.getElementById("auto-endereco-casa").value,
     escola: document.getElementById("auto-escola").value,
     email_mae: document.getElementById("auto-email-mae").value,
@@ -270,7 +272,6 @@ async function enviarAutoCadastroPais(e) {
   document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
   carregarDadosPais();
 }
-
 // APROVAÇÃO SEGURA DE CADASTROS PENDENTES
 async function aprovarCadastroAluno(id) {
   if (!supabaseClient) {
