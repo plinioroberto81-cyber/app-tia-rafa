@@ -165,10 +165,19 @@
     <!-- DASHBOARD PAIS -->
     <section id="dashboard-pais" class="hidden space-y-4">
       <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Selecione seu cadastro</label>
+        <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Acesso dos Responsáveis</label>
+        
         <select id="select-email-pais" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400">
           <option value="">-- Selecione seu E-mail --</option>
         </select>
+
+        <div id="box-pin-pais" class="space-y-2 hidden">
+          <input type="password" id="input-pin-pais" maxlength="4" placeholder="Digite seu PIN de 4 dígitos" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-center tracking-widest text-white focus:outline-none focus:border-amber-400 font-mono text-base">
+          <button id="btn-entrar-pais-pin" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
+            Acessar Painel do Filho(a)
+          </button>
+        </div>
+
         <button id="btn-abrir-auto-cadastro" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs rounded-xl border border-amber-500/30 transition-all flex items-center justify-center gap-2">
           <i class="fa-solid fa-user-plus"></i> Novo por aqui? Cadastrar Passageiro
         </button>
@@ -196,8 +205,12 @@
           </div>
           <input type="text" id="auto-endereco-casa" placeholder="Endereço Residencial Completo" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
           <input type="text" id="auto-escola" placeholder="Nome da Escola" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-          <input type="email" id="auto-email-mae" placeholder="Seu E-mail (Para Login)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
           
+          <div class="grid grid-cols-2 gap-2">
+            <input type="email" id="auto-email-mae" placeholder="E-mail do Responsável" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <input type="password" id="auto-pin" maxlength="4" placeholder="Crie um PIN (4 dígitos)" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
+          </div>
+
           <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
             Enviar Cadastro para Aprovação
           </button>
@@ -361,7 +374,10 @@
             </div>
             <input type="text" id="add-endereco-casa" placeholder="Endereço Residencial" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
             <input type="text" id="add-escola" placeholder="Nome da Escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-            <input type="email" id="add-email-mae" placeholder="E-mail da Mãe/Pai (Login dos Pais)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="email" id="add-email-mae" placeholder="E-mail do Responsável" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+              <input type="password" id="add-pin" maxlength="4" placeholder="PIN Pais (ex: 1234)" value="1234" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
+            </div>
             <div class="grid grid-cols-2 gap-2">
               <input type="number" id="add-valor" placeholder="Valor Mensalidade (R$)" value="180" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
               <input type="number" id="add-vencimento" placeholder="Dia Vencimento" value="10" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
@@ -507,7 +523,10 @@
         </div>
         <input type="text" id="edit-endereco-casa" placeholder="Endereço Casa" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
         <input type="text" id="edit-escola" placeholder="Escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-        <input type="email" id="edit-email-mae" placeholder="E-mail da Mãe/Pai" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+        <div class="grid grid-cols-2 gap-2">
+          <input type="email" id="edit-email-mae" placeholder="E-mail da Mãe/Pai" required class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+          <input type="text" id="edit-pin" maxlength="4" placeholder="PIN Pais" required class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs font-mono text-center text-white">
+        </div>
         <div class="grid grid-cols-2 gap-2">
           <input type="number" id="edit-valor" placeholder="Valor Mensalidade" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
           <input type="number" id="edit-vencimento" placeholder="Dia Vencimento" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
