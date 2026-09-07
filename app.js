@@ -228,25 +228,44 @@ function validarLoginPinPais() {
 // SUBMETER AUTO-CADASTRO DOS PAIS
 async function enviarAutoCadastroPais(e) {
   e.preventDefault();
-  if (!supabaseClient) return;
 
-  const pin = document.getElementById("auto-pin").value;
-  if (pin.length !== 4 || isNaN(pin)) {
-    alert("O PIN deve conter exatamente 4 números.");
+  if (!supabaseClient) {
+    alert("Erro: O cliente do Supabase não foi inicializado corretamente.");
     return;
   }
 
-  const turnoSelecionado = document.getElementById("auto-turno").value;
+  // Captura dos elementos com checagem de existência
+  const nomeEl = document.getElementById("auto-nome");
+  const turnoEl = document.getElementById("auto-turno");
+  const wspEl = document.getElementById("auto-wsp");
+  const endEl = document.getElementById("auto-endereco-casa");
+  const escolaEl = document.getElementById("auto-escola");
+  const emailEl = document.getElementById("auto-email-mae");
+  const pinEl = document.getElementById("auto-pin");
 
+  const pin = pinEl ? pinEl.value.trim() : "";
+  if (pin.length !== 4 || isNaN(pin)) {
+    alert("O PIN deve conter exatamente 4 números (ex: 1234).");
+    if (pinEl) pinEl.focus();
+    return;
+  }
+
+  const turnoSelecionado = turnoEl ? turnoEl.value : "";
+  if (!turnoSelecionado) {
+    alert("Por favor, selecione o turno escolar.");
+    return;
+  }
+
+  // Objeto estruturado para envio ao banco
   const novoAluno = {
-    nome: document.getElementById("auto-nome").value,
+    nome: nomeEl ? nomeEl.value.trim() : "",
     turno: turnoSelecionado,
-    whatsapp: document.getElementById("auto-wsp").value,
-    horario_escola: turnoSelecionado, // O próprio turno define o horário escolar
-    horario_busca: "", // A Tia Rafa preenche o horário da busca ao aprovar
-    endereco_casa: document.getElementById("auto-endereco-casa").value,
-    escola: document.getElementById("auto-escola").value,
-    email_mae: document.getElementById("auto-email-mae").value,
+    whatsapp: wspEl ? wspEl.value.trim() : "",
+    horario_escola: turnoSelecionado,
+    horario_busca: "", // A Tia Rafa preenche o horário exato da van ao aprovar
+    endereco_casa: endEl ? endEl.value.trim() : "",
+    escola: escolaEl ? escolaEl.value.trim() : "",
+    email_mae: emailEl ? emailEl.value.trim().toLowerCase() : "",
     pin_pais: pin,
     valor: 180,
     vencimento: 10,
@@ -260,17 +279,30 @@ async function enviarAutoCadastroPais(e) {
     pendente_aprovacao: true
   };
 
-  const { error } = await supabaseClient.from('alunos').insert([novoAluno]);
+  try {
+    const { data, error } = await supabaseClient
+      .from('alunos')
+      .insert([novoAluno])
+      .select();
 
-  if (error) {
-    alert("Erro ao enviar cadastro: " + error.message);
-    return;
+    if (error) {
+      console.error("Erro Supabase:", error);
+      alert("Erro ao salvar cadastro no banco: " + error.message);
+      return;
+    }
+
+    alert("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa irá analisar, definir o horário de busca e aprovar o acesso do seu filho(a).");
+    
+    document.getElementById("form-auto-cadastro-pais")?.reset();
+    document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
+    
+    // Atualiza a lista em segundo plano
+    if (typeof carregarDadosPais === "function") carregarDadosPais();
+
+  } catch (err) {
+    console.error("Exceção não tratada:", err);
+    alert("Falha de rede ou erro inesperado ao conectar ao banco. Tente novamente.");
   }
-
-  alert("Cadastro enviado com sucesso! A Tia Rafa irá definir o horário da busca e aprovar o acesso.");
-  document.getElementById("form-auto-cadastro-pais").reset();
-  document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
-  carregarDadosPais();
 }
 // APROVAÇÃO SEGURA DE CADASTROS PENDENTES
 async function aprovarCadastroAluno(id) {
