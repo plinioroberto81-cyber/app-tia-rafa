@@ -1,5 +1,10 @@
-<style>
-    /* REGRAS EXCLUSIVAS PARA O MODO CLARO (NÃO AFETAM O MODO ESCURO) */
+/* 1. MODO ESCURO PADRÃO (FAZ O FUNDO VOLTAR A FICAR ESCURO) */
+    body {
+      background-color: #020617 !important; /* Azul-escuro profundo (slate-950) */
+      color: #f1f5f9 !important;
+    }
+
+    /* 2. MODO CLARO (SÓ ATIVA QUANDO CLICAR NO BOTÃO) */
     html.light-mode body {
       background-color: #cbd5e1 !important; /* Fundo cinza suave */
       color: #020617 !important;
@@ -11,7 +16,7 @@
       border-color: #94a3b8 !important;
     }
 
-    /* FORÇA TEXTO PRETO NO MODO CLARO */
+    /* TEXTO DO BEM-VINDO E TÍTULOS NO MODO CLARO */
     html.light-mode #login-section h2,
     html.light-mode #login-section p,
     html.light-mode h1,
@@ -26,10 +31,10 @@
     html.light-mode .text-slate-300,
     html.light-mode .text-slate-400,
     html.light-mode .text-slate-500 {
-      color: #020617 !important;
+      color: #020617 !important; /* Força cor preta totalmente legível no claro */
     }
 
-    /* CARDS CLAROS */
+    /* CARDS E CAIXAS NO MODO CLARO */
     html.light-mode .bg-slate-900,
     html.light-mode .bg-slate-800,
     html.light-mode .bg-slate-900\/80,
@@ -39,7 +44,7 @@
       border-color: #94a3b8 !important;
     }
 
-    /* INPUTS E SELECTS */
+    /* INPUTS E SELECTS NO MODO CLARO */
     html.light-mode input,
     html.light-mode select {
       background-color: #ffffff !important;
@@ -47,11 +52,10 @@
       color: #020617 !important;
     }
 
-    /* ELEMENTOS INTERNOS */
+    /* CAIXAS INTERNAS NO MODO CLARO */
     html.light-mode .bg-slate-950,
     html.light-mode .bg-slate-900\/60 {
       background-color: #e2e8f0 !important;
       border-color: #cbd5e1 !important;
       color: #020617 !important;
     }
-  </style>
