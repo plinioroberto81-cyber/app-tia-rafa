@@ -125,13 +125,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
-
-// TRANSMISSÃO GPS COM TRATAMENTO DE ERROS DO SUPABASE
+// TRANSMISSÃO GPS
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
     if ("geolocation" in navigator) {
-      btn.innerHTML = "🟡 Enviando ao Banco...";
+      if (btn) btn.innerHTML = "🟡 Enviando ao Banco...";
       
       gpsWatchId = navigator.geolocation.watchPosition(
         async (pos) => {
@@ -148,8 +147,10 @@ function alternarTransmissaoGps() {
 
             if (error) {
               console.error("Erro ao gravar GPS no Supabase:", error);
-              btn.innerHTML = "🔴 Erro de Permissão no Banco";
-              btn.className = "px-3 py-1 bg-rose-600 text-white font-bold text-[11px] rounded-lg";
+              if (btn) {
+                btn.innerHTML = "🔴 Erro de Permissão no Banco";
+                btn.className = "px-3 py-1 bg-rose-600 text-white font-bold text-[11px] rounded-lg";
+              }
               return;
             }
           }
@@ -161,9 +162,11 @@ function alternarTransmissaoGps() {
           }
         },
         (err) => {
-          alert("Aviso: Ative a localização (GPS) do seu celular.");
-          btn.innerHTML = "⚪ GPS Desligado";
-          btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
+          console.warn("Erro GPS:", err);
+          if (btn) {
+            btn.innerHTML = "⚪ GPS Desligado";
+            btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
+          }
           isGpsTransmitting = false;
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -181,7 +184,7 @@ function alternarTransmissaoGps() {
   }
 }
 
-// BUSCAR GPS NO PAINEL ADMIN (MARCADOR PERSONALIZADO ZAFIRA)
+// BUSCAR GPS NO PAINEL ADMIN
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -190,70 +193,67 @@ async function carregarGpsAdmin() {
   
   if (!containerMapa) return;
 
-  // Busca a última posição registrada no banco de dados
-  const { data } = await supabaseClient
-    .from('alertas')
-    .select('*')
-    .eq('tipo', 'GPS_VAN')
-    .order('id', { ascending: false })
-    .limit(1);
+  try {
+    const { data } = await supabaseClient
+      .from('alertas')
+      .select('*')
+      .eq('tipo', 'GPS_VAN')
+      .order('id', { ascending: false })
+      .limit(1);
 
-  // COORDENADAS PADRÃO: Campo Alegre / Cabuçu - Nova Iguaçu (RJ)
-  let lat = -22.7681; 
-  let lng = -43.5591;
-  let temSinal = false;
+    let lat = -22.7681; 
+    let lng = -43.5591;
+    let temSinal = false;
 
-  if (data && data.length > 0 && data[0].mensagem) {
-    const coords = data[0].mensagem.split(',');
-    if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-      lat = parseFloat(coords[0]);
-      lng = parseFloat(coords[1]);
-      temSinal = true;
+    if (data && data.length > 0 && data[0].mensagem) {
+      const coords = data[0].mensagem.split(',');
+      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        lat = parseFloat(coords[0]);
+        lng = parseFloat(coords[1]);
+        temSinal = true;
+      }
     }
-  }
 
-  if (statusTxt) {
-    statusTxt.innerText = temSinal 
-      ? "🟢 Sinal ao Vivo Detectado (Em Movimento)" 
-      : "⚪ Van Offline (Exibindo Campo Alegre / Cabuçu)";
-  }
-
-  // ÍCONE PERSONALIZADO DA ZAFIRA DA TIA RAFA PARA O MAPA
-  const iconeZafiraGps = L.divIcon({
-    className: 'custom-van-marker',
-    html: `
-      <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
-        <img src="https://i.ibb.co/8DjK8D2v/image.png" style="width:100%; height:100%; object-fit:contain;">
-      </div>
-    `,
-    iconSize: [50, 50],
-    iconAnchor: [25, 25]
-  });
-
-  // CRIA OU ATUALIZA O MAPA NO PAINEL ADMIN
-  if (!mapAdmin && window.L) {
-    mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
-    
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap'
-    }).addTo(mapAdmin);
-
-    markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin).bindPopup("🚐 Zafira Tia Rafa").openPopup();
-  } else if (mapAdmin && markerVanAdmin) {
-    markerVanAdmin.setLatLng([lat, lng]);
-    mapAdmin.setView([lat, lng]);
-  }
-
-  // REAJUSTA AS DIMENSÕES DO MAPA
-  setTimeout(() => {
-    if (mapAdmin) {
-      mapAdmin.invalidateSize();
+    if (statusTxt) {
+      statusTxt.innerText = temSinal 
+        ? "🟢 Sinal ao Vivo Detectado (Em Movimento)" 
+        : "⚪ Van Offline (Exibindo Campo Alegre / Cabuçu)";
     }
-  }, 300);
+
+    const iconeZafiraGps = L.divIcon({
+      className: 'custom-van-marker',
+      html: `
+        <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
+          <img src="https://i.ibb.co/8DjK8D2v/image.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
+        </div>
+      `,
+      iconSize: [50, 50],
+      iconAnchor: [25, 25]
+    });
+
+    if (!mapAdmin && window.L) {
+      mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+      }).addTo(mapAdmin);
+
+      markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin).bindPopup("🚐 Zafira Tia Rafa").openPopup();
+    } else if (mapAdmin && markerVanAdmin) {
+      markerVanAdmin.setLatLng([lat, lng]);
+      mapAdmin.setView([lat, lng]);
+    }
+
+    setTimeout(() => {
+      if (mapAdmin) mapAdmin.invalidateSize();
+    }, 300);
+  } catch (e) {
+    console.error("Erro ao carregar mapa:", e);
+  }
 }
 
-// EMERGÊNCIA
+// SIRENE DE EMERGÊNCIA
 function tocarSomSirene() {
   if (audioContext) return;
   try {
@@ -310,9 +310,23 @@ async function dispararEmergenciaRafa() {
   });
 }
 
+// CHECAGEM DE EMERGÊNCIA RESTRITA AO ADMIN
 async function verificarEmergenciaAdmin() {
   if (!supabaseClient) return;
-  const { data } = await supabaseClient.from('alertas').select('*').eq('tipo', 'EMERGENCIA_ADMIN').eq('ativo', true).order('id', { ascending: false }).limit(1);
+
+  // Se NÃO for o Admin logado, cancela a sirene e oculta modais
+  if (currentRole !== "admin") {
+    pararSomSirene();
+    return;
+  }
+
+  const { data } = await supabaseClient
+    .from('alertas')
+    .select('*')
+    .eq('tipo', 'EMERGENCIA_ADMIN')
+    .eq('ativo', true)
+    .order('id', { ascending: false })
+    .limit(1);
 
   const modal = document.getElementById("modal-emergencia-admin");
   const detalhes = document.getElementById("detalhes-emergencia-admin");
@@ -340,7 +354,7 @@ async function atenderEmergenciaAdmin() {
   alert("Emergência desativada.");
 }
 
-// SUPER ADMIN - GESTÃO TOTAL DE ALUNOS
+// ADMIN GESTÃO
 async function carregarDadosAdmin() {
   if (!supabaseClient) return;
 
@@ -457,7 +471,7 @@ function salvarConfigsGlobais() {
   alert("Configurações salvas para esta sessão!");
 }
 
-// NAVEGAÇÕES E INTERFACE
+// NAVEGAÇÃO E ENTRADA NOS PERFIS
 function inicializarTema() {
   const temaSalvo = localStorage.getItem("theme");
   const themeIcon = document.getElementById("theme-icon");
@@ -504,6 +518,10 @@ function voltarHome() {
   bottomBar?.classList.add("hidden");
   btnTopBack?.classList.add("hidden");
   loginSection?.classList.remove("hidden");
+  
+  // Desliga GPS ao sair da tela
+  if (isGpsTransmitting) alternarTransmissaoGps();
+  pararSomSirene();
   resetLogin();
 }
 
@@ -522,15 +540,18 @@ function entrarPerfil(role) {
   } else if (role === "rafa") {
     document.getElementById("dashboard-rafa")?.classList.remove("hidden");
     carregarDadosRafa();
+    
+    // ATIVA O GPS AUTOMATICAMENTE AO ENTRAR COMO TIA RAFA
+    if (!isGpsTransmitting) {
+      alternarTransmissaoGps();
+    }
   } else if (role === "admin") {
     document.getElementById("dashboard-admin")?.classList.remove("hidden");
     carregarDadosAdmin();
 
     setTimeout(() => {
       carregarGpsAdmin();
-      if (mapAdmin) {
-        mapAdmin.invalidateSize();
-      }
+      if (mapAdmin) mapAdmin.invalidateSize();
     }, 400);
   }
 }
