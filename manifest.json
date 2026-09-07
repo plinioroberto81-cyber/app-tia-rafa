@@ -1,17 +1,23 @@
 {
-  "name": "App Tia Rafa",
   "short_name": "Tia Rafa",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#f59e0b",
-  "description": "Aplicativo de Transporte Escolar Tia Rafa",
+  "name": "Tia Rafa - Transporte Escolar",
   "icons": [
     {
-      "src": "zafira.jpg",
-      "sizes": "192x192 512x512",
-      "type": "image/jpeg",
+      "src": "https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png",
+      "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "start_url": "./index.html",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait"
 }
