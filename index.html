@@ -23,7 +23,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    /* SOBREPOSIÇÃO EXCLUSIVA PARA O MODO CLARO */
+    /* MODO CLARO */
     html.light-mode {
       background-color: #cbd5e1 !important;
     }
@@ -39,7 +39,6 @@
       border-color: #94a3b8 !important;
     }
 
-    /* CORREÇÃO DE TEXTOS NO MODO CLARO */
     html.light-mode #login-section h2,
     html.light-mode #login-section p,
     html.light-mode h1,
@@ -57,7 +56,6 @@
       color: #020617 !important;
     }
 
-    /* CARDS EM CINZA FOSCO NO MODO CLARO */
     html.light-mode .bg-slate-900,
     html.light-mode .bg-slate-800,
     html.light-mode .bg-slate-900\/80,
@@ -67,7 +65,6 @@
       border-color: #94a3b8 !important;
     }
 
-    /* INPUTS E SELECTS */
     html.light-mode input,
     html.light-mode select {
       background-color: #ffffff !important;
@@ -75,7 +72,6 @@
       color: #020617 !important;
     }
 
-    /* CAIXAS INTERNAS */
     html.light-mode .bg-slate-950,
     html.light-mode .bg-slate-900\/60 {
       background-color: #e2e8f0 !important;
@@ -90,7 +86,6 @@
   <header class="w-full bg-slate-900 border-b border-slate-800 relative z-40 py-3 px-4 shadow-md">
     <div class="max-w-md mx-auto flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <!-- FOTO DA ZAFIRA AMPLIA NO CABEÇALHO (w-14 h-14) -->
         <div class="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400/60 bg-slate-950 flex items-center justify-center shrink-0 shadow-md">
           <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" alt="Zafira Tia Rafa" class="w-full h-full object-contain p-0.5" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
         </div>
@@ -124,8 +119,6 @@
 
     <!-- SEÇÃO DE LOGIN -->
     <section id="login-section" class="space-y-4 py-4">
-      
-      <!-- CARD DE BOAS-VINDAS COM A ZAFIRA EM DESTAQUE -->
       <div class="bg-gradient-to-b from-slate-900 to-slate-900/90 border border-slate-800 rounded-3xl p-5 text-center space-y-3 shadow-xl relative overflow-hidden">
         <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
         <div class="w-28 h-28 mx-auto relative flex items-center justify-center">
@@ -140,7 +133,6 @@
 
       <p class="text-xs text-slate-400 text-center font-medium">Selecione o seu perfil para acessar o painel:</p>
 
-      <!-- BOTÕES DE SELEÇÃO DE PERFIL -->
       <div id="main-buttons" class="space-y-3">
         <button id="btn-pais" class="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/10 flex items-center justify-between group transition-all">
           <span class="flex items-center gap-3">
@@ -167,7 +159,6 @@
         </button>
       </div>
 
-      <!-- FORMULÁRIO DE SENHA -->
       <div id="auth-form" class="hidden bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
         <div class="flex items-center justify-between">
           <h3 id="auth-title" class="text-sm font-bold text-white">Digite a Senha</h3>
@@ -201,7 +192,6 @@
         </button>
       </div>
 
-      <!-- FORMULÁRIO DE AUTO-CADASTRO DOS PAIS -->
       <div id="form-auto-cadastro-container" class="hidden bg-slate-900 border border-amber-500/40 p-4 rounded-2xl space-y-3 shadow-xl">
         <div class="flex justify-between items-center">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Cadastro de Novo Aluno</h3>
@@ -237,7 +227,7 @@
       <div id="conteudo-filho-pais" class="space-y-4 hidden"></div>
     </section>
 
-    <!-- DASHBOARD TIA RAFA -->
+    <!-- DASHBOARD TIA RAFA (COM TODAS AS FUNCIONALIDADES DO ADMIN) -->
     <section id="dashboard-rafa" class="hidden space-y-4">
       <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-3.5 rounded-2xl">
         <span class="text-xs font-bold text-white">Transmissão GPS</span>
@@ -246,7 +236,7 @@
         </button>
       </div>
 
-      <!-- SEÇÃO DE APROVAÇÕES PENDENTES (RAFA) -->
+      <!-- SEÇÃO DE APROVAÇÕES PENDENTES -->
       <div id="container-pendentes-rafa" class="hidden bg-amber-500/10 border border-amber-500/40 p-4 rounded-2xl space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -257,23 +247,27 @@
         <div id="lista-pendentes-rafa" class="space-y-2.5"></div>
       </div>
 
+      <!-- ABAS DE NAVEGAÇÃO DA TIA RAFA -->
       <div class="flex border-b border-slate-800">
         <button id="tab-btn-chamada" class="flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400">
-          <i class="fa-solid fa-route"></i> Rota & Chamada
+          <i class="fa-solid fa-route"></i> Rota
+        </button>
+        <button id="tab-btn-passageiros" class="flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent">
+          <i class="fa-solid fa-users"></i> Gestão Alunos
         </button>
         <button id="tab-btn-financeiro" class="flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent">
           <i class="fa-solid fa-wallet"></i> Financeiro
         </button>
       </div>
 
-      <!-- ABA CHAMADA & ROTA DINÂMICA (TIA RAFA) -->
+      <!-- ABA 1: ROTA E CHAMADA DA TIA RAFA -->
       <div id="aba-chamada-rafa" class="space-y-3">
         <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
           <button id="btn-rota-ida" class="py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-van-shuttle"></i> Rota da Ida (Casa ➔ Escola)
+            <i class="fa-solid fa-van-shuttle"></i> Rota da Ida
           </button>
           <button id="btn-rota-volta" class="py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-house"></i> Rota da Volta (Escola ➔ Casa)
+            <i class="fa-solid fa-house"></i> Rota da Volta
           </button>
         </div>
 
@@ -292,6 +286,76 @@
         <div id="lista-chamada-rafa-cards" class="space-y-3"></div>
       </div>
 
+      <!-- ABA 2: GESTÃO COMPLETA DE ALUNOS & GPS (COM MESMAS FUNÇÕES DO ADMIN) -->
+      <div id="aba-passageiros-rafa" class="space-y-4 hidden">
+        
+        <!-- MAPA GPS DA VAN -->
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2.5">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Localização da Van no Mapa</h3>
+            <button id="btn-forcar-gps-test-rafa" class="text-[10px] text-amber-400 hover:underline">Atualizar Mapa</button>
+          </div>
+          <p id="txt-status-gps-rafa" class="text-[10px] text-slate-400">⚪ Van Offline</p>
+          <div id="mapa-rafa-container" class="w-full h-48 rounded-xl overflow-hidden border border-slate-800 z-10"></div>
+        </div>
+
+        <!-- ENVIAR AVISOS RÁPIDOS AOS PAIS -->
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mural de Avisos (Para os Pais)</h3>
+          <div class="grid grid-cols-3 gap-1.5">
+            <button id="btn-aviso-10min-rafa" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">⏱️ Atraso 10m</button>
+            <button id="btn-aviso-transito-rafa" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">🚗 Trânsito</button>
+            <button id="btn-aviso-chuva-rafa" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-[10px] font-bold text-slate-300">🌧️ Chuva Forte</button>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="input-aviso-custom-rafa" placeholder="Mensagem personalizada..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-400">
+            <button id="btn-enviar-aviso-custom-rafa" class="px-3 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl">Enviar</button>
+          </div>
+          <button id="btn-limpar-aviso-rafa" class="w-full py-1.5 text-[10px] text-rose-400 font-bold hover:underline">Limpar Avisos Ativos</button>
+        </div>
+
+        <!-- FORMULÁRIO DE CADASTRAR ALUNO MANUALMENTE -->
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Cadastrar Novo Passageiro</h3>
+          <form id="form-cadastrar-aluno-rafa" class="space-y-2.5">
+            <input type="text" id="add-nome-rafa" placeholder="Nome Completo do Aluno" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <div class="grid grid-cols-2 gap-2">
+              <select id="add-turno-rafa" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
+                <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
+                <option value="Tarde">Tarde</option>
+              </select>
+              <input type="text" id="add-wsp-rafa" placeholder="WhatsApp dos Pais (DDD)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="add-horario-busca-rafa" placeholder="Horário Busca (ex: 06:40)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+              <input type="text" id="add-horario-escola-rafa" placeholder="Entrada Escola (ex: 07:30)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <input type="text" id="add-endereco-casa-rafa" placeholder="Endereço Residencial" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <input type="text" id="add-escola-rafa" placeholder="Nome da Escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="email" id="add-email-mae-rafa" placeholder="E-mail do Responsável" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+              <input type="password" id="add-pin-rafa" maxlength="4" placeholder="PIN Pais" value="1234" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="number" id="add-valor-rafa" placeholder="Mensalidade (R$)" value="180" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+              <input type="number" id="add-vencimento-rafa" placeholder="Dia Vencimento" value="10" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <button type="submit" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all">+ Salvar Novo Cadastro</button>
+          </form>
+        </div>
+
+        <!-- LISTA GERAL DE ALUNOS COM EDITAR E DELETAR -->
+        <div class="space-y-2">
+          <div class="flex justify-between items-center">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Todos os Passageiros Cadastrados</h3>
+            <span id="count-rafa-alunos" class="text-[10px] font-bold text-slate-400">0 Alunos</span>
+          </div>
+          <div id="lista-passageiros-geral-rafa" class="space-y-2.5"></div>
+        </div>
+      </div>
+
+      <!-- ABA 3: FINANCEIRO DA TIA RAFA -->
       <div id="aba-financeiro-rafa" class="space-y-4 hidden">
         <div class="grid grid-cols-3 gap-2">
           <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl text-center">
@@ -318,10 +382,15 @@
           </div>
         </div>
 
-        <div class="flex gap-1.5">
-          <button id="btn-fin-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950">Todos</button>
-          <button id="btn-fin-filtro-pendentes" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300">Pendentes</button>
-          <button id="btn-fin-filtro-pagos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300">Pagos</button>
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex gap-1.5">
+            <button id="btn-fin-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950">Todos</button>
+            <button id="btn-fin-filtro-pendentes" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300">Pendentes</button>
+            <button id="btn-fin-filtro-pagos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300">Pagos</button>
+          </div>
+          <button id="btn-encerrar-mes-rafa" class="px-2.5 py-1 bg-rose-600/20 border border-rose-500/40 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">
+            🔒 Fechar Mês
+          </button>
         </div>
 
         <button id="btn-rafa-exportar-csv" class="w-full py-2 bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 font-bold text-xs rounded-xl hover:bg-emerald-600 hover:text-slate-950 transition-all flex items-center justify-center gap-2">
@@ -348,7 +417,6 @@
       </div>
 
       <div id="aba-admin-alunos" class="space-y-4">
-        <!-- SEÇÃO DE APROVAÇÕES PENDENTES (ADMIN) -->
         <div id="container-pendentes-admin" class="hidden bg-amber-500/10 border border-amber-500/40 p-4 rounded-2xl space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -359,7 +427,6 @@
           <div id="lista-pendentes-admin" class="space-y-2.5"></div>
         </div>
 
-        <!-- MAPA GPS NO ADMIN -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2.5">
           <div class="flex justify-between items-center">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider">Localização da Van em Tempo Real</h3>
@@ -369,7 +436,6 @@
           <div id="mapa-admin-container" class="w-full h-48 rounded-xl overflow-hidden border border-slate-800 z-10"></div>
         </div>
 
-        <!-- ENVIAR AVISOS -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mural de Avisos (Para os Pais)</h3>
           <div class="grid grid-cols-3 gap-1.5">
@@ -384,7 +450,6 @@
           <button id="btn-limpar-aviso" class="w-full py-1.5 text-[10px] text-rose-400 font-bold hover:underline">Limpar Avisos Ativos</button>
         </div>
 
-        <!-- CADASTRAR NOVO ALUNO (ADMIN MANUAL) -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
           <h3 class="text-xs font-bold text-white uppercase tracking-wider">Cadastrar Novo Passageiro (Manual)</h3>
           <form id="form-cadastrar-aluno" class="space-y-2.5">
@@ -517,7 +582,7 @@
     </div>
   </div>
 
-  <!-- MODAL EDIÇÃO ALUNO (ADMIN) -->
+  <!-- MODAL EDIÇÃO ALUNO -->
   <div id="modal-editar-aluno" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl max-w-sm w-full space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center">
