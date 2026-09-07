@@ -1,13 +1,11 @@
-/* SOBREPOSIÇÃO EXCLUSIVA PARA O MODO CLARO */
-html.light-mode {
-  background-color: #cbd5e1 !important;
-}
-
+/* FUNDO DO MODO CLARO - SOBREPOSIÇÃO FORÇADA */
+html.light-mode,
 html.light-mode body {
-  background-color: #cbd5e1 !important; /* Cinza suave e confortável */
+  background-color: #cbd5e1 !important; /* Força o cinza suave em toda a tela */
   color: #020617 !important;
 }
 
+/* CABEÇALHO E NAVEGAÇÃO */
 html.light-mode header,
 html.light-mode nav#bottom-bar {
   background-color: #e2e8f0 !important;
@@ -29,7 +27,7 @@ html.light-mode .text-slate-100,
 html.light-mode .text-slate-300,
 html.light-mode .text-slate-400,
 html.light-mode .text-slate-500 {
-  color: #020617 !important; /* Força texto em tom escuro nítido */
+  color: #020617 !important;
 }
 
 /* CARDS EM CINZA FOSCO NO MODO CLARO */
