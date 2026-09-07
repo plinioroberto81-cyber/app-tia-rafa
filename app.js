@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
   document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
 
-  // LOGIN
+  // LOGIN RAFA E ADMIN
   document.getElementById("btn-login-submit")?.addEventListener("click", () => {
     const pwd = inputPassword ? inputPassword.value : "";
     if (currentRole === "rafa" && pwd === passRafa) entrarPerfil("rafa");
@@ -88,6 +88,24 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
   });
   document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
+
+  // LOGIN PIN PAIS
+  document.getElementById("select-email-pais")?.addEventListener("change", (e) => {
+    const email = e.target.value;
+    const boxPin = document.getElementById("box-pin-pais");
+    const containerFilho = document.getElementById("conteudo-filho-pais");
+    
+    if (email) {
+      boxPin?.classList.remove("hidden");
+      containerFilho?.classList.add("hidden");
+      document.getElementById("input-pin-pais").value = "";
+    } else {
+      boxPin?.classList.add("hidden");
+      containerFilho?.classList.add("hidden");
+    }
+  });
+
+  document.getElementById("btn-entrar-pais-pin")?.addEventListener("click", validarLoginPinPais);
 
   // ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
@@ -153,18 +171,48 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("btn-limpar-aviso")?.addEventListener("click", limparAvisos);
 
-  // SELEÇÃO E-MAIL PAIS
-  document.getElementById("select-email-pais")?.addEventListener("change", (e) => renderizarPaisFilho(e.target.value));
-
   // ADMIN AÇÕES
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
-// SUBMETER AUTO-CADASTRO DOS PAIS
+// VALIDAR PIN 4 DÍGITOS DOS PAIS
+function validarLoginPinPais() {
+  const emailSelect = document.getElementById("select-email-pais")?.value;
+  const pinInput = document.getElementById("input-pin-pais")?.value;
+
+  if (!emailSelect) {
+    alert("Selecione seu e-mail.");
+    return;
+  }
+
+  const aluno = alunosCache.find(a => a.email_mae === emailSelect && !a.pendente_aprovacao);
+
+  if (!aluno) {
+    alert("Cadastro não encontrado ou pendente de aprovação.");
+    return;
+  }
+
+  const pinCorreto = aluno.pin_pais || "1234";
+
+  if (pinInput === pinCorreto) {
+    document.getElementById("box-pin-pais")?.classList.add("hidden");
+    renderizarPaisFilho(emailSelect);
+  } else {
+    alert("PIN de 4 dígitos incorreto. Tente novamente.");
+  }
+}
+
+// SUBMETER AUTO-CADASTRO DOS PAIS COM PIN
 async function enviarAutoCadastroPais(e) {
   e.preventDefault();
   if (!supabaseClient) return;
+
+  const pin = document.getElementById("auto-pin").value;
+  if (pin.length !== 4 || isNaN(pin)) {
+    alert("O PIN deve conter exatamente 4 números.");
+    return;
+  }
 
   const novoAluno = {
     nome: document.getElementById("auto-nome").value,
@@ -175,7 +223,8 @@ async function enviarAutoCadastroPais(e) {
     endereco_casa: document.getElementById("auto-endereco-casa").value,
     escola: document.getElementById("auto-escola").value,
     email_mae: document.getElementById("auto-email-mae").value,
-    valor: 180, // Valor padrão que será revisado na aprovação
+    pin_pais: pin,
+    valor: 180,
     vencimento: 10,
     status: 'Em Casa',
     status_pagamento: 'Pendente',
@@ -224,7 +273,7 @@ function renderizarPendentesAprovacao() {
         <div>
           <h4 class="text-xs font-bold text-white">${a.nome}</h4>
           <p class="text-[10px] text-amber-300 font-semibold">${a.escola || '-'} • ${a.turno}</p>
-          <p class="text-[10px] text-slate-400 mt-0.5">Mãe/Pai: ${a.email_mae} (${a.whatsapp || 'S/ Whats'})</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">Mãe/Pai: ${a.email_mae} (PIN: ${a.pin_pais || '1234'})</p>
           <p class="text-[10px] text-slate-400">Endereço: ${a.endereco_casa || '-'}</p>
         </div>
       </div>
@@ -530,7 +579,6 @@ async function carregarDadosAdmin() {
   alunosCache = data;
   renderizarPendentesAprovacao();
 
-  // Exibe apenas alunos já APROVADOS na lista comum
   const aprovados = data.filter(a => !a.pendente_aprovacao);
   if (countEl) countEl.innerText = `${aprovados.length} Alunos`;
 
@@ -544,7 +592,7 @@ async function carregarDadosAdmin() {
         <div class="flex justify-between items-start">
           <div>
             <h4 class="text-xs font-bold text-white">${a.nome}</h4>
-            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã (07h às 11h)'} | Mensalidade: R$ ${val.toFixed(2)} (Venc: Dia ${a.vencimento || 10})</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã (07h às 11h)'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
           </div>
           <div class="flex gap-1 shrink-0">
             <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
@@ -599,6 +647,7 @@ function abrirModalEditarAluno(id) {
   document.getElementById("edit-endereco-casa").value = aluno.endereco_casa || '';
   document.getElementById("edit-escola").value = aluno.escola || '';
   document.getElementById("edit-email-mae").value = aluno.email_mae || '';
+  document.getElementById("edit-pin").value = aluno.pin_pais || '1234';
   document.getElementById("edit-valor").value = aluno.valor || 180;
   document.getElementById("edit-vencimento").value = aluno.vencimento || 10;
 
@@ -619,6 +668,7 @@ async function salvarEdicaoAlunoAdmin(e) {
     endereco_casa: document.getElementById("edit-endereco-casa").value,
     escola: document.getElementById("edit-escola").value,
     email_mae: document.getElementById("edit-email-mae").value,
+    pin_pais: document.getElementById("edit-pin").value,
     valor: parseFloat(document.getElementById("edit-valor").value),
     vencimento: parseInt(document.getElementById("edit-vencimento").value)
   };
@@ -737,7 +787,7 @@ function exportarRelatorioFinanceiroCSV() {
   }
 
   let csvContent = "\uFEFF";
-  csvContent += "Nome do Passageiro;Escola;Turno;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;Email Responsavel;WhatsApp\n";
+  csvContent += "Nome do Passageiro;Escola;Turno;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;Email Responsavel;WhatsApp;PIN Pais\n";
 
   aprovados.forEach(a => {
     const nome = (a.nome || "-").replace(/;/g, ",");
@@ -749,8 +799,9 @@ function exportarRelatorioFinanceiroCSV() {
     const formaPag = a.forma_pagamento || "-";
     const email = a.email_mae || "-";
     const whats = a.whatsapp || "-";
+    const pin = a.pin_pais || "1234";
 
-    csvContent += `${nome};${escola};${turno};R$ ${valor};Dia ${vencimento};${statusPag};${formaPag};${email};${whats}\n`;
+    csvContent += `${nome};${escola};${turno};R$ ${valor};Dia ${vencimento};${statusPag};${formaPag};${email};${whats};${pin}\n`;
   });
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -889,7 +940,6 @@ async function carregarDadosPais() {
   if (!data) return;
   alunosCache = data;
 
-  // Exibe apenas e-mails de alunos já APROVADOS no select
   const aprovados = data.filter(a => !a.pendente_aprovacao);
   const emailsUnicos = [...new Set(aprovados.map(a => a.email_mae).filter(Boolean))];
   
@@ -1215,13 +1265,14 @@ async function cadastrarAlunoAdmin(e) {
     endereco_casa: document.getElementById("add-endereco-casa").value,
     escola: document.getElementById("add-escola").value,
     email_mae: document.getElementById("add-email-mae").value,
+    pin_pais: document.getElementById("add-pin").value || "1234",
     valor: parseFloat(document.getElementById("add-valor").value),
     vencimento: parseInt(document.getElementById("add-vencimento").value),
     status: 'Em Casa',
     status_pagamento: 'Pendente',
     vai_hoje: true,
     vai_turno1_hoje: false,
-    pendente_aprovacao: false // Cadastro direto do Admin entra aprovado
+    pendente_aprovacao: false
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
