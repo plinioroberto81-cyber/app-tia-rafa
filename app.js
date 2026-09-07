@@ -13,7 +13,7 @@ let pixChaveGlobal = "11999998888";
 let linkCartaoGlobal = "https://mpago.la/";
 let currentRole = null;
 let alunosCache = [];
-let modoRotaAtual = "IDA"; // 'IDA' ou 'VOLTA'
+let modoRotaAtual = "IDA";
 let filtroTurnoAtual = "Todos";
 let filtroFinStatus = "Todos";
 let filtroFinAdminStatus = "Todos";
@@ -39,24 +39,18 @@ document.addEventListener("DOMContentLoaded", () => {
   inicializarTema();
   verificarAlertaGlobal();
   
-  // CHECAGENS AUTOMÁTICAS
   setInterval(verificarEmergenciaAdmin, 3000);
   setInterval(carregarGpsAdmin, 5000);
 
-  // NAVEGAÇÃO
   btnTopBack?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
   document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
-
-  // TEMA
   document.getElementById("btn-theme-toggle")?.addEventListener("click", alternarTema);
 
-  // PERFIS
   document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
   document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
 
-  // LOGIN RAFA E ADMIN
   document.getElementById("btn-login-submit")?.addEventListener("click", () => {
     const pwd = inputPassword ? inputPassword.value : "";
     if (currentRole === "rafa" && pwd === passRafa) entrarPerfil("rafa");
@@ -64,24 +58,19 @@ document.addEventListener("DOMContentLoaded", () => {
     else alert("Senha incorreta!");
   });
 
-  // GPS TOGGLE (TIA RAFA)
   document.getElementById("btn-toggle-gps")?.addEventListener("click", alternarTransmissaoGps);
   document.getElementById("btn-forcar-gps-test")?.addEventListener("click", carregarGpsAdmin);
 
-  // EMERGÊNCIA
   document.getElementById("btn-disparar-emergencia")?.addEventListener("click", dispararEmergenciaRafa);
   document.getElementById("btn-desativar-emergencia")?.addEventListener("click", atenderEmergenciaAdmin);
 
-  // MODAL EDIÇÃO
   document.getElementById("btn-fechar-modal-edit")?.addEventListener("click", () => {
     document.getElementById("modal-editar-aluno")?.classList.add("hidden");
   });
   document.getElementById("form-editar-aluno")?.addEventListener("submit", salvarEdicaoAlunoAdmin);
 
-  // CONFIGS GLOBAIS
   document.getElementById("btn-salvar-configs")?.addEventListener("click", salvarConfigsGlobais);
 
-  // AUTO-CADASTRO PAIS
   document.getElementById("btn-abrir-auto-cadastro")?.addEventListener("click", () => {
     document.getElementById("form-auto-cadastro-container")?.classList.remove("hidden");
   });
@@ -90,7 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
 
-  // LOGIN PIN PAIS
   document.getElementById("select-email-pais")?.addEventListener("change", (e) => {
     const email = e.target.value;
     const boxPin = document.getElementById("box-pin-pais");
@@ -109,11 +97,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btn-entrar-pais-pin")?.addEventListener("click", validarLoginPinPais);
 
-  // BOTÕES ALTERNAR ROTA (IDA vs VOLTA)
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
-  // ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
     document.getElementById("aba-financeiro-rafa")?.classList.add("hidden");
@@ -128,7 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
   });
 
-  // ABAS DO PAINEL ADMIN
   document.getElementById("tab-admin-alunos")?.addEventListener("click", () => {
     document.getElementById("aba-admin-alunos")?.classList.remove("hidden");
     document.getElementById("aba-admin-financeiro")?.classList.add("hidden");
@@ -144,27 +129,22 @@ document.addEventListener("DOMContentLoaded", () => {
     renderizarFinanceiroAdmin();
   });
 
-  // FILTROS TURNO TIA RAFA
   document.getElementById("btn-filtro-todos")?.addEventListener("click", () => aplicarFiltroTurno("Todos"));
   document.getElementById("btn-filtro-manha7")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (07h às 11h)"));
   document.getElementById("btn-filtro-manha8")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (08h às 12h)"));
   document.getElementById("btn-filtro-tarde")?.addEventListener("click", () => aplicarFiltroTurno("Tarde"));
 
-  // FILTROS FINANCEIROS TIA RAFA
   document.getElementById("btn-fin-filtro-todos")?.addEventListener("click", () => aplicarFiltroFin("Todos"));
   document.getElementById("btn-fin-filtro-pendentes")?.addEventListener("click", () => aplicarFiltroFin("Pendente"));
   document.getElementById("btn-fin-filtro-pagos")?.addEventListener("click", () => aplicarFiltroFin("Pago"));
 
-  // FILTROS ADMIN FINANCEIRO
   document.getElementById("btn-admin-fin-todos")?.addEventListener("click", () => aplicarFiltroFinAdmin("Todos"));
   document.getElementById("btn-admin-fin-pendentes")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pendente"));
   document.getElementById("btn-admin-fin-pagos")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pago"));
 
-  // BACKUP / EXPORTAÇÃO CSV
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
-  // AVISOS
   document.getElementById("btn-aviso-10min")?.addEventListener("click", () => dispararAviso("⏱️ Pequeno atraso na rota (Aproximadamente 10 minutos). Crianças em segurança!"));
   document.getElementById("btn-aviso-transito")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
   document.getElementById("btn-aviso-chuva")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
@@ -177,12 +157,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("btn-limpar-aviso")?.addEventListener("click", limparAvisos);
 
-  // ADMIN AÇÕES
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
-// AUTO-CADASTRO ENXUTO DOS PAIS
+// AUTO-CADASTRO PAIS
 async function enviarAutoCadastroPais(e) {
   e.preventDefault();
 
@@ -256,7 +235,7 @@ async function enviarAutoCadastroPais(e) {
   }
 }
 
-// APROVAÇÃO SEGURA DE CADASTROS PENDENTES (TIA RAFA / ADMIN)
+// APROVAÇÃO SEGURA DE CADASTROS PENDENTES
 async function aprovarCadastroAluno(id) {
   if (!supabaseClient) return;
 
@@ -297,6 +276,40 @@ async function aprovarCadastroAluno(id) {
 
   } catch (err) {
     console.error("Erro ao aprovar:", err);
+  }
+}
+
+// EXCLUIR / RECUSAR ALUNO (CORRIGIDO)
+async function deletarAlunoAdmin(id) {
+  if (!supabaseClient) {
+    alert("Erro de conexão com o banco de dados.");
+    return;
+  }
+
+  if (confirm("Deseja realmente recusar e apagar este cadastro?")) {
+    try {
+      const { error } = await supabaseClient
+        .from('alunos')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert("Erro ao recusar cadastro no banco: " + error.message);
+        return;
+      }
+
+      alert("Cadastro recusado e removido com sucesso!");
+
+      alunosCache = alunosCache.filter(a => a.id != id);
+      renderizarPendentesAprovacao();
+
+      if (currentRole === 'rafa') carregarDadosRafa();
+      if (currentRole === 'admin') carregarDadosAdmin();
+
+    } catch (err) {
+      console.error("Erro ao deletar:", err);
+      alert("Falha inesperada ao recusar cadastro.");
+    }
   }
 }
 
@@ -367,7 +380,7 @@ function renderizarPendentesAprovacao() {
   containerAdmin?.classList.remove("hidden");
 }
 
-// ALTERNAR ENTRE ROTA DA IDA E VOLTA
+// ALTERNAR ROTA IDA E VOLTA
 function alternarModoRota(modo) {
   modoRotaAtual = modo;
   const btnIda = document.getElementById("btn-rota-ida");
@@ -565,7 +578,6 @@ function renderizarPaisFilho(email) {
         ${desc}
       </div>
 
-      <!-- HORÁRIO DIFERENTE HOJE -->
       <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Horário Diferente Hoje?</span>
@@ -730,7 +742,7 @@ function alternarTransmissaoGps() {
   }
 }
 
-// BUSCAR GPS ADMIN
+// BUSCAR GPS ADMIN (MARCADOR ATUALIZADO COM O NOVO LOGO)
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -769,7 +781,7 @@ async function carregarGpsAdmin() {
       className: 'custom-van-marker',
       html: `
         <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
-          <img src="https://i.ibb.co/8DjK8D2v/image.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
+          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
         </div>
       `,
       iconSize: [50, 50],
@@ -1060,7 +1072,7 @@ function renderizarFinanceiroAdmin() {
     const emAtraso = stP !== "Pago" && diaHoje > venc;
     const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
 
-    const msgCobranca = encodeURIComponent(`Olá! Passando para lembrar sobre a mensalidade do transporte escolar do(a) *${aluno.nome}* referente a este mês no valor de R$ ${val.toFixed(2)}.\n\n🔑 Chave PIX: ${pixChaveGlobal}\n\nQualquer dúvida estou à disposição! 😊`);
+    const msgCobranca = encodeURIComponent(`Olá! Passando para lembrar sobre a mensalidade do transporte escolar do(a) *${aluno.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 Chave PIX: ${pixChaveGlobal}\n\nQualquer dúvida estou à disposição! 😊`);
 
     return `
       <div class="bg-slate-900/80 border ${emAtraso ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-700/80'} p-3.5 rounded-2xl space-y-2">
@@ -1251,7 +1263,6 @@ async function limparAvisos() {
   verificarAlertaGlobal();
 }
 
-// CARREGAR DADOS DOS PAIS E TIA RAFA
 async function carregarDadosPais() {
   if (!supabaseClient) return;
   const select = document.getElementById("select-email-pais");
@@ -1438,40 +1449,4 @@ async function cadastrarAlunoAdmin(e) {
   alert("Aluno cadastrado!");
   document.getElementById("form-cadastrar-aluno").reset();
   carregarDadosAdmin();
-}
-
-async function deletarAlunoAdmin(id) {
-  if (!supabaseClient) {
-    alert("Erro de conexão com o banco de dados.");
-    return;
-  }
-
-  if (confirm("Deseja realmente recusar e apagar este cadastro?")) {
-    try {
-      const { error } = await supabaseClient
-        .from('alunos')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        alert("Erro ao recusar cadastro no banco: " + error.message);
-        return;
-      }
-
-      alert("Cadastro recusado e removido com sucesso!");
-
-      // Remove o aluno da lista na memória do aplicativo
-      alunosCache = alunosCache.filter(a => a.id != id);
-
-      // Re-renderiza a tela para sumir com o card instantaneamente
-      renderizarPendentesAprovacao();
-
-      if (currentRole === 'rafa') carregarDadosRafa();
-      if (currentRole === 'admin') carregarDadosAdmin();
-
-    } catch (err) {
-      console.error("Erro ao deletar:", err);
-      alert("Falha inesperada ao recusar cadastro.");
-    }
-  }
 }
