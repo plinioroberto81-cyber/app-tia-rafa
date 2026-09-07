@@ -80,6 +80,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // CONFIGS GLOBAIS
   document.getElementById("btn-salvar-configs")?.addEventListener("click", salvarConfigsGlobais);
 
+  // AUTO-CADASTRO PAIS
+  document.getElementById("btn-abrir-auto-cadastro")?.addEventListener("click", () => {
+    document.getElementById("form-auto-cadastro-container")?.classList.remove("hidden");
+  });
+  document.getElementById("btn-fechar-auto-cadastro")?.addEventListener("click", () => {
+    document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
+  });
+  document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
+
   // ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
@@ -151,6 +160,131 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
+
+// SUBMETER AUTO-CADASTRO DOS PAIS
+async function enviarAutoCadastroPais(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const novoAluno = {
+    nome: document.getElementById("auto-nome").value,
+    turno: document.getElementById("auto-turno").value,
+    whatsapp: document.getElementById("auto-wsp").value,
+    horario_busca: document.getElementById("auto-horario-busca").value,
+    horario_escola: document.getElementById("auto-horario-escola").value,
+    endereco_casa: document.getElementById("auto-endereco-casa").value,
+    escola: document.getElementById("auto-escola").value,
+    email_mae: document.getElementById("auto-email-mae").value,
+    valor: 180, // Valor padrão que será revisado na aprovação
+    vencimento: 10,
+    status: 'Em Casa',
+    status_pagamento: 'Pendente',
+    vai_hoje: true,
+    vai_turno1_hoje: false,
+    pendente_aprovacao: true
+  };
+
+  const { error } = await supabaseClient.from('alunos').insert([novoAluno]);
+
+  if (error) {
+    alert("Erro ao enviar cadastro: " + error.message);
+    return;
+  }
+
+  alert("Cadastro enviado com sucesso! A Tia Rafa irá revisar e aprovar o acesso em breve.");
+  document.getElementById("form-auto-cadastro-pais").reset();
+  document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
+  carregarDadosPais();
+}
+
+// RENDERIZAR CARDS DE APROVAÇÃO PENDENTE (RAFA E ADMIN)
+function renderizarPendentesAprovacao() {
+  const pendentes = alunosCache.filter(a => a.pendente_aprovacao === true);
+
+  const containerRafa = document.getElementById("container-pendentes-rafa");
+  const listaRafa = document.getElementById("lista-pendentes-rafa");
+  const countRafa = document.getElementById("badge-pendentes-count-rafa");
+
+  const containerAdmin = document.getElementById("container-pendentes-admin");
+  const listaAdmin = document.getElementById("lista-pendentes-admin");
+  const countAdmin = document.getElementById("badge-pendentes-count-admin");
+
+  if (pendentes.length === 0) {
+    containerRafa?.classList.add("hidden");
+    containerAdmin?.classList.add("hidden");
+    return;
+  }
+
+  if (countRafa) countRafa.innerText = pendentes.length;
+  if (countAdmin) countAdmin.innerText = pendentes.length;
+
+  const htmlContent = pendentes.map(a => `
+    <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
+      <div class="flex justify-between items-start">
+        <div>
+          <h4 class="text-xs font-bold text-white">${a.nome}</h4>
+          <p class="text-[10px] text-amber-300 font-semibold">${a.escola || '-'} • ${a.turno}</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">Mãe/Pai: ${a.email_mae} (${a.whatsapp || 'S/ Whats'})</p>
+          <p class="text-[10px] text-slate-400">Endereço: ${a.endereco_casa || '-'}</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 bg-slate-950 p-2 rounded-lg border border-slate-800">
+        <div>
+          <label class="text-[9px] text-slate-400 block font-bold">Mensalidade (R$)</label>
+          <input type="number" id="val-aprov-${a.id}" value="${a.valor || 180}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+        </div>
+        <div>
+          <label class="text-[9px] text-slate-400 block font-bold">Vencimento (Dia)</label>
+          <input type="number" id="venc-aprov-${a.id}" value="${a.vencimento || 10}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="aprovarCadastroAluno('${a.id}')" class="flex-1 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+          ✓ Aprovar
+        </button>
+        <button onclick="deletarAlunoAdmin('${a.id}')" class="px-3 py-1.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg hover:bg-rose-600 hover:text-white transition-all">
+          ✕ Recusar
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  if (listaRafa) listaRafa.innerHTML = htmlContent;
+  if (listaAdmin) listaAdmin.innerHTML = htmlContent;
+
+  containerRafa?.classList.remove("hidden");
+  containerAdmin?.classList.remove("hidden");
+}
+
+async function aprovarCadastroAluno(id) {
+  if (!supabaseClient) return;
+
+  const inputVal = document.getElementById(`val-aprov-${id}`);
+  const inputVenc = document.getElementById(`venc-aprov-${id}`);
+
+  const val = inputVal ? parseFloat(inputVal.value) : 180;
+  const venc = inputVenc ? parseInt(inputVenc.value) : 10;
+
+  const { error } = await supabaseClient
+    .from('alunos')
+    .update({ 
+      pendente_aprovacao: false,
+      valor: val,
+      vencimento: venc
+    })
+    .eq('id', id);
+
+  if (error) {
+    alert("Erro ao aprovar cadastro: " + error.message);
+    return;
+  }
+
+  alert("Cadastro aprovado com sucesso!");
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
+}
 
 // TRANSMISSÃO GPS
 function alternarTransmissaoGps() {
@@ -394,9 +528,13 @@ async function carregarDadosAdmin() {
   if (!container || !data) return;
 
   alunosCache = data;
-  if (countEl) countEl.innerText = `${data.length} Alunos`;
+  renderizarPendentesAprovacao();
 
-  container.innerHTML = data.map(a => {
+  // Exibe apenas alunos já APROVADOS na lista comum
+  const aprovados = data.filter(a => !a.pendente_aprovacao);
+  if (countEl) countEl.innerText = `${aprovados.length} Alunos`;
+
+  container.innerHTML = aprovados.map(a => {
     const st = a.status || 'Em Casa';
     const stP = a.status_pagamento || 'Pendente';
     const val = parseFloat(a.valor || 180);
@@ -516,7 +654,9 @@ function renderizarFinanceiroAdmin() {
   let pendente = 0;
   const diaHoje = new Date().getDate();
 
-  alunosCache.forEach(a => {
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+
+  aprovados.forEach(a => {
     const val = parseFloat(a.valor || 180);
     faturamentoTotal += val;
     if (a.status_pagamento === "Pago") recebido += val;
@@ -537,9 +677,9 @@ function renderizarFinanceiroAdmin() {
   if (progTexto) progTexto.innerText = `${porc}%`;
   if (progBarra) progBarra.style.width = `${porc}%`;
 
-  let filtrados = alunosCache;
-  if (filtroFinAdminStatus === "Pendente") filtrados = alunosCache.filter(a => a.status_pagamento !== "Pago");
-  if (filtroFinAdminStatus === "Pago") filtrados = alunosCache.filter(a => a.status_pagamento === "Pago");
+  let filtrados = aprovados;
+  if (filtroFinAdminStatus === "Pendente") filtrados = aprovados.filter(a => a.status_pagamento !== "Pago");
+  if (filtroFinAdminStatus === "Pago") filtrados = aprovados.filter(a => a.status_pagamento === "Pago");
 
   container.innerHTML = filtrados.map(aluno => {
     const stP = aluno.status_pagamento || 'Pendente';
@@ -590,15 +730,16 @@ async function darBaixaAdmin(id, stP, forma) {
 
 // EXPORTAÇÃO CSV / PLANILHA
 function exportarRelatorioFinanceiroCSV() {
-  if (!alunosCache || alunosCache.length === 0) {
-    alert("Não há dados cadastrados para exportar.");
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+  if (!aprovados || aprovados.length === 0) {
+    alert("Não há dados de alunos aprovados para exportar.");
     return;
   }
 
   let csvContent = "\uFEFF";
   csvContent += "Nome do Passageiro;Escola;Turno;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;Email Responsavel;WhatsApp\n";
 
-  alunosCache.forEach(a => {
+  aprovados.forEach(a => {
     const nome = (a.nome || "-").replace(/;/g, ",");
     const escola = (a.escola || "-").replace(/;/g, ",");
     const turno = a.turno || "Manhã";
@@ -748,7 +889,9 @@ async function carregarDadosPais() {
   if (!data) return;
   alunosCache = data;
 
-  const emailsUnicos = [...new Set(data.map(a => a.email_mae).filter(Boolean))];
+  // Exibe apenas e-mails de alunos já APROVADOS no select
+  const aprovados = data.filter(a => !a.pendente_aprovacao);
+  const emailsUnicos = [...new Set(aprovados.map(a => a.email_mae).filter(Boolean))];
   
   if (select) {
     select.innerHTML = '<option value="">-- Selecione seu E-mail --</option>' + 
@@ -763,7 +906,7 @@ function renderizarPaisFilho(email) {
     return;
   }
 
-  const filho = alunosCache.find(a => a.email_mae === email);
+  const filho = alunosCache.find(a => a.email_mae === email && !a.pendente_aprovacao);
   if (!filho) return;
 
   const st = filho.status || 'Em Casa';
@@ -880,6 +1023,7 @@ async function carregarDadosRafa() {
   if (!data) return;
   alunosCache = data;
 
+  renderizarPendentesAprovacao();
   renderizarRotaRafa();
   renderizarFinanceiroRafa();
 }
@@ -897,10 +1041,11 @@ function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
 
-  let filtrados = alunosCache;
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+  let filtrados = aprovados;
+
   if (filtroTurnoAtual !== "Todos") {
-    filtrados = alunosCache.filter(a => {
-      // Se o aluno for das 08h mas avisou que vai às 07h hoje, inclui ele no filtro das 07h
+    filtrados = aprovados.filter(a => {
       if (filtroTurnoAtual === 'Manhã (07h às 11h)' && a.vai_turno1_hoje) return true;
       return a.turno === filtroTurnoAtual;
     });
@@ -950,7 +1095,9 @@ function renderizarFinanceiroRafa() {
   let pendente = 0;
   const diaHoje = new Date().getDate();
 
-  alunosCache.forEach(a => {
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+
+  aprovados.forEach(a => {
     const val = parseFloat(a.valor || 180);
     faturamentoTotal += val;
     if (a.status_pagamento === "Pago") recebido += val;
@@ -967,15 +1114,15 @@ function renderizarFinanceiroRafa() {
   if (mTot) mTot.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
   if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
   if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
-  if (countAlunos) countAlunos.innerText = `${alunosCache.length} Alunos Ativos`;
+  if (countAlunos) countAlunos.innerText = `${aprovados.length} Alunos Ativos`;
 
   const porc = faturamentoTotal > 0 ? Math.round((recebido / faturamentoTotal) * 100) : 0;
   if (progTexto) progTexto.innerText = `${porc}%`;
   if (progBarra) progBarra.style.width = `${porc}%`;
 
-  let filtrados = alunosCache;
-  if (filtroFinStatus === "Pendente") filtrados = alunosCache.filter(a => a.status_pagamento !== "Pago");
-  if (filtroFinStatus === "Pago") filtrados = alunosCache.filter(a => a.status_pagamento === "Pago");
+  let filtrados = aprovados;
+  if (filtroFinStatus === "Pendente") filtrados = aprovados.filter(a => a.status_pagamento !== "Pago");
+  if (filtroFinStatus === "Pago") filtrados = aprovados.filter(a => a.status_pagamento === "Pago");
 
   container.innerHTML = filtrados.map(aluno => {
     const stP = aluno.status_pagamento || 'Pendente';
@@ -1073,7 +1220,8 @@ async function cadastrarAlunoAdmin(e) {
     status: 'Em Casa',
     status_pagamento: 'Pendente',
     vai_hoje: true,
-    vai_turno1_hoje: false
+    vai_turno1_hoje: false,
+    pendente_aprovacao: false // Cadastro direto do Admin entra aprovado
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
@@ -1084,8 +1232,9 @@ async function cadastrarAlunoAdmin(e) {
 
 async function deletarAlunoAdmin(id) {
   if (!supabaseClient) return;
-  if (confirm("Deseja apagar este aluno do banco de dados?")) {
+  if (confirm("Deseja recusar/apagar este aluno do banco de dados?")) {
     await supabaseClient.from('alunos').delete().eq('id', id);
-    carregarDadosAdmin();
+    if (currentRole === 'rafa') carregarDadosRafa();
+    if (currentRole === 'admin') carregarDadosAdmin();
   }
 }
