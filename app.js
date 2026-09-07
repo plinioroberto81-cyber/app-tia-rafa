@@ -225,7 +225,7 @@ function validarLoginPinPais() {
   }
 }
 
-// SUBMETER AUTO-CADASTRO DOS PAIS (SEM O HORÁRIO DE BUSCA)
+// SUBMETER AUTO-CADASTRO DOS PAIS
 async function enviarAutoCadastroPais(e) {
   e.preventDefault();
   if (!supabaseClient) return;
@@ -241,7 +241,7 @@ async function enviarAutoCadastroPais(e) {
     turno: document.getElementById("auto-turno").value,
     whatsapp: document.getElementById("auto-wsp").value,
     horario_escola: document.getElementById("auto-horario-escola").value,
-    horario_busca: "", // Fica em branco para a Tia Rafa preencher ao aprovar
+    horario_busca: "",
     endereco_casa: document.getElementById("auto-endereco-casa").value,
     escola: document.getElementById("auto-escola").value,
     email_mae: document.getElementById("auto-email-mae").value,
@@ -251,8 +251,10 @@ async function enviarAutoCadastroPais(e) {
     status: 'Em Casa',
     status_pagamento: 'Pendente',
     vai_hoje: true,
-    vai_turno1_hoje: false,
-    levado_hoje: false, // Flag de controle para a rota dinâmica da volta
+    levado_hoje: false,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: "",
     pendente_aprovacao: true
   };
 
@@ -267,6 +269,55 @@ async function enviarAutoCadastroPais(e) {
   document.getElementById("form-auto-cadastro-pais").reset();
   document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
   carregarDadosPais();
+}
+
+// APROVAÇÃO SEGURA DE CADASTROS PENDENTES
+async function aprovarCadastroAluno(id) {
+  if (!supabaseClient) {
+    alert("Erro de conexão com o banco de dados Supabase.");
+    return;
+  }
+
+  const inputBusca = document.getElementById(`hor-busca-aprov-${id}`);
+  const inputVal = document.getElementById(`val-aprov-${id}`);
+  const inputVenc = document.getElementById(`venc-aprov-${id}`);
+
+  const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
+  
+  if (!horarioBusca) {
+    alert("Por favor, preencha o horário em que a Tia Rafa passará para buscar o aluno antes de aprovar!");
+    if (inputBusca) inputBusca.focus();
+    return;
+  }
+
+  const val = (inputVal && inputVal.value) ? parseFloat(inputVal.value) : 180;
+  const venc = (inputVenc && inputVenc.value) ? parseInt(inputVenc.value) : 10;
+
+  try {
+    const { error } = await supabaseClient
+      .from('alunos')
+      .update({ 
+        pendente_aprovacao: false,
+        horario_busca: horarioBusca,
+        valor: val,
+        vencimento: venc
+      })
+      .eq('id', id);
+
+    if (error) {
+      alert("Erro ao aprovar no banco de dados: " + error.message);
+      return;
+    }
+
+    alert("✓ Cadastro aprovado com sucesso! Horário de busca definido.");
+
+    if (currentRole === 'rafa') carregarDadosRafa();
+    if (currentRole === 'admin') carregarDadosAdmin();
+
+  } catch (err) {
+    console.error("Exceção ao aprovar cadastro:", err);
+    alert("Ocorreu uma falha inesperada.");
+  }
 }
 
 // RENDERIZAR CARDS DE APROVAÇÃO PENDENTE (RAFA E ADMIN DEFINEM O HORÁRIO DE BUSCA)
@@ -337,60 +388,7 @@ function renderizarPendentesAprovacao() {
   containerAdmin?.classList.remove("hidden");
 }
 
-async function aprovarCadastroAluno(id) {
-  if (!supabaseClient) {
-    alert("Erro de conexão com o banco de dados Supabase.");
-    return;
-  }
-
-  // Busca os elementos de input no DOM de forma segura
-  const inputBusca = document.getElementById(`hor-busca-aprov-${id}`);
-  const inputVal = document.getElementById(`val-aprov-${id}`);
-  const inputVenc = document.getElementById(`venc-aprov-${id}`);
-
-  // Captura os valores evitando erros de runtime
-  const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
-  
-  if (!horarioBusca) {
-    alert("Por favor, preencha o horário em que a Tia Rafa passará para buscar o aluno antes de aprovar!");
-    if (inputBusca) inputBusca.focus();
-    return;
-  }
-
-  const val = (inputVal && inputVal.value) ? parseFloat(inputVal.value) : 180;
-  const venc = (inputVenc && inputVenc.value) ? parseInt(inputVenc.value) : 10;
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('alunos')
-      .update({ 
-        pendente_aprovacao: false,
-        horario_busca: horarioBusca,
-        valor: val,
-        vencimento: venc
-      })
-      .eq('id', id)
-      .select();
-
-    if (error) {
-      console.error("Erro Supabase:", error);
-      alert("Erro ao aprovar no banco de dados: " + error.message);
-      return;
-    }
-
-    alert("✓ Cadastro aprovado com sucesso! Horário de busca definido.");
-
-    // Recarrega os dados do perfil ativo
-    if (currentRole === 'rafa') carregarDadosRafa();
-    if (currentRole === 'admin') carregarDadosAdmin();
-
-  } catch (err) {
-    console.error("Exceção ao aprovar cadastro:", err);
-    alert("Ocorreu uma falha inesperada. Tente novamente.");
-  }
-}
-
-// RENDERIZAR ROTA DINÂMICA DA TIA RAFA (ORDENADA POR HORÁRIO DE BUSCA)
+// RENDERIZAR ROTA DINÂMICA DA TIA RAFA (CONSIDERANDO HORÁRIOS ESPECIAIS DO DIA)
 function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
@@ -400,22 +398,25 @@ function renderizarRotaRafa() {
 
   // 1. FILTRAR POR ROTA DE IDA vs VOLTA
   if (modoRotaAtual === "VOLTA") {
-    // Rota da Volta traz apenas quem foi LEVADO para a escola no dia ou marcado como presente
     filtrados = aprovados.filter(a => a.levado_hoje === true || a.status === 'Na Escola' || a.status === 'Na Van');
   }
 
   // 2. FILTRAR POR TURNO
   if (filtroTurnoAtual !== "Todos") {
-    filtrados = filtrados.filter(a => {
-      if (filtroTurnoAtual === 'Manhã (07h às 11h)' && a.vai_turno1_hoje) return true;
-      return a.turno === filtroTurnoAtual;
-    });
+    filtrados = filtrados.filter(a => a.turno === filtroTurnoAtual);
   }
 
-  // 3. ORDENAR DINAMICAMENTE POR HORÁRIO DE BUSCA (Ex: 06:20 -> 06:40 -> 07:10)
+  // 3. ORDENAR DINAMICAMENTE (Usando Horário Especial se houver)
   filtrados.sort((a, b) => {
-    const hA = a.horario_busca || '99:99';
-    const hB = b.horario_busca || '99:99';
+    let hA = a.horario_busca || '99:99';
+    let hB = b.horario_busca || '99:99';
+
+    if (modoRotaAtual === "IDA" && a.horario_busca_hoje) hA = a.horario_busca_hoje;
+    if (modoRotaAtual === "IDA" && b.horario_busca_hoje) hB = b.horario_busca_hoje;
+
+    if (modoRotaAtual === "VOLTA" && a.horario_volta_hoje) hA = a.horario_volta_hoje;
+    if (modoRotaAtual === "VOLTA" && b.horario_volta_hoje) hB = b.horario_volta_hoje;
+
     return hA.localeCompare(hB);
   });
 
@@ -433,17 +434,26 @@ function renderizarRotaRafa() {
   container.innerHTML = filtrados.map(aluno => {
     const st = aluno.status || 'Em Casa';
     const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
-    const vaiTurno1 = aluno.vai_turno1_hoje;
+    const temEspecial = aluno.tem_horario_especial;
+    
+    // Define qual horário exibir na chamada (Normal vs Especial do Dia)
+    const horBuscaExibicao = (aluno.horario_busca_hoje) ? `${aluno.horario_busca_hoje} (Especial)` : (aluno.horario_busca || 'S/ hor.');
+    const horVoltaExibicao = (aluno.horario_volta_hoje) ? `${aluno.horario_volta_hoje} (Especial)` : (aluno.horario_escola || '-');
 
     return `
-      <div class="bg-slate-800/80 border ${vaiTurno1 ? 'border-amber-400 bg-amber-500/5' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
+      <div class="bg-slate-800/80 border ${temEspecial ? 'border-amber-400 bg-amber-500/10' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-start">
           <div>
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 bg-amber-500 text-slate-950 font-black text-xs rounded-lg">${aluno.horario_busca || 'S/ hor.'}</span>
+              <span class="px-2 py-0.5 ${temEspecial ? 'bg-amber-400 text-slate-950 font-black' : 'bg-slate-700 text-amber-400 font-bold'} text-xs rounded-lg">
+                ${modoRotaAtual === 'IDA' ? horBuscaExibicao : horVoltaExibicao}
+              </span>
               <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
             </div>
-            <p class="text-xs text-slate-400 mt-1">${aluno.escola || ''} (${aluno.turno || 'Manhã'}) • Entrada: ${aluno.horario_escola || '-'}</p>
+            
+            ${temEspecial ? '<p class="text-[10px] font-bold text-amber-300 mt-1"><i class="fa-solid fa-clock-rotate-left"></i> ⚡ ATENÇÃO: Horário alterado pelos pais para hoje!</p>' : ''}
+
+            <p class="text-xs text-slate-400 mt-1">${aluno.escola || ''} (${aluno.turno || 'Manhã'})</p>
             <p class="text-[10px] text-slate-300 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Endereço não informado'}</p>
           </div>
           ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg shrink-0"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
@@ -463,8 +473,6 @@ async function atualizarStatusRafa(id, st) {
   if (!supabaseClient) return;
 
   let updateData = { status: st };
-  
-  // Se marcou que está Na Van ou Na Escola, grava que a criança foi levada hoje
   if (st === 'Na Van' || st === 'Na Escola') {
     updateData.levado_hoje = true;
   }
@@ -475,16 +483,184 @@ async function atualizarStatusRafa(id, st) {
 
 async function resetarStatusDoDia() {
   if (!supabaseClient) return;
-  if (confirm("Deseja resetar o status de todos os alunos para 'Em Casa' e limpar a rota do dia?")) {
+  if (confirm("Deseja resetar a rota do dia? Isso limpará os horários especiais e retornará o status para 'Em Casa'.")) {
     await supabaseClient.from('alunos').update({
       status: 'Em Casa',
       levado_hoje: false,
-      vai_turno1_hoje: false
+      tem_horario_especial: false,
+      horario_busca_hoje: "",
+      horario_volta_hoje: ""
     }).neq('id', '0');
 
-    alert("Dia resetado com sucesso!");
+    alert("Rota resetada para o padrão!");
     carregarDadosRafa();
   }
+}
+
+// RENDERIZAR PAINEL DOS PAIS COM OPÇÃO DE HORÁRIO FLEXÍVEL HOJE
+function renderizarPaisFilho(email) {
+  const container = document.getElementById("conteudo-filho-pais");
+  if (!email || !container) {
+    container?.classList.add("hidden");
+    return;
+  }
+
+  const filho = alunosCache.find(a => a.email_mae === email && !a.pendente_aprovacao);
+  if (!filho) return;
+
+  const st = filho.status || 'Em Casa';
+  let badgeColor = 'bg-slate-700/50 text-slate-300 border-slate-600';
+  let icon = 'fa-house-user';
+  let desc = 'Aguardando busca residencial.';
+
+  if (st === 'Na Van' || st === 'Embarcou') { 
+    badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/30'; 
+    icon = 'fa-van-shuttle'; 
+    desc = 'A caminho com a Tia Rafa!';
+  }
+  if (st === 'Na Escola' || st === 'Desembarcou') { 
+    badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'; 
+    icon = 'fa-school'; 
+    desc = 'Entregue no destino com segurança.';
+  }
+
+  const stPag = filho.status_pagamento || 'Pendente';
+  const val = filho.valor || 180.00;
+  const venc = filho.vencimento || 10;
+  const temEspecial = filho.tem_horario_especial;
+
+  container.innerHTML = `
+    <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-base font-extrabold text-white">${filho.nome}</h3>
+          <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-graduation-cap"></i> ${filho.escola || '-'} (${filho.turno || 'Manhã'})</p>
+          <p class="text-[11px] text-amber-400 font-medium mt-1"><i class="fa-regular fa-clock"></i> Horário Fixo: Busca ${filho.horario_busca || 'A definir'} | Entrada ${filho.horario_escola || '-'}</p>
+        </div>
+        <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor} flex items-center gap-1.5">
+          <i class="fa-solid ${icon}"></i> ${st}
+        </span>
+      </div>
+
+      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs text-slate-300">
+        ${desc}
+      </div>
+
+      <!-- SEÇÃO DE HORÁRIO DIFERENTE HOJE -->
+      <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Horário Diferente Hoje?</span>
+          <button onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
+            ${temEspecial ? '✓ Ativo Hoje' : '+ Informar Exceção'}
+          </button>
+        </div>
+
+        <div id="box-horario-especial-${filho.id}" class="${temEspecial ? '' : 'hidden'} space-y-2 pt-2 border-t border-slate-800">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] text-slate-400 block font-bold">Busca Ida Hoje:</label>
+              <input type="text" id="esp-ida-${filho.id}" value="${filho.horario_busca_hoje || ''}" placeholder="Ex: 09:30" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-400 block font-bold">Volta Hoje:</label>
+              <input type="text" id="esp-volta-${filho.id}" value="${filho.horario_volta_hoje || ''}" placeholder="Ex: 15:00" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="flex-1 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg">Salvar Aviso pra Tia Rafa</button>
+            ${temEspecial ? `<button onclick="limparHorarioEspecialPais('${filho.id}')" class="px-2.5 py-1.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg">Cancelar Exceção</button>` : ''}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
+        <span class="text-xs font-bold text-slate-300">Vai no transporte hoje?</span>
+        <button onclick="alternarPresenca('${filho.id}', ${!filho.vai_hoje})" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${filho.vai_hoje !== false ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+          ${filho.vai_hoje !== false ? '✓ Confirmado' : '✕ Ausente Hoje'}
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
+      <div class="flex justify-between items-center">
+        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mensalidade Escolar</h4>
+        <span class="text-xs font-bold ${stPag === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stPag === 'Pago' ? '🟢 Quitado' : '🔴 Pendente'}</span>
+      </div>
+
+      <div class="flex justify-between items-baseline">
+        <p class="text-2xl font-extrabold text-white">R$ ${val.toFixed(2)}</p>
+        <p class="text-xs text-slate-400">Vencimento: Dia ${venc}</p>
+      </div>
+
+      ${stPag !== 'Pago' ? `
+        <div class="space-y-3 pt-2">
+          <div class="p-3 bg-teal-950/40 border border-teal-500/30 rounded-xl space-y-1.5">
+            <p class="text-xs font-bold text-teal-300"><i class="fa-brands fa-pix"></i> Pagamento via PIX</p>
+            <p class="text-xs font-mono bg-slate-900 p-2 rounded border border-slate-700 text-teal-200 select-all">${pixChaveGlobal}</p>
+          </div>
+
+          <div class="p-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-xs text-slate-400">
+            <i class="fa-solid fa-money-bill-wave text-amber-400"></i> <strong>Dinheiro:</strong> Entregar diretamente para a Tia Rafa no embarque.
+          </div>
+
+          <a href="${linkCartaoGlobal}" target="_blank" class="block w-full py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-bold text-xs rounded-xl transition-all">
+            <i class="fa-solid fa-credit-card"></i> Pagar no Cartão de Crédito/Débito
+          </a>
+        </div>
+      ` : `
+        <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-semibold text-center">
+          ✓ Obrigado! A mensalidade deste mês está quitada.
+        </div>
+      `}
+    </div>
+  `;
+
+  container.classList.remove("hidden");
+}
+
+function toggleBoxHorarioEspecial(id) {
+  const box = document.getElementById(`box-horario-especial-${id}`);
+  box?.classList.toggle("hidden");
+}
+
+async function salvarHorarioEspecialPais(id) {
+  if (!supabaseClient) return;
+
+  const hIda = document.getElementById(`esp-ida-${id}`)?.value.trim() || "";
+  const hVolta = document.getElementById(`esp-volta-${id}`)?.value.trim() || "";
+
+  if (!hIda && !hVolta) {
+    alert("Informe ao menos o horário de ida ou de volta para salvar.");
+    return;
+  }
+
+  await supabaseClient.from('alunos').update({
+    tem_horario_especial: true,
+    horario_busca_hoje: hIda,
+    horario_volta_hoje: hVolta
+  }).eq('id', id);
+
+  alert("Aviso de horário especial enviado para a Tia Rafa!");
+  carregarDadosPais();
+}
+
+async function limparHorarioEspecialPais(id) {
+  if (!supabaseClient) return;
+
+  await supabaseClient.from('alunos').update({
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: ""
+  }).eq('id', id);
+
+  alert("Horário especial cancelado. Voltou ao horário normal.");
+  carregarDadosPais();
+}
+
+async function alternarPresenca(id, novoStatus) {
+  if (!supabaseClient) return;
+  await supabaseClient.from('alunos').update({ vai_hoje: novoStatus }).eq('id', id);
+  carregarDadosPais();
 }
 
 // TRANSMISSÃO GPS
@@ -1104,124 +1280,6 @@ async function carregarDadosPais() {
   }
 }
 
-function renderizarPaisFilho(email) {
-  const container = document.getElementById("conteudo-filho-pais");
-  if (!email || !container) {
-    container?.classList.add("hidden");
-    return;
-  }
-
-  const filho = alunosCache.find(a => a.email_mae === email && !a.pendente_aprovacao);
-  if (!filho) return;
-
-  const st = filho.status || 'Em Casa';
-  let badgeColor = 'bg-slate-700/50 text-slate-300 border-slate-600';
-  let icon = 'fa-house-user';
-  let desc = 'Aguardando busca residencial.';
-
-  if (st === 'Na Van' || st === 'Embarcou') { 
-    badgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/30'; 
-    icon = 'fa-van-shuttle'; 
-    desc = 'A caminho com a Tia Rafa!';
-  }
-  if (st === 'Na Escola' || st === 'Desembarcou') { 
-    badgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'; 
-    icon = 'fa-school'; 
-    desc = 'Entregue no destino com segurança.';
-  }
-
-  const stPag = filho.status_pagamento || 'Pendente';
-  const val = filho.valor || 180.00;
-  const venc = filho.vencimento || 10;
-  const vaiTurno1 = filho.vai_turno1_hoje || false;
-
-  container.innerHTML = `
-    <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
-      <div class="flex justify-between items-start">
-        <div>
-          <h3 class="text-base font-extrabold text-white">${filho.nome}</h3>
-          <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-graduation-cap"></i> ${filho.escola || '-'} (${filho.turno || 'Manhã'})</p>
-          <p class="text-[11px] text-amber-400 font-medium mt-1"><i class="fa-regular fa-clock"></i> Horário de Busca: ${filho.horario_busca || 'A definir pela Tia Rafa'} | Entrada: ${filho.horario_escola || '-'}</p>
-        </div>
-        <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor} flex items-center gap-1.5">
-          <i class="fa-solid ${icon}"></i> ${st}
-        </span>
-      </div>
-
-      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs text-slate-300">
-        ${desc}
-      </div>
-
-      <!-- AVISO DE TURNO EXCEÇÃO (07H) -->
-      ${filho.turno === 'Manhã (08h às 12h)' ? `
-        <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Vai no 1º turno hoje (07h)?</span>
-            <button onclick="alternarExcecaoPais('${filho.id}', ${!vaiTurno1})" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${vaiTurno1 ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
-              ${vaiTurno1 ? '✓ Sim (07h)' : 'Não (08h)'}
-            </button>
-          </div>
-          <p class="text-[10px] text-slate-400">Marque "Sim" se ele vai no primeiro horário do transporte hoje.</p>
-        </div>
-      ` : ''}
-
-      <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
-        <span class="text-xs font-bold text-slate-300">Vai no transporte hoje?</span>
-        <button onclick="alternarPresenca('${filho.id}', ${!filho.vai_hoje})" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${filho.vai_hoje !== false ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-          ${filho.vai_hoje !== false ? '✓ Confirmado' : '✕ Ausente Hoje'}
-        </button>
-      </div>
-    </div>
-
-    <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
-      <div class="flex justify-between items-center">
-        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mensalidade Escolar</h4>
-        <span class="text-xs font-bold ${stPag === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stPag === 'Pago' ? '🟢 Quitado' : '🔴 Pendente'}</span>
-      </div>
-
-      <div class="flex justify-between items-baseline">
-        <p class="text-2xl font-extrabold text-white">R$ ${val.toFixed(2)}</p>
-        <p class="text-xs text-slate-400">Vencimento: Dia ${venc}</p>
-      </div>
-
-      ${stPag !== 'Pago' ? `
-        <div class="space-y-3 pt-2">
-          <div class="p-3 bg-teal-950/40 border border-teal-500/30 rounded-xl space-y-1.5">
-            <p class="text-xs font-bold text-teal-300"><i class="fa-brands fa-pix"></i> Pagamento via PIX</p>
-            <p class="text-xs font-mono bg-slate-900 p-2 rounded border border-slate-700 text-teal-200 select-all">${pixChaveGlobal}</p>
-          </div>
-
-          <div class="p-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-xs text-slate-400">
-            <i class="fa-solid fa-money-bill-wave text-amber-400"></i> <strong>Dinheiro:</strong> Entregar diretamente para a Tia Rafa no embarque.
-          </div>
-
-          <a href="${linkCartaoGlobal}" target="_blank" class="block w-full py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-bold text-xs rounded-xl transition-all">
-            <i class="fa-solid fa-credit-card"></i> Pagar no Cartão de Crédito/Débito
-          </a>
-        </div>
-      ` : `
-        <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-semibold text-center">
-          ✓ Obrigado! A mensalidade deste mês está quitada.
-        </div>
-      `}
-    </div>
-  `;
-
-  container.classList.remove("hidden");
-}
-
-async function alternarPresenca(id, novoStatus) {
-  if (!supabaseClient) return;
-  await supabaseClient.from('alunos').update({ vai_hoje: novoStatus }).eq('id', id);
-  carregarDadosPais();
-}
-
-async function alternarExcecaoPais(id, statusExcecao) {
-  if (!supabaseClient) return;
-  await supabaseClient.from('alunos').update({ vai_turno1_hoje: statusExcecao }).eq('id', id);
-  carregarDadosPais();
-}
-
 // PAINEL RAFA
 async function carregarDadosRafa() {
   if (!supabaseClient) return;
@@ -1352,7 +1410,9 @@ async function encerrarMesFinanceiro() {
       await supabaseClient.from('alunos').update({
         status_pagamento: 'Pendente',
         forma_pagamento: null,
-        vai_turno1_hoje: false,
+        tem_horario_especial: false,
+        horario_busca_hoje: "",
+        horario_volta_hoje: "",
         levado_hoje: false
       }).eq('id', a.id);
     }
@@ -1381,8 +1441,10 @@ async function cadastrarAlunoAdmin(e) {
     status: 'Em Casa',
     status_pagamento: 'Pendente',
     vai_hoje: true,
-    vai_turno1_hoje: false,
     levado_hoje: false,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: "",
     pendente_aprovacao: false
   };
 
