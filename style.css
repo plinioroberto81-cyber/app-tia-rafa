@@ -1,11 +1,11 @@
-/* CORREÇÃO COMPLETA DO TEMA CLARO (LIGHT MODE) */
+/* TEMA CLARO (LIGHT MODE) - AJUSTADO APENAS PARA MODO CLARO */
     html.light-mode, 
     html.light-mode body {
-      background-color: #f1f5f9 !important; /* Fundo geral cinza claro suave */
-      color: #0f172a !important; /* Texto principal azul escuro */
+      background-color: #f1f5f9 !important; /* Fundo geral em cinza-claro suave */
+      color: #0f172a !important;
     }
 
-    /* CABEÇALHO E ELEMENTOS FIXOS */
+    /* CABEÇALHO E NAVEGAÇÃO CLAROS */
     html.light-mode header,
     html.light-mode nav#bottom-bar {
       background-color: #ffffff !important;
@@ -15,7 +15,18 @@
       color: #0f172a !important;
     }
 
-    /* CARDS, CONTAINERS E PAINÉIS */
+    /* TEXTOS DE BOAS-VINDAS E TÍTULOS VISÍVEIS */
+    html.light-mode #login-section h2,
+    html.light-mode #login-section p,
+    html.light-mode .text-white,
+    html.light-mode .text-slate-100,
+    html.light-mode .text-slate-300,
+    html.light-mode .text-slate-400,
+    html.light-mode .text-slate-500 {
+      color: #0f172a !important; /* Força cor preta/azul-escuro legível no fundo claro */
+    }
+
+    /* CARDS, BOTÕES E CAIXAS CLARAS */
     html.light-mode .bg-slate-900,
     html.light-mode .bg-slate-800,
     html.light-mode .bg-slate-900\/80,
@@ -26,7 +37,7 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     }
 
-    /* CAMPOS DE TEXTO E SELECTS */
+    /* CAMPOS DE INPUTS E SELECTS */
     html.light-mode input,
     html.light-mode select {
       background-color: #f8fafc !important;
@@ -34,21 +45,10 @@
       color: #0f172a !important;
     }
 
-    /* TEXTOS E CONTRASTE */
-    html.light-mode .text-white,
-    html.light-mode .text-slate-100,
-    html.light-mode .text-slate-300 {
-      color: #0f172a !important;
-    }
-    html.light-mode .text-slate-400,
-    html.light-mode .text-slate-500 {
-      color: #475569 !important;
-    }
-
-    /* CAIXAS DE INFORMAÇÕES INTERNAS */
+    /* CAIXAS DE INFORMAÇÃO INTERNAS */
     html.light-mode .bg-slate-950,
     html.light-mode .bg-slate-900\/60 {
-      background-color: #f1f5f9 !important;
-      border-color: #e2e8f0 !important;
+      background-color: #e2e8f0 !important;
+      border-color: #cbd5e1 !important;
       color: #0f172a !important;
     }
