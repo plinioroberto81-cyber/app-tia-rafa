@@ -1,24 +1,17 @@
-/* BASE E MODO ESCURO */
-    body {
-      background-color: #020617 !important;
-      color: #f1f5f9 !important;
-    }
-
-    /* MODO CLARO (CINZA CONFORTÁVEL) */
-    html.light-mode, 
+<style>
+    /* REGRAS EXCLUSIVAS PARA O MODO CLARO (NÃO AFETAM O MODO ESCURO) */
     html.light-mode body {
-      background-color: #cbd5e1 !important; /* Cinza-médio suave para tirar o excesso de brilho */
+      background-color: #cbd5e1 !important; /* Fundo cinza suave */
       color: #020617 !important;
     }
 
-    /* CABEÇALHO E NAVEGAÇÃO */
     html.light-mode header,
     html.light-mode nav#bottom-bar {
       background-color: #e2e8f0 !important;
       border-color: #94a3b8 !important;
     }
 
-    /* TEXTO DO "BEM-VINDO" E DEMAIS TÍTULOS COM DESTAQUE PRETO ESCURO */
+    /* FORÇA TEXTO PRETO NO MODO CLARO */
     html.light-mode #login-section h2,
     html.light-mode #login-section p,
     html.light-mode h1,
@@ -33,18 +26,17 @@
     html.light-mode .text-slate-300,
     html.light-mode .text-slate-400,
     html.light-mode .text-slate-500 {
-      color: #020617 !important; /* Força tom preto puro para contraste total */
+      color: #020617 !important;
     }
 
-    /* CARDS E PAINÉIS EM CINZA CLARO FOSCO (SEM O BRANCO CEGANTE) */
+    /* CARDS CLAROS */
     html.light-mode .bg-slate-900,
     html.light-mode .bg-slate-800,
     html.light-mode .bg-slate-900\/80,
     html.light-mode .bg-slate-800\/80,
     html.light-mode .bg-slate-800\/90 {
-      background-color: #f1f5f9 !important; /* Cinza suave fosco */
+      background-color: #f1f5f9 !important;
       border-color: #94a3b8 !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 
     /* INPUTS E SELECTS */
@@ -55,10 +47,11 @@
       color: #020617 !important;
     }
 
-    /* ELEMENTOS INTERNOS DE DESTAQUE */
+    /* ELEMENTOS INTERNOS */
     html.light-mode .bg-slate-950,
     html.light-mode .bg-slate-900\/60 {
       background-color: #e2e8f0 !important;
       border-color: #cbd5e1 !important;
       color: #020617 !important;
     }
+  </style>
