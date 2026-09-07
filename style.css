@@ -1,7 +1,9 @@
-/* FUNDO DO MODO CLARO - SOBREPOSIÇÃO FORÇADA */
+/* FORÇA O FUNDO DA TELA E DAS CLASSES TAILWIND NO MODO CLARO */
 html.light-mode,
-html.light-mode body {
-  background-color: #cbd5e1 !important; /* Força o cinza suave em toda a tela */
+html.light-mode body,
+html.light-mode body.bg-slate-950,
+html.light-mode .bg-slate-950 {
+  background-color: #cbd5e1 !important; /* Cinza suave e confortável */
   color: #020617 !important;
 }
 
@@ -12,7 +14,7 @@ html.light-mode nav#bottom-bar {
   border-color: #94a3b8 !important;
 }
 
-/* CORREÇÃO DO BEM-VINDO E TEXTOS NO MODO CLARO */
+/* TEXTO DO BEM-VINDO E TÍTULOS VISÍVEIS NO MODO CLARO */
 html.light-mode #login-section h2,
 html.light-mode #login-section p,
 html.light-mode h1,
@@ -48,8 +50,7 @@ html.light-mode select {
   color: #020617 !important;
 }
 
-/* CAIXAS INTERNAS */
-html.light-mode .bg-slate-950,
+/* CAIXAS INTERNAS DENTRO DOS CARDS */
 html.light-mode .bg-slate-900\/60 {
   background-color: #e2e8f0 !important;
   border-color: #cbd5e1 !important;
