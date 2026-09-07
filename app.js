@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-fechar-modal-edit")?.addEventListener("click", () => {
     document.getElementById("modal-editar-aluno")?.classList.add("hidden");
   });
-  document.getElementById("form-editar-aluno")?.addEventListener("submit", salvarEdicaoAlunoAdmin);
+  document.getElementById("form-editar-aluno")?.addEventListener("submit", salvarEdicaoAluno);
 
   document.getElementById("btn-salvar-configs")?.addEventListener("click", salvarConfigsGlobais);
 
@@ -279,7 +279,7 @@ async function aprovarCadastroAluno(id) {
   }
 }
 
-// EXCLUIR / RECUSAR ALUNO (CORRIGIDO)
+// EXCLUIR / RECUSAR ALUNO
 async function deletarAlunoAdmin(id) {
   if (!supabaseClient) {
     alert("Erro de conexão com o banco de dados.");
@@ -397,7 +397,7 @@ function alternarModoRota(modo) {
   renderizarRotaRafa();
 }
 
-// RENDERIZAR ROTA DINÂMICA TIA RAFA
+// RENDERIZAR ROTA DINÂMICA TIA RAFA (COM BOTÃO DE EDITAR)
 function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
@@ -461,7 +461,13 @@ function renderizarRotaRafa() {
             <p class="text-xs text-slate-400 mt-1">${aluno.escola || ''} (${aluno.turno || 'Manhã'})</p>
             <p class="text-[10px] text-slate-300 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Endereço não informado'}</p>
           </div>
-          ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg shrink-0"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
+          
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="abrirModalEditarAluno('${aluno.id}')" class="text-amber-400 text-xs bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">
+              ✏️ Editar
+            </button>
+            ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
+          </div>
         </div>
 
         <div class="grid grid-cols-3 gap-2">
@@ -742,7 +748,7 @@ function alternarTransmissaoGps() {
   }
 }
 
-// BUSCAR GPS ADMIN (MARCADOR ATUALIZADO COM O NOVO LOGO)
+// BUSCAR GPS ADMIN
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -897,6 +903,62 @@ async function atenderEmergenciaAdmin() {
   document.getElementById("modal-emergencia-admin")?.classList.add("hidden");
 }
 
+// ABRIR MODAL DE EDIÇÃO
+function abrirModalEditarAluno(id) {
+  const aluno = alunosCache.find(a => a.id == id);
+  if (!aluno) return;
+
+  document.getElementById("edit-id").value = aluno.id;
+  document.getElementById("edit-nome").value = aluno.nome || '';
+  document.getElementById("edit-turno").value = aluno.turno || 'Manhã (07h às 11h)';
+  document.getElementById("edit-wsp").value = aluno.whatsapp || '';
+  document.getElementById("edit-horario-busca").value = aluno.horario_busca || '';
+  document.getElementById("edit-horario-escola").value = aluno.horario_escola || '';
+  document.getElementById("edit-endereco-casa").value = aluno.endereco_casa || '';
+  document.getElementById("edit-escola").value = aluno.escola || '';
+  document.getElementById("edit-email-mae").value = aluno.email_mae || '';
+  document.getElementById("edit-pin").value = aluno.pin_pais || '1234';
+  document.getElementById("edit-valor").value = aluno.valor || 180;
+  document.getElementById("edit-vencimento").value = aluno.vencimento || 10;
+
+  document.getElementById("modal-editar-aluno")?.classList.remove("hidden");
+}
+
+// SALVAR EDIÇÃO (PARA TIA RAFA E ADMIN)
+async function salvarEdicaoAluno(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const id = document.getElementById("edit-id").value;
+  const updateData = {
+    nome: document.getElementById("edit-nome").value,
+    turno: document.getElementById("edit-turno").value,
+    whatsapp: document.getElementById("edit-wsp").value,
+    horario_busca: document.getElementById("edit-horario-busca").value,
+    horario_escola: document.getElementById("edit-horario-escola").value,
+    endereco_casa: document.getElementById("edit-endereco-casa").value,
+    escola: document.getElementById("edit-escola").value,
+    email_mae: document.getElementById("edit-email-mae").value,
+    pin_pais: document.getElementById("edit-pin").value,
+    valor: parseFloat(document.getElementById("edit-valor").value),
+    vencimento: parseInt(document.getElementById("edit-vencimento").value)
+  };
+
+  const { error } = await supabaseClient.from('alunos').update(updateData).eq('id', id);
+
+  if (error) {
+    alert("Erro ao salvar alterações: " + error.message);
+    return;
+  }
+
+  alert("✓ Cadastro atualizado com sucesso!");
+  document.getElementById("modal-editar-aluno")?.classList.add("hidden");
+
+  // Recarrega o painel correto
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
+}
+
 // ADMIN GESTÃO DE ALUNOS
 async function carregarDadosAdmin() {
   if (!supabaseClient) return;
@@ -965,51 +1027,6 @@ async function alterarStatusAdmin(id, campo, valor) {
   let updateObj = {};
   updateObj[campo] = valor;
   await supabaseClient.from('alunos').update(updateObj).eq('id', id);
-  carregarDadosAdmin();
-}
-
-function abrirModalEditarAluno(id) {
-  const aluno = alunosCache.find(a => a.id == id);
-  if (!aluno) return;
-
-  document.getElementById("edit-id").value = aluno.id;
-  document.getElementById("edit-nome").value = aluno.nome || '';
-  document.getElementById("edit-turno").value = aluno.turno || 'Manhã (07h às 11h)';
-  document.getElementById("edit-wsp").value = aluno.whatsapp || '';
-  document.getElementById("edit-horario-busca").value = aluno.horario_busca || '';
-  document.getElementById("edit-horario-escola").value = aluno.horario_escola || '';
-  document.getElementById("edit-endereco-casa").value = aluno.endereco_casa || '';
-  document.getElementById("edit-escola").value = aluno.escola || '';
-  document.getElementById("edit-email-mae").value = aluno.email_mae || '';
-  document.getElementById("edit-pin").value = aluno.pin_pais || '1234';
-  document.getElementById("edit-valor").value = aluno.valor || 180;
-  document.getElementById("edit-vencimento").value = aluno.vencimento || 10;
-
-  document.getElementById("modal-editar-aluno")?.classList.remove("hidden");
-}
-
-async function salvarEdicaoAlunoAdmin(e) {
-  e.preventDefault();
-  if (!supabaseClient) return;
-
-  const id = document.getElementById("edit-id").value;
-  const updateData = {
-    nome: document.getElementById("edit-nome").value,
-    turno: document.getElementById("edit-turno").value,
-    whatsapp: document.getElementById("edit-wsp").value,
-    horario_busca: document.getElementById("edit-horario-busca").value,
-    horario_escola: document.getElementById("edit-horario-escola").value,
-    endereco_casa: document.getElementById("edit-endereco-casa").value,
-    escola: document.getElementById("edit-escola").value,
-    email_mae: document.getElementById("edit-email-mae").value,
-    pin_pais: document.getElementById("edit-pin").value,
-    valor: parseFloat(document.getElementById("edit-valor").value),
-    vencimento: parseInt(document.getElementById("edit-vencimento").value)
-  };
-
-  await supabaseClient.from('alunos').update(updateData).eq('id', id);
-  alert("Salvo!");
-  document.getElementById("modal-editar-aluno")?.classList.add("hidden");
   carregarDadosAdmin();
 }
 
@@ -1190,7 +1207,7 @@ function mostrarFormLogin(role) {
 
 function resetLogin() {
   if (authForm) authForm.classList.add("hidden");
-  if (mainButtons) mainButtons.classList.remove("hidden");
+  if (mainButtons) mainButtons.className = "space-y-3";
   if (inputPassword) inputPassword.value = "";
 }
 
