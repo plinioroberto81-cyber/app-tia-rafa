@@ -4,7 +4,7 @@ html.light-mode {
 }
 
 html.light-mode body {
-  background-color: #cbd5e1 !important;
+  background-color: #cbd5e1 !important; /* Cinza suave e confortável */
   color: #020617 !important;
 }
 
@@ -29,7 +29,7 @@ html.light-mode .text-slate-100,
 html.light-mode .text-slate-300,
 html.light-mode .text-slate-400,
 html.light-mode .text-slate-500 {
-  color: #020617 !important;
+  color: #020617 !important; /* Força texto em tom escuro nítido */
 }
 
 /* CARDS EM CINZA FOSCO NO MODO CLARO */
