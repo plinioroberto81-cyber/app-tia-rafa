@@ -239,7 +239,7 @@ async function carregarGpsAdmin() {
         attribution: '© OpenStreetMap'
       }).addTo(mapAdmin);
 
-      markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin).bindPopup("🚐 Zafira Tia Rafa").openPopup();
+      markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin);
     } else if (mapAdmin && markerVanAdmin) {
       markerVanAdmin.setLatLng([lat, lng]);
       mapAdmin.setView([lat, lng]);
