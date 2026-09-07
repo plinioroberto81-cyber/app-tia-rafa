@@ -169,15 +169,39 @@
         <select id="select-email-pais" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400">
           <option value="">-- Selecione seu E-mail --</option>
         </select>
+        <button id="btn-abrir-auto-cadastro" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs rounded-xl border border-amber-500/30 transition-all flex items-center justify-center gap-2">
+          <i class="fa-solid fa-user-plus"></i> Novo por aqui? Cadastrar Passageiro
+        </button>
       </div>
 
-      <!-- BOTÃO DE NOTIFICAÇÃO RÁPIDA DOS PAIS -->
-      <div id="painel-avisos-pais" class="hidden bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-2">
-        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Aviso de Horário Excepcional</h4>
-        <p class="text-[11px] text-slate-300">Seu filho(a) estuda no turno das 08h mas precisa ir mais cedo hoje?</p>
-        <button id="btn-notificar-antecipacao" onclick="alternarExcecaoPais()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2">
-          <i class="fa-solid fa-clock"></i> Notificar Tia Rafa: "Hoje vai às 07h"
-        </button>
+      <!-- FORMULÁRIO DE AUTO-CADASTRO DOS PAIS -->
+      <div id="form-auto-cadastro-container" class="hidden bg-slate-900 border border-amber-500/40 p-4 rounded-2xl space-y-3 shadow-xl">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Cadastro de Novo Aluno</h3>
+          <button id="btn-fechar-auto-cadastro" class="text-xs text-slate-400 hover:text-white">✕</button>
+        </div>
+        <form id="form-auto-cadastro-pais" class="space-y-2.5">
+          <input type="text" id="auto-nome" placeholder="Nome Completo do Aluno" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          <div class="grid grid-cols-2 gap-2">
+            <select id="auto-turno" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+              <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
+              <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
+              <option value="Tarde">Tarde</option>
+            </select>
+            <input type="text" id="auto-wsp" placeholder="WhatsApp dos Pais (DDD)" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="auto-horario-busca" placeholder="Horário Busca (ex: 06:40)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <input type="text" id="auto-horario-escola" placeholder="Entrada Escola (ex: 07:30)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          </div>
+          <input type="text" id="auto-endereco-casa" placeholder="Endereço Residencial Completo" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          <input type="text" id="auto-escola" placeholder="Nome da Escola" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          <input type="email" id="auto-email-mae" placeholder="Seu E-mail (Para Login)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          
+          <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
+            Enviar Cadastro para Aprovação
+          </button>
+        </form>
       </div>
 
       <div id="conteudo-filho-pais" class="space-y-4 hidden"></div>
@@ -192,6 +216,17 @@
         </button>
       </div>
 
+      <!-- SEÇÃO DE APROVAÇÕES PENDENTES (RAFA) -->
+      <div id="container-pendentes-rafa" class="hidden bg-amber-500/10 border border-amber-500/40 p-4 rounded-2xl space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-user-clock text-sm"></i> Cadastros Pendentes de Aprovação
+          </h3>
+          <span id="badge-pendentes-count-rafa" class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">0</span>
+        </div>
+        <div id="lista-pendentes-rafa" class="space-y-2.5"></div>
+      </div>
+
       <div class="flex border-b border-slate-800">
         <button id="tab-btn-chamada" class="flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400">
           <i class="fa-solid fa-list-check"></i> Chamada da Rota
@@ -202,7 +237,6 @@
       </div>
 
       <div id="aba-chamada-rafa" class="space-y-3">
-        <!-- FILTROS DE TURNO ATUALIZADOS -->
         <div class="flex gap-1.5 overflow-x-auto pb-1">
           <button id="btn-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950 whitespace-nowrap">Todos</button>
           <button id="btn-filtro-manha7" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 whitespace-nowrap">Manhã 07h</button>
@@ -272,6 +306,17 @@
 
       <!-- ABA 1: ALUNOS & GPS ADMIN -->
       <div id="aba-admin-alunos" class="space-y-4">
+        <!-- SEÇÃO DE APROVAÇÕES PENDENTES (ADMIN) -->
+        <div id="container-pendentes-admin" class="hidden bg-amber-500/10 border border-amber-500/40 p-4 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-user-clock text-sm"></i> Cadastros Pendentes de Aprovação
+            </h3>
+            <span id="badge-pendentes-count-admin" class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">0</span>
+          </div>
+          <div id="lista-pendentes-admin" class="space-y-2.5"></div>
+        </div>
+
         <!-- MAPA GPS NO ADMIN -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2.5">
           <div class="flex justify-between items-center">
@@ -297,9 +342,9 @@
           <button id="btn-limpar-aviso" class="w-full py-1.5 text-[10px] text-rose-400 font-bold hover:underline">Limpar Avisos Ativos</button>
         </div>
 
-        <!-- CADASTRAR NOVO ALUNO COM SUB-TURNOS -->
+        <!-- CADASTRAR NOVO ALUNO (ADMIN) -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Cadastrar Novo Passageiro</h3>
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider">Cadastrar Novo Passageiro (Manual)</h3>
           <form id="form-cadastrar-aluno" class="space-y-2.5">
             <input type="text" id="add-nome" placeholder="Nome Completo do Aluno" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
             <div class="grid grid-cols-2 gap-2">
