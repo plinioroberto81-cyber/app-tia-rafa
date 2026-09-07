@@ -183,37 +183,42 @@
         </button>
       </div>
 
-      <!-- FORMULÁRIO DE AUTO-CADASTRO DOS PAIS (SIMPLIFICADO) -->
-      <div id="form-auto-cadastro-container" class="hidden bg-slate-900 border border-amber-500/40 p-4 rounded-2xl space-y-3 shadow-xl">
-        <div class="flex justify-between items-center">
-          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Cadastro de Novo Aluno</h3>
-          <button id="btn-fechar-auto-cadastro" class="text-xs text-slate-400 hover:text-white">✕</button>
-        </div>
-        <form id="form-auto-cadastro-pais" class="space-y-2.5">
-          <input type="text" id="auto-nome" placeholder="Nome Completo do Aluno" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-          <div class="grid grid-cols-2 gap-2">
-            <select id="auto-turno" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
-              <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
-              <option value="Tarde">Tarde</option>
-            </select>
-            <input type="text" id="auto-wsp" placeholder="WhatsApp dos Pais (DDD)" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-          </div>
-          
-          <input type="text" id="auto-horario-escola" placeholder="Horário de Entrada na Escola (ex: 07:30)" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-          <input type="text" id="auto-endereco-casa" placeholder="Endereço Residencial Completo" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-          <input type="text" id="auto-escola" placeholder="Nome da Escola" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-          
-          <div class="grid grid-cols-2 gap-2">
-            <input type="email" id="auto-email-mae" placeholder="E-mail do Responsável" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-            <input type="password" id="auto-pin" maxlength="4" placeholder="Crie PIN (4 números)" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
-          </div>
+      <!-- FORMULÁRIO DE AUTO-CADASTRO DOS PAIS (ENXUTO E SEM REDUNDÂNCIA) -->
+<div id="form-auto-cadastro-container" class="hidden bg-slate-900 border border-amber-500/40 p-4 rounded-2xl space-y-3 shadow-xl">
+  <div class="flex justify-between items-center">
+    <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Cadastro de Novo Aluno</h3>
+    <button id="btn-fechar-auto-cadastro" class="text-xs text-slate-400 hover:text-white">✕</button>
+  </div>
+  <form id="form-auto-cadastro-pais" class="space-y-2.5">
+    <!-- NOME COMPLETO -->
+    <input type="text" id="auto-nome" placeholder="Nome Completo do Aluno" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+    
+    <!-- TURNO E WHATSAPP -->
+    <div class="grid grid-cols-2 gap-2">
+      <select id="auto-turno" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+        <option value="">-- Selecione o Turno --</option>
+        <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
+        <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
+        <option value="Tarde">Tarde</option>
+      </select>
+      <input type="text" id="auto-wsp" placeholder="WhatsApp dos Pais (DDD)" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+    </div>
+    
+    <!-- ENDEREÇO E ESCOLA -->
+    <input type="text" id="auto-endereco-casa" placeholder="Endereço Residencial Completo" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+    <input type="text" id="auto-escola" placeholder="Nome da Escola" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+    
+    <!-- E-MAIL E PIN DE ACESSO -->
+    <div class="grid grid-cols-2 gap-2">
+      <input type="email" id="auto-email-mae" placeholder="E-mail do Responsável" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+      <input type="password" id="auto-pin" maxlength="4" placeholder="Crie PIN (4 números)" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
+    </div>
 
-          <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
-            Enviar Cadastro para Aprovação
-          </button>
-        </form>
-      </div>
+    <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
+      Enviar Cadastro para Aprovação
+    </button>
+  </form>
+</div>
 
       <div id="conteudo-filho-pais" class="space-y-4 hidden"></div>
     </section>
