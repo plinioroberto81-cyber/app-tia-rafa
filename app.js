@@ -1057,3 +1057,29 @@ async function deletarAlunoAdmin(id) {
     carregarDadosAdmin();
   }
 }
+// --- LÓGICA DE EXCEÇÃO DIÁRIA DE HORÁRIO ---
+
+// 1. Função dos Pais para Notificar Antecipação (Exceção de Horário)
+async function alternarExcecaoPais() {
+  const selectEmail = document.getElementById('select-email-pais');
+  const emailSelecionado = selectEmail ? selectEmail.value : null;
+
+  if (!emailSelecionado) {
+    alert("Por favor, selecione seu e-mail de cadastro primeiro.");
+    return;
+  }
+
+  // Busca o aluno vinculado ao e-mail
+  const aluno = alunosData.find(a => a.email_mae === emailSelecionado);
+  if (!aluno) return;
+
+  const novoStatusExcecao = !aluno.vai_turno1_hoje;
+
+  // Atualiza no banco do Supabase
+  const { error } = await supabaseClient
+    .from('alunos')
+    .update({ vai_turno1_hoje: novoStatusExcecao })
+    .eq('id', aluno.id);
+
+  if (error) {
+    alert("Erro ao notificar alteração: " + error.message);
