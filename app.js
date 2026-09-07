@@ -126,6 +126,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-admin-fin-pendentes")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pendente"));
   document.getElementById("btn-admin-fin-pagos")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pago"));
 
+  // BACKUP / EXPORTAÇÃO CSV
+  document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
+  document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
+
   // AVISOS
   document.getElementById("btn-aviso-10min")?.addEventListener("click", () => dispararAviso("⏱️ Pequeno atraso na rota (Aproximadamente 10 minutos). Crianças em segurança!"));
   document.getElementById("btn-aviso-transito")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
@@ -261,7 +265,6 @@ async function carregarGpsAdmin() {
         attribution: '© OpenStreetMap'
       }).addTo(mapAdmin);
 
-      // MARCADOR LIMPO (SEM BALÃO DE TEXTO SOBREPOSTO)
       markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin);
     } else if (mapAdmin && markerVanAdmin) {
       markerVanAdmin.setLatLng([lat, lng]);
@@ -337,7 +340,6 @@ async function dispararEmergenciaRafa() {
 async function verificarEmergenciaAdmin() {
   if (!supabaseClient) return;
 
-  // Se NÃO for o perfil Admin logado, para o som e oculta modais
   if (currentRole !== "admin") {
     pararSomSirene();
     return;
@@ -585,6 +587,44 @@ async function darBaixaAdmin(id, stP, forma) {
   carregarDadosAdmin();
 }
 
+// EXPORTAÇÃO CSV / PLANILHA
+function exportarRelatorioFinanceiroCSV() {
+  if (!alunosCache || alunosCache.length === 0) {
+    alert("Não há dados cadastrados para exportar.");
+    return;
+  }
+
+  let csvContent = "\uFEFF";
+  csvContent += "Nome do Passageiro;Escola;Turno;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;Email Responsavel;WhatsApp\n";
+
+  alunosCache.forEach(a => {
+    const nome = (a.nome || "-").replace(/;/g, ",");
+    const escola = (a.escola || "-").replace(/;/g, ",");
+    const turno = a.turno || "Manhã";
+    const valor = parseFloat(a.valor || 180).toFixed(2);
+    const vencimento = a.vencimento || 10;
+    const statusPag = a.status_pagamento || "Pendente";
+    const formaPag = a.forma_pagamento || "-";
+    const email = a.email_mae || "-";
+    const whats = a.whatsapp || "-";
+
+    csvContent += `${nome};${escola};${turno};R$ ${valor};Dia ${vencimento};${statusPag};${formaPag};${email};${whats}\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const dataHoje = new Date().toISOString().slice(0, 10);
+  const fileName = `Backup_Financeiro_TiaRafa_${dataHoje}.csv`;
+
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", fileName);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 // NAVEGAÇÃO E ENTRADA NOS PERFIS
 function inicializarTema() {
   const temaSalvo = localStorage.getItem("theme");
@@ -633,7 +673,6 @@ function voltarHome() {
   btnTopBack?.classList.add("hidden");
   loginSection?.classList.remove("hidden");
   
-  // Desliga GPS ao sair
   if (isGpsTransmitting) alternarTransmissaoGps();
   pararSomSirene();
   resetLogin();
@@ -655,7 +694,6 @@ function entrarPerfil(role) {
     document.getElementById("dashboard-rafa")?.classList.remove("hidden");
     carregarDadosRafa();
     
-    // ATIVA O GPS AUTOMATICAMENTE AO LOGAR COMO TIA RAFA
     if (!isGpsTransmitting) {
       alternarTransmissaoGps();
     }
