@@ -1,60 +1,54 @@
-/* REGRAS DO MODO CLARO (LIGHT MODE) */
-html.light-mode {
-  background-color: #f8fafc !important; /* slate-50 */
-  color: #0f172a !important; /* slate-900 */
-}
+/* CORREÇÃO COMPLETA DO TEMA CLARO (LIGHT MODE) */
+    html.light-mode, 
+    html.light-mode body {
+      background-color: #f1f5f9 !important; /* Fundo geral cinza claro suave */
+      color: #0f172a !important; /* Texto principal azul escuro */
+    }
 
-/* Fundo da tela e textos */
-html.light-mode body {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-}
+    /* CABEÇALHO E ELEMENTOS FIXOS */
+    html.light-mode header,
+    html.light-mode nav#bottom-bar {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light-mode header h1 {
+      color: #0f172a !important;
+    }
 
-/* Cards e Seções de Login */
-html.light-mode #login-section,
-html.light-mode .bg-slate-800\/90,
-html.light-mode .bg-slate-800\/80,
-html.light-mode .bg-slate-800\/60 {
-  background-color: #ffffff !important;
-  border-color: #e2e8f0 !important; /* slate-200 */
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-}
+    /* CARDS, CONTAINERS E PAINÉIS */
+    html.light-mode .bg-slate-900,
+    html.light-mode .bg-slate-800,
+    html.light-mode .bg-slate-900\/80,
+    html.light-mode .bg-slate-800\/80,
+    html.light-mode .bg-slate-800\/90 {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
 
-/* Botões do Menu Principal */
-html.light-mode #main-buttons button {
-  background: #f1f5f9 !important; /* slate-100 */
-  border-color: #cbd5e1 !important; /* slate-300 */
-}
+    /* CAMPOS DE TEXTO E SELECTS */
+    html.light-mode input,
+    html.light-mode select {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
 
-/* Ajustes de Cores de Textos no Modo Claro */
-html.light-mode h2, 
-html.light-mode h3, 
-html.light-mode h4,
-html.light-mode .text-white {
-  color: #0f172a !important; /* slate-900 */
-}
+    /* TEXTOS E CONTRASTE */
+    html.light-mode .text-white,
+    html.light-mode .text-slate-100,
+    html.light-mode .text-slate-300 {
+      color: #0f172a !important;
+    }
+    html.light-mode .text-slate-400,
+    html.light-mode .text-slate-500 {
+      color: #475569 !important;
+    }
 
-html.light-mode .text-slate-400,
-html.light-mode .text-slate-300 {
-  color: #64748b !important; /* slate-500 */
-}
-
-/* Inputs de Texto */
-html.light-mode input[type="text"],
-html.light-mode input[type="password"] {
-  background-color: #f1f5f9 !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-}
-
-/* Barra Inferior (Bottom Bar) */
-html.light-mode #bottom-bar {
-  background-color: rgba(255, 255, 255, 0.9) !important;
-  border-color: #e2e8f0 !important;
-}
-
-/* Botões Inativos dentro dos Cards */
-html.light-mode .bg-slate-900\/60 {
-  background-color: #e2e8f0 !important;
-  color: #475569 !important;
-}
+    /* CAIXAS DE INFORMAÇÕES INTERNAS */
+    html.light-mode .bg-slate-950,
+    html.light-mode .bg-slate-900\/60 {
+      background-color: #f1f5f9 !important;
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
