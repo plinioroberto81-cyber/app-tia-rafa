@@ -338,39 +338,56 @@ function renderizarPendentesAprovacao() {
 }
 
 async function aprovarCadastroAluno(id) {
-  if (!supabaseClient) return;
+  if (!supabaseClient) {
+    alert("Erro de conexão com o banco de dados Supabase.");
+    return;
+  }
 
+  // Busca os elementos de input no DOM de forma segura
   const inputBusca = document.getElementById(`hor-busca-aprov-${id}`);
   const inputVal = document.getElementById(`val-aprov-${id}`);
   const inputVenc = document.getElementById(`venc-aprov-${id}`);
 
+  // Captura os valores evitando erros de runtime
   const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
+  
   if (!horarioBusca) {
-    alert("Por favor, informe o horário de busca da criança antes de aprovar!");
+    alert("Por favor, preencha o horário em que a Tia Rafa passará para buscar o aluno antes de aprovar!");
+    if (inputBusca) inputBusca.focus();
     return;
   }
 
-  const val = inputVal ? parseFloat(inputVal.value) : 180;
-  const venc = inputVenc ? parseInt(inputVenc.value) : 10;
+  const val = (inputVal && inputVal.value) ? parseFloat(inputVal.value) : 180;
+  const venc = (inputVenc && inputVenc.value) ? parseInt(inputVenc.value) : 10;
 
-  const { error } = await supabaseClient
-    .from('alunos')
-    .update({ 
-      pendente_aprovacao: false,
-      horario_busca: horarioBusca,
-      valor: val,
-      vencimento: venc
-    })
-    .eq('id', id);
+  try {
+    const { data, error } = await supabaseClient
+      .from('alunos')
+      .update({ 
+        pendente_aprovacao: false,
+        horario_busca: horarioBusca,
+        valor: val,
+        vencimento: venc
+      })
+      .eq('id', id)
+      .select();
 
-  if (error) {
-    alert("Erro ao aprovar cadastro: " + error.message);
-    return;
+    if (error) {
+      console.error("Erro Supabase:", error);
+      alert("Erro ao aprovar no banco de dados: " + error.message);
+      return;
+    }
+
+    alert("✓ Cadastro aprovado com sucesso! Horário de busca definido.");
+
+    // Recarrega os dados do perfil ativo
+    if (currentRole === 'rafa') carregarDadosRafa();
+    if (currentRole === 'admin') carregarDadosAdmin();
+
+  } catch (err) {
+    console.error("Exceção ao aprovar cadastro:", err);
+    alert("Ocorreu uma falha inesperada. Tente novamente.");
   }
-
-  alert("Cadastro aprovado e horário da rota definido!");
-  if (currentRole === 'rafa') carregarDadosRafa();
-  if (currentRole === 'admin') carregarDadosAdmin();
 }
 
 // RENDERIZAR ROTA DINÂMICA DA TIA RAFA (ORDENADA POR HORÁRIO DE BUSCA)
