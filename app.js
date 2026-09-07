@@ -24,6 +24,8 @@ let gpsWatchId = null;
 let isGpsTransmitting = false;
 let mapAdmin = null;
 let markerVanAdmin = null;
+let mapRafa = null;
+let markerVanRafa = null;
 
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
@@ -40,7 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
   verificarAlertaGlobal();
   
   setInterval(verificarEmergenciaAdmin, 3000);
-  setInterval(carregarGpsAdmin, 5000);
+  setInterval(() => {
+    carregarGpsAdmin();
+    carregarGpsRafa();
+  }, 5000);
 
   btnTopBack?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
@@ -60,6 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("btn-toggle-gps")?.addEventListener("click", alternarTransmissaoGps);
   document.getElementById("btn-forcar-gps-test")?.addEventListener("click", carregarGpsAdmin);
+  document.getElementById("btn-forcar-gps-test-rafa")?.addEventListener("click", carregarGpsRafa);
 
   document.getElementById("btn-disparar-emergencia")?.addEventListener("click", dispararEmergenciaRafa);
   document.getElementById("btn-desativar-emergencia")?.addEventListener("click", atenderEmergenciaAdmin);
@@ -100,20 +106,40 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
+  // NAVEGAÇÃO DE ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
+    document.getElementById("aba-passageiros-rafa")?.classList.add("hidden");
     document.getElementById("aba-financeiro-rafa")?.classList.add("hidden");
     document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
+    document.getElementById("tab-btn-passageiros").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
     document.getElementById("tab-btn-financeiro").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+  });
+
+  document.getElementById("tab-btn-passageiros")?.addEventListener("click", () => {
+    document.getElementById("aba-chamada-rafa")?.classList.add("hidden");
+    document.getElementById("aba-passageiros-rafa")?.classList.remove("hidden");
+    document.getElementById("aba-financeiro-rafa")?.classList.add("hidden");
+    document.getElementById("tab-btn-passageiros").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
+    document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    document.getElementById("tab-btn-financeiro").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    renderizarPassageirosGeralRafa();
+    setTimeout(() => {
+      carregarGpsRafa();
+      if (mapRafa) mapRafa.invalidateSize();
+    }, 300);
   });
 
   document.getElementById("tab-btn-financeiro")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.add("hidden");
+    document.getElementById("aba-passageiros-rafa")?.classList.add("hidden");
     document.getElementById("aba-financeiro-rafa")?.classList.remove("hidden");
     document.getElementById("tab-btn-financeiro").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
     document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    document.getElementById("tab-btn-passageiros").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
   });
 
+  // NAVEGAÇÃO DE ABAS ADMIN
   document.getElementById("tab-admin-alunos")?.addEventListener("click", () => {
     document.getElementById("aba-admin-alunos")?.classList.remove("hidden");
     document.getElementById("aba-admin-financeiro")?.classList.add("hidden");
@@ -145,21 +171,63 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
-  document.getElementById("btn-aviso-10min")?.addEventListener("click", () => dispararAviso("⏱️ Pequeno atraso na rota (Aproximadamente 10 minutos). Crianças em segurança!"));
-  document.getElementById("btn-aviso-transito")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
-  document.getElementById("btn-aviso-chuva")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
-  document.getElementById("btn-enviar-aviso-custom")?.addEventListener("click", () => {
-    const txt = document.getElementById("input-aviso-custom")?.value;
-    if (txt) {
-      dispararAviso(`📢 ${txt}`);
-      document.getElementById("input-aviso-custom").value = "";
-    }
-  });
-  document.getElementById("btn-limpar-aviso")?.addEventListener("click", limparAvisos);
+  // AVISOS PAIS (ADMIN & TIA RAFA)
+  const setAvisoEvents = (suffix) => {
+    document.getElementById(`btn-aviso-10min${suffix}`)?.addEventListener("click", () => dispararAviso("⏱️ Pequeno atraso na rota (Aproximadamente 10 minutos). Crianças em segurança!"));
+    document.getElementById(`btn-aviso-transito${suffix}`)?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
+    document.getElementById(`btn-aviso-chuva${suffix}`)?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
+    document.getElementById(`btn-enviar-aviso-custom${suffix}`)?.addEventListener("click", () => {
+      const txt = document.getElementById(`input-aviso-custom${suffix}`)?.value;
+      if (txt) {
+        dispararAviso(`📢 ${txt}`);
+        document.getElementById(`input-aviso-custom${suffix}`).value = "";
+      }
+    });
+    document.getElementById(`btn-limpar-aviso${suffix}`)?.addEventListener("click", limparAvisos);
+  };
+
+  setAvisoEvents("");
+  setAvisoEvents("-rafa");
 
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
+  document.getElementById("form-cadastrar-aluno-rafa")?.addEventListener("submit", cadastrarAlunoRafa);
+  
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
+  document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 });
+
+// CADASTRO MANUAL TIA RAFA
+async function cadastrarAlunoRafa(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const novoAluno = {
+    nome: document.getElementById("add-nome-rafa").value,
+    turno: document.getElementById("add-turno-rafa").value,
+    whatsapp: document.getElementById("add-wsp-rafa").value,
+    horario_busca: document.getElementById("add-horario-busca-rafa").value,
+    horario_escola: document.getElementById("add-horario-escola-rafa").value,
+    endereco_casa: document.getElementById("add-endereco-casa-rafa").value,
+    escola: document.getElementById("add-escola-rafa").value,
+    email_mae: document.getElementById("add-email-mae-rafa").value,
+    pin_pais: document.getElementById("add-pin-rafa").value || "1234",
+    valor: parseFloat(document.getElementById("add-valor-rafa").value),
+    vencimento: parseInt(document.getElementById("add-vencimento-rafa").value),
+    status: 'Em Casa',
+    status_pagamento: 'Pendente',
+    vai_hoje: true,
+    levado_hoje: false,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: "",
+    pendente_aprovacao: false
+  };
+
+  await supabaseClient.from('alunos').insert([novoAluno]);
+  alert("Aluno cadastrado com sucesso!");
+  document.getElementById("form-cadastrar-aluno-rafa").reset();
+  carregarDadosRafa();
+}
 
 // AUTO-CADASTRO PAIS
 async function enviarAutoCadastroPais(e) {
@@ -214,9 +282,7 @@ async function enviarAutoCadastroPais(e) {
   };
 
   try {
-    const { error } = await supabaseClient
-      .from('alunos')
-      .insert([novoAluno]);
+    const { error } = await supabaseClient.from('alunos').insert([novoAluno]);
 
     if (error) {
       alert("Erro ao enviar cadastro: " + error.message);
@@ -224,7 +290,6 @@ async function enviarAutoCadastroPais(e) {
     }
 
     alert("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca e aprovará o acesso do seu filho(a).");
-    
     document.getElementById("form-auto-cadastro-pais")?.reset();
     document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
     carregarDadosPais();
@@ -279,14 +344,14 @@ async function aprovarCadastroAluno(id) {
   }
 }
 
-// EXCLUIR / RECUSAR ALUNO
+// EXCLUIR ALUNO (PARA RAFA E ADMIN)
 async function deletarAlunoAdmin(id) {
   if (!supabaseClient) {
     alert("Erro de conexão com o banco de dados.");
     return;
   }
 
-  if (confirm("Deseja realmente recusar e apagar este cadastro?")) {
+  if (confirm("Deseja realmente apagar este cadastro?")) {
     try {
       const { error } = await supabaseClient
         .from('alunos')
@@ -294,11 +359,11 @@ async function deletarAlunoAdmin(id) {
         .eq('id', id);
 
       if (error) {
-        alert("Erro ao recusar cadastro no banco: " + error.message);
+        alert("Erro ao excluir no banco: " + error.message);
         return;
       }
 
-      alert("Cadastro recusado e removido com sucesso!");
+      alert("Cadastro removido com sucesso!");
 
       alunosCache = alunosCache.filter(a => a.id != id);
       renderizarPendentesAprovacao();
@@ -380,24 +445,7 @@ function renderizarPendentesAprovacao() {
   containerAdmin?.classList.remove("hidden");
 }
 
-// ALTERNAR ROTA IDA E VOLTA
-function alternarModoRota(modo) {
-  modoRotaAtual = modo;
-  const btnIda = document.getElementById("btn-rota-ida");
-  const btnVolta = document.getElementById("btn-rota-volta");
-
-  if (modo === "IDA") {
-    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
-    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
-  } else {
-    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
-    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
-  }
-
-  renderizarRotaRafa();
-}
-
-// RENDERIZAR ROTA DINÂMICA TIA RAFA (COM BOTÃO DE EDITAR)
+// RENDERIZAR ROTA DINÂMICA
 function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
@@ -463,9 +511,8 @@ function renderizarRotaRafa() {
           </div>
           
           <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="abrirModalEditarAluno('${aluno.id}')" class="text-amber-400 text-xs bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">
-              ✏️ Editar
-            </button>
+            <button onclick="abrirModalEditarAluno('${aluno.id}')" class="text-amber-400 text-xs bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️</button>
+            <button onclick="deletarAlunoAdmin('${aluno.id}')" class="text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️</button>
             ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
           </div>
         </div>
@@ -478,6 +525,123 @@ function renderizarRotaRafa() {
       </div>
     `;
   }).join('');
+}
+
+// RENDERIZAR GESTÃO DE PASSAGEIROS DA TIA RAFA
+function renderizarPassageirosGeralRafa() {
+  const container = document.getElementById("lista-passageiros-geral-rafa");
+  const countEl = document.getElementById("count-rafa-alunos");
+  if (!container) return;
+
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+  if (countEl) countEl.innerText = `${aprovados.length} Alunos`;
+
+  if (aprovados.length === 0) {
+    container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum aluno cadastrado.</p>`;
+    return;
+  }
+
+  container.innerHTML = aprovados.map(a => {
+    const st = a.status || 'Em Casa';
+    const stP = a.status_pagamento || 'Pendente';
+
+    return `
+      <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2.5">
+        <div class="flex justify-between items-start">
+          <div>
+            <h4 class="text-xs font-bold text-white">${a.nome}</h4>
+            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
+            <p class="text-[10px] text-amber-400 font-medium">📍 Busca Casa: ${a.horario_busca || '-'} | Entrada: ${a.horario_escola || '-'}</p>
+            <p class="text-[10px] text-slate-400">Responsável: ${a.email_mae} (${a.whatsapp || 'S/ Whats'})</p>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
+            <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️ Deletar</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+          <div>
+            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Rota</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+              <option value="Em Casa" ${st === 'Em Casa' ? 'selected' : ''}>🏡 Em Casa</option>
+              <option value="Na Van" ${st === 'Na Van' ? 'selected' : ''}>🚌 Na Van</option>
+              <option value="Na Escola" ${st === 'Na Escola' ? 'selected' : ''}>🏫 Na Escola</option>
+            </select>
+          </div>
+
+          <div>
+            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Financeiro</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+              <option value="Pendente" ${stP === 'Pendente' ? 'selected' : ''}>🔴 Pendente</option>
+              <option value="Pago" ${stP === 'Pago' ? 'selected' : ''}>🟢 Quitado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// GPS RAFA (IGUAL AO ADMIN)
+async function carregarGpsRafa() {
+  if (currentRole !== "rafa" || !supabaseClient) return;
+
+  const statusTxt = document.getElementById("txt-status-gps-rafa");
+  const containerMapa = document.getElementById("mapa-rafa-container");
+  if (!containerMapa) return;
+
+  try {
+    const { data } = await supabaseClient
+      .from('alertas')
+      .select('*')
+      .eq('tipo', 'GPS_VAN')
+      .order('id', { ascending: false })
+      .limit(1);
+
+    let lat = -22.7681; 
+    let lng = -43.5591;
+    let temSinal = false;
+
+    if (data && data.length > 0 && data[0].mensagem) {
+      const coords = data[0].mensagem.split(',');
+      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        lat = parseFloat(coords[0]);
+        lng = parseFloat(coords[1]);
+        temSinal = true;
+      }
+    }
+
+    if (statusTxt) {
+      statusTxt.innerText = temSinal 
+        ? "🟢 Sinal ao Vivo Detectado" 
+        : "⚪ Van Offline";
+    }
+
+    const iconeZafiraGps = L.divIcon({
+      className: 'custom-van-marker',
+      html: `
+        <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
+          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
+        </div>
+      `,
+      iconSize: [50, 50],
+      iconAnchor: [25, 25]
+    });
+
+    if (!mapRafa && window.L) {
+      mapRafa = L.map('mapa-rafa-container').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapRafa);
+      markerVanRafa = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapRafa);
+    } else if (mapRafa && markerVanRafa) {
+      markerVanRafa.setLatLng([lat, lng]);
+      mapRafa.setView([lat, lng]);
+    }
+
+    setTimeout(() => { if (mapRafa) mapRafa.invalidateSize(); }, 300);
+  } catch (e) {
+    console.error("Erro mapa rafa:", e);
+  }
 }
 
 async function atualizarStatusRafa(id, st) {
@@ -903,7 +1067,7 @@ async function atenderEmergenciaAdmin() {
   document.getElementById("modal-emergencia-admin")?.classList.add("hidden");
 }
 
-// ABRIR MODAL DE EDIÇÃO
+// ABRIR MODAL DE EDIÇÃO DE ALUNO
 function abrirModalEditarAluno(id) {
   const aluno = alunosCache.find(a => a.id == id);
   if (!aluno) return;
@@ -924,7 +1088,7 @@ function abrirModalEditarAluno(id) {
   document.getElementById("modal-editar-aluno")?.classList.remove("hidden");
 }
 
-// SALVAR EDIÇÃO (PARA TIA RAFA E ADMIN)
+// SALVAR EDIÇÃO
 async function salvarEdicaoAluno(e) {
   e.preventDefault();
   if (!supabaseClient) return;
@@ -954,7 +1118,6 @@ async function salvarEdicaoAluno(e) {
   alert("✓ Cadastro atualizado com sucesso!");
   document.getElementById("modal-editar-aluno")?.classList.add("hidden");
 
-  // Recarrega o painel correto
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
@@ -1027,7 +1190,9 @@ async function alterarStatusAdmin(id, campo, valor) {
   let updateObj = {};
   updateObj[campo] = valor;
   await supabaseClient.from('alunos').update(updateObj).eq('id', id);
-  carregarDadosAdmin();
+  
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
 }
 
 function salvarConfigsGlobais() {
@@ -1305,6 +1470,7 @@ async function carregarDadosRafa() {
 
   renderizarPendentesAprovacao();
   renderizarRotaRafa();
+  renderizarPassageirosGeralRafa();
   renderizarFinanceiroRafa();
 }
 
@@ -1432,38 +1598,7 @@ async function encerrarMesFinanceiro() {
     }
 
     alert("Mês encerrado com sucesso!");
-    carregarDadosRafa();
+    if (currentRole === 'rafa') carregarDadosRafa();
+    if (currentRole === 'admin') carregarDadosAdmin();
   }
-}
-
-async function cadastrarAlunoAdmin(e) {
-  e.preventDefault();
-  if (!supabaseClient) return;
-
-  const novoAluno = {
-    nome: document.getElementById("add-nome").value,
-    turno: document.getElementById("add-turno").value,
-    whatsapp: document.getElementById("add-wsp").value,
-    horario_busca: document.getElementById("add-horario-busca").value,
-    horario_escola: document.getElementById("add-horario-escola").value,
-    endereco_casa: document.getElementById("add-endereco-casa").value,
-    escola: document.getElementById("add-escola").value,
-    email_mae: document.getElementById("add-email-mae").value,
-    pin_pais: document.getElementById("add-pin").value || "1234",
-    valor: parseFloat(document.getElementById("add-valor").value),
-    vencimento: parseInt(document.getElementById("add-vencimento").value),
-    status: 'Em Casa',
-    status_pagamento: 'Pendente',
-    vai_hoje: true,
-    levado_hoje: false,
-    tem_horario_especial: false,
-    horario_busca_hoje: "",
-    horario_volta_hoje: "",
-    pendente_aprovacao: false
-  };
-
-  await supabaseClient.from('alunos').insert([novoAluno]);
-  alert("Aluno cadastrado!");
-  document.getElementById("form-cadastrar-aluno").reset();
-  carregarDadosAdmin();
 }
