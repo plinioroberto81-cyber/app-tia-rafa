@@ -1441,10 +1441,37 @@ async function cadastrarAlunoAdmin(e) {
 }
 
 async function deletarAlunoAdmin(id) {
-  if (!supabaseClient) return;
-  if (confirm("Deseja recusar/excluir este registro?")) {
-    await supabaseClient.from('alunos').delete().eq('id', id);
-    if (currentRole === 'rafa') carregarDadosRafa();
-    if (currentRole === 'admin') carregarDadosAdmin();
+  if (!supabaseClient) {
+    alert("Erro de conexão com o banco de dados.");
+    return;
+  }
+
+  if (confirm("Deseja realmente recusar e apagar este cadastro?")) {
+    try {
+      const { error } = await supabaseClient
+        .from('alunos')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert("Erro ao recusar cadastro no banco: " + error.message);
+        return;
+      }
+
+      alert("Cadastro recusado e removido com sucesso!");
+
+      // Remove o aluno da lista na memória do aplicativo
+      alunosCache = alunosCache.filter(a => a.id != id);
+
+      // Re-renderiza a tela para sumir com o card instantaneamente
+      renderizarPendentesAprovacao();
+
+      if (currentRole === 'rafa') carregarDadosRafa();
+      if (currentRole === 'admin') carregarDadosAdmin();
+
+    } catch (err) {
+      console.error("Erro ao deletar:", err);
+      alert("Falha inesperada ao recusar cadastro.");
+    }
   }
 }
