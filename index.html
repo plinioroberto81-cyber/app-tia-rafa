@@ -23,7 +23,7 @@
     }
 
     html.light-mode body {
-      background-color: #cbd5e1 !important; /* Cinza suave e confortável */
+      background-color: #cbd5e1 !important;
       color: #020617 !important;
     }
 
@@ -48,7 +48,7 @@
     html.light-mode .text-slate-300,
     html.light-mode .text-slate-400,
     html.light-mode .text-slate-500 {
-      color: #020617 !important; /* Força texto em tom escuro nítido */
+      color: #020617 !important;
     }
 
     /* CARDS EM CINZA FOSCO NO MODO CLARO */
@@ -170,6 +170,16 @@
           <option value="">-- Selecione seu E-mail --</option>
         </select>
       </div>
+
+      <!-- BOTÃO DE NOTIFICAÇÃO RÁPIDA DOS PAIS -->
+      <div id="painel-avisos-pais" class="hidden bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-2">
+        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Aviso de Horário Excepcional</h4>
+        <p class="text-[11px] text-slate-300">Seu filho(a) estuda no turno das 08h mas precisa ir mais cedo hoje?</p>
+        <button id="btn-notificar-antecipacao" onclick="alternarExcecaoPais()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2">
+          <i class="fa-solid fa-clock"></i> Notificar Tia Rafa: "Hoje vai às 07h"
+        </button>
+      </div>
+
       <div id="conteudo-filho-pais" class="space-y-4 hidden"></div>
     </section>
 
@@ -192,10 +202,12 @@
       </div>
 
       <div id="aba-chamada-rafa" class="space-y-3">
-        <div class="flex gap-1.5">
-          <button id="btn-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950">Todos</button>
-          <button id="btn-filtro-manha" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300">Manhã</button>
-          <button id="btn-filtro-tarde" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300">Tarde</button>
+        <!-- FILTROS DE TURNO ATUALIZADOS -->
+        <div class="flex gap-1.5 overflow-x-auto pb-1">
+          <button id="btn-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950 whitespace-nowrap">Todos</button>
+          <button id="btn-filtro-manha7" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 whitespace-nowrap">Manhã 07h</button>
+          <button id="btn-filtro-manha8" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 whitespace-nowrap">Manhã 08h</button>
+          <button id="btn-filtro-tarde" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 whitespace-nowrap">Tarde</button>
         </div>
         <div id="lista-chamada-rafa-cards" class="space-y-3"></div>
       </div>
@@ -285,14 +297,15 @@
           <button id="btn-limpar-aviso" class="w-full py-1.5 text-[10px] text-rose-400 font-bold hover:underline">Limpar Avisos Ativos</button>
         </div>
 
-        <!-- CADASTRAR NOVO ALUNO -->
+        <!-- CADASTRAR NOVO ALUNO COM SUB-TURNOS -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
           <h3 class="text-xs font-bold text-white uppercase tracking-wider">Cadastrar Novo Passageiro</h3>
           <form id="form-cadastrar-aluno" class="space-y-2.5">
             <input type="text" id="add-nome" placeholder="Nome Completo do Aluno" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
             <div class="grid grid-cols-2 gap-2">
               <select id="add-turno" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                <option value="Manhã">Manhã</option>
+                <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
+                <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
                 <option value="Tarde">Tarde</option>
               </select>
               <input type="text" id="add-wsp" placeholder="WhatsApp dos Pais (Com DDD)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
@@ -437,7 +450,8 @@
         <input type="text" id="edit-nome" placeholder="Nome Completo" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
         <div class="grid grid-cols-2 gap-2">
           <select id="edit-turno" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-            <option value="Manhã">Manhã</option>
+            <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
+            <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
             <option value="Tarde">Tarde</option>
           </select>
           <input type="text" id="edit-wsp" placeholder="WhatsApp" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
