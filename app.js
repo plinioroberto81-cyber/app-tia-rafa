@@ -44,7 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // NAVEGAÇÃO
   btnTopBack?.addEventListener("click", voltarHome);
-  document.getElementById("nav-btn-home")?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
   document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
 
@@ -112,11 +111,13 @@ document.addEventListener("DOMContentLoaded", () => {
     renderizarFinanceiroAdmin();
   });
 
-  // FILTROS TIA RAFA
+  // FILTROS TURNO TIA RAFA
   document.getElementById("btn-filtro-todos")?.addEventListener("click", () => aplicarFiltroTurno("Todos"));
-  document.getElementById("btn-filtro-manha")?.addEventListener("click", () => aplicarFiltroTurno("Manhã"));
+  document.getElementById("btn-filtro-manha7")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (07h às 11h)"));
+  document.getElementById("btn-filtro-manha8")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (08h às 12h)"));
   document.getElementById("btn-filtro-tarde")?.addEventListener("click", () => aplicarFiltroTurno("Tarde"));
 
+  // FILTROS FINANCEIROS TIA RAFA
   document.getElementById("btn-fin-filtro-todos")?.addEventListener("click", () => aplicarFiltroFin("Todos"));
   document.getElementById("btn-fin-filtro-pendentes")?.addEventListener("click", () => aplicarFiltroFin("Pendente"));
   document.getElementById("btn-fin-filtro-pagos")?.addEventListener("click", () => aplicarFiltroFin("Pago"));
@@ -146,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // SELEÇÃO E-MAIL PAIS
   document.getElementById("select-email-pais")?.addEventListener("change", (e) => renderizarPaisFilho(e.target.value));
 
-  // ADMIN ACCIONS
+  // ADMIN AÇÕES
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
 });
@@ -405,7 +406,7 @@ async function carregarDadosAdmin() {
         <div class="flex justify-between items-start">
           <div>
             <h4 class="text-xs font-bold text-white">${a.nome}</h4>
-            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | Mensalidade: R$ ${val.toFixed(2)} (Venc: Dia ${a.vencimento || 10})</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã (07h às 11h)'} | Mensalidade: R$ ${val.toFixed(2)} (Venc: Dia ${a.vencimento || 10})</p>
           </div>
           <div class="flex gap-1 shrink-0">
             <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
@@ -453,7 +454,7 @@ function abrirModalEditarAluno(id) {
 
   document.getElementById("edit-id").value = aluno.id;
   document.getElementById("edit-nome").value = aluno.nome || '';
-  document.getElementById("edit-turno").value = aluno.turno || 'Manhã';
+  document.getElementById("edit-turno").value = aluno.turno || 'Manhã (07h às 11h)';
   document.getElementById("edit-wsp").value = aluno.whatsapp || '';
   document.getElementById("edit-horario-busca").value = aluno.horario_busca || '';
   document.getElementById("edit-horario-escola").value = aluno.horario_escola || '';
@@ -784,13 +785,14 @@ function renderizarPaisFilho(email) {
   const stPag = filho.status_pagamento || 'Pendente';
   const val = filho.valor || 180.00;
   const venc = filho.vencimento || 10;
+  const vaiTurno1 = filho.vai_turno1_hoje || false;
 
   container.innerHTML = `
     <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
       <div class="flex justify-between items-start">
         <div>
           <h3 class="text-base font-extrabold text-white">${filho.nome}</h3>
-          <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-graduation-cap"></i> ${filho.escola || '-'}</p>
+          <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-graduation-cap"></i> ${filho.escola || '-'} (${filho.turno || 'Manhã'})</p>
         </div>
         <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor} flex items-center gap-1.5">
           <i class="fa-solid ${icon}"></i> ${st}
@@ -800,6 +802,19 @@ function renderizarPaisFilho(email) {
       <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs text-slate-300">
         ${desc}
       </div>
+
+      <!-- AVISO DE TURNO EXCEÇÃO (07H) -->
+      ${filho.turno === 'Manhã (08h às 12h)' ? `
+        <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Vai no 1º turno hoje (07h)?</span>
+            <button onclick="alternarExcecaoPais('${filho.id}', ${!vaiTurno1})" class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all ${vaiTurno1 ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
+              ${vaiTurno1 ? '✓ Sim (07h)' : 'Não (08h)'}
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-400">Marque "Sim" se ele vai no primeiro horário do transporte hoje.</p>
+        </div>
+      ` : ''}
 
       <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
         <span class="text-xs font-bold text-slate-300">Vai no transporte hoje?</span>
@@ -852,6 +867,12 @@ async function alternarPresenca(id, novoStatus) {
   carregarDadosPais();
 }
 
+async function alternarExcecaoPais(id, statusExcecao) {
+  if (!supabaseClient) return;
+  await supabaseClient.from('alunos').update({ vai_turno1_hoje: statusExcecao }).eq('id', id);
+  carregarDadosPais();
+}
+
 // PAINEL RAFA
 async function carregarDadosRafa() {
   if (!supabaseClient) return;
@@ -865,9 +886,10 @@ async function carregarDadosRafa() {
 
 function aplicarFiltroTurno(turno) {
   filtroTurnoAtual = turno;
-  document.getElementById("btn-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-filtro-manha").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-filtro-tarde").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Tarde' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha7").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã (07h às 11h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha8").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã (08h às 12h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-tarde").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Tarde' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
   renderizarRotaRafa();
 }
 
@@ -877,19 +899,27 @@ function renderizarRotaRafa() {
 
   let filtrados = alunosCache;
   if (filtroTurnoAtual !== "Todos") {
-    filtrados = alunosCache.filter(a => a.turno === filtroTurnoAtual);
+    filtrados = alunosCache.filter(a => {
+      // Se o aluno for das 08h mas avisou que vai às 07h hoje, inclui ele no filtro das 07h
+      if (filtroTurnoAtual === 'Manhã (07h às 11h)' && a.vai_turno1_hoje) return true;
+      return a.turno === filtroTurnoAtual;
+    });
   }
 
   container.innerHTML = filtrados.map(aluno => {
     const st = aluno.status || 'Em Casa';
     const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
+    const vaiTurno1 = aluno.vai_turno1_hoje;
 
     return `
-      <div class="bg-slate-800/80 border border-slate-700 p-4 rounded-2xl space-y-3">
+      <div class="bg-slate-800/80 border ${vaiTurno1 ? 'border-amber-400 bg-amber-500/5' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-start">
           <div>
-            <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
-            <p class="text-xs text-slate-400">${aluno.escola || ''} • ${aluno.turno || 'Manhã'}</p>
+            <div class="flex items-center gap-2">
+              <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
+              ${vaiTurno1 ? '<span class="text-[9px] bg-amber-500 text-slate-950 font-extrabold px-1.5 py-0.5 rounded">⚡ Vai às 07h Hoje</span>' : ''}
+            </div>
+            <p class="text-xs text-slate-400">${aluno.escola || ''} • ${aluno.turno || 'Manhã (07h às 11h)'}</p>
           </div>
           ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
         </div>
@@ -1015,7 +1045,8 @@ async function encerrarMesFinanceiro() {
 
       await supabaseClient.from('alunos').update({
         status_pagamento: 'Pendente',
-        forma_pagamento: null
+        forma_pagamento: null,
+        vai_turno1_hoje: false
       }).eq('id', a.id);
     }
 
@@ -1041,7 +1072,8 @@ async function cadastrarAlunoAdmin(e) {
     vencimento: parseInt(document.getElementById("add-vencimento").value),
     status: 'Em Casa',
     status_pagamento: 'Pendente',
-    vai_hoje: true
+    vai_hoje: true,
+    vai_turno1_hoje: false
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
