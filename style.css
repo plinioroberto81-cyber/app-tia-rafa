@@ -1,61 +1,59 @@
-<style>
-    /* SOBREPOSIÇÃO EXCLUSIVA PARA O MODO CLARO */
-    html.light-mode {
-      background-color: #cbd5e1 !important;
-    }
+/* SOBREPOSIÇÃO EXCLUSIVA PARA O MODO CLARO */
+html.light-mode {
+  background-color: #cbd5e1 !important;
+}
 
-    html.light-mode body {
-      background-color: #cbd5e1 !important; /* Cinza suave e confortável */
-      color: #020617 !important;
-    }
+html.light-mode body {
+  background-color: #cbd5e1 !important;
+  color: #020617 !important;
+}
 
-    html.light-mode header,
-    html.light-mode nav#bottom-bar {
-      background-color: #e2e8f0 !important;
-      border-color: #94a3b8 !important;
-    }
+html.light-mode header,
+html.light-mode nav#bottom-bar {
+  background-color: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+}
 
-    /* CORREÇÃO DO "BEM-VINDO" E TEXTOS NO MODO CLARO */
-    html.light-mode #login-section h2,
-    html.light-mode #login-section p,
-    html.light-mode h1,
-    html.light-mode h2,
-    html.light-mode h3,
-    html.light-mode h4,
-    html.light-mode p,
-    html.light-mode span,
-    html.light-mode label,
-    html.light-mode .text-white,
-    html.light-mode .text-slate-100,
-    html.light-mode .text-slate-300,
-    html.light-mode .text-slate-400,
-    html.light-mode .text-slate-500 {
-      color: #020617 !important; /* Força texto em tom escuro nítido */
-    }
+/* CORREÇÃO DO BEM-VINDO E TEXTOS NO MODO CLARO */
+html.light-mode #login-section h2,
+html.light-mode #login-section p,
+html.light-mode h1,
+html.light-mode h2,
+html.light-mode h3,
+html.light-mode h4,
+html.light-mode p,
+html.light-mode span,
+html.light-mode label,
+html.light-mode .text-white,
+html.light-mode .text-slate-100,
+html.light-mode .text-slate-300,
+html.light-mode .text-slate-400,
+html.light-mode .text-slate-500 {
+  color: #020617 !important;
+}
 
-    /* CARDS EM CINZA FOSCO NO MODO CLARO */
-    html.light-mode .bg-slate-900,
-    html.light-mode .bg-slate-800,
-    html.light-mode .bg-slate-900\/80,
-    html.light-mode .bg-slate-800\/80,
-    html.light-mode .bg-slate-800\/90 {
-      background-color: #f1f5f9 !important;
-      border-color: #94a3b8 !important;
-    }
+/* CARDS EM CINZA FOSCO NO MODO CLARO */
+html.light-mode .bg-slate-900,
+html.light-mode .bg-slate-800,
+html.light-mode .bg-slate-900\/80,
+html.light-mode .bg-slate-800\/80,
+html.light-mode .bg-slate-800\/90 {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
 
-    /* INPUTS E SELECTS */
-    html.light-mode input,
-    html.light-mode select {
-      background-color: #ffffff !important;
-      border-color: #94a3b8 !important;
-      color: #020617 !important;
-    }
+/* INPUTS E SELECTS */
+html.light-mode input,
+html.light-mode select {
+  background-color: #ffffff !important;
+  border-color: #94a3b8 !important;
+  color: #020617 !important;
+}
 
-    /* CAIXAS INTERNAS */
-    html.light-mode .bg-slate-950,
-    html.light-mode .bg-slate-900\/60 {
-      background-color: #e2e8f0 !important;
-      border-color: #cbd5e1 !important;
-      color: #020617 !important;
-    }
-  </style>
+/* CAIXAS INTERNAS */
+html.light-mode .bg-slate-950,
+html.light-mode .bg-slate-900\/60 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #020617 !important;
+}
