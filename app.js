@@ -27,6 +27,92 @@ let markerVanRafa = null;
 
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
+// CONTROLE DE MODAIS CUSTOMIZADOS (PADRÃO VISUAL DO APP)
+function mostrarAlertaCustom(mensagem, titulo = "Aviso") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("modal-app-custom");
+    const titleEl = document.getElementById("modal-app-title");
+    const msgEl = document.getElementById("modal-app-message");
+    const btnOk = document.getElementById("modal-app-btn-ok");
+    const btnCancel = document.getElementById("modal-app-btn-cancel");
+    const iconContainer = document.getElementById("modal-app-icon");
+
+    if (!modal) {
+      alert(mensagem);
+      resolve(true);
+      return;
+    }
+
+    titleEl.innerText = titulo;
+    msgEl.innerText = mensagem;
+    if (iconContainer) iconContainer.innerHTML = `<i class="fa-solid fa-circle-info"></i>`;
+    
+    if (btnCancel) btnCancel.classList.add("hidden");
+    if (btnOk) {
+      btnOk.innerText = "Entendido";
+      btnOk.className = "w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md";
+    }
+
+    modal.classList.remove("hidden");
+
+    const handleOk = () => {
+      modal.classList.add("hidden");
+      btnOk?.removeEventListener("click", handleOk);
+      resolve(true);
+    };
+
+    btnOk?.addEventListener("click", handleOk);
+  });
+}
+
+function mostrarConfirmacaoCustom(mensagem, titulo = "Confirmação") {
+  return new Promise((resolve) => {
+    const modal = document.getElementById("modal-app-custom");
+    const titleEl = document.getElementById("modal-app-title");
+    const msgEl = document.getElementById("modal-app-message");
+    const btnOk = document.getElementById("modal-app-btn-ok");
+    const btnCancel = document.getElementById("modal-app-btn-cancel");
+    const iconContainer = document.getElementById("modal-app-icon");
+
+    if (!modal) {
+      const res = confirm(mensagem);
+      resolve(res);
+      return;
+    }
+
+    titleEl.innerText = titulo;
+    msgEl.innerText = mensagem;
+    if (iconContainer) iconContainer.innerHTML = `<i class="fa-solid fa-circle-question text-amber-400"></i>`;
+
+    if (btnCancel) btnCancel.classList.remove("hidden");
+    if (btnOk) {
+      btnOk.innerText = "Sim, confirmar";
+      btnOk.className = "flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md";
+    }
+
+    modal.classList.remove("hidden");
+
+    const cleanup = () => {
+      modal.classList.add("hidden");
+      btnOk?.removeEventListener("click", handleOk);
+      btnCancel?.removeEventListener("click", handleCancel);
+    };
+
+    const handleOk = () => {
+      cleanup();
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      cleanup();
+      resolve(false);
+    };
+
+    btnOk?.addEventListener("click", handleOk);
+    btnCancel?.addEventListener("click", handleCancel);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   loginSection = document.getElementById("login-section");
   authForm = document.getElementById("auth-form");
@@ -199,7 +285,7 @@ async function efetuarLoginComSupabase() {
   const pwd = pwdInput ? pwdInput.value.trim() : "";
 
   if (!pwd) {
-    alert("Por favor, digite a senha.");
+    await mostrarAlertaCustom("Por favor, digite a senha.", "Aviso");
     return;
   }
 
@@ -214,7 +300,7 @@ async function efetuarLoginComSupabase() {
     });
 
     if (error) {
-      alert("⚠️ Senha incorreta ou acesso negado!");
+      await mostrarAlertaCustom("⚠️ Senha incorreta ou acesso negado!", "Erro de Login");
       return;
     }
 
@@ -223,11 +309,10 @@ async function efetuarLoginComSupabase() {
 
   } catch (err) {
     console.error("Erro no login:", err);
-    alert("Falha de comunicação na autenticação.");
+    await mostrarAlertaCustom("Falha de comunicação na autenticação.", "Erro");
   }
 }
 
-// LOGOUT DESCONECTA DO SUPABASE
 async function logout() {
   if (supabaseClient) {
     await supabaseClient.auth.signOut();
@@ -235,7 +320,6 @@ async function logout() {
   voltarHome();
 }
 
-// CARREGAR CONFIGURAÇÕES DO BANCO DE DADOS (SUPABASE)
 async function carregarConfiguracoesGlobais() {
   if (!supabaseClient) return;
 
@@ -250,11 +334,9 @@ async function carregarConfiguracoesGlobais() {
       pixChaveGlobal = data.pix_chave || pixChaveGlobal;
       linkCartaoGlobal = data.link_cartao || linkCartaoGlobal;
 
-      // Preenche os campos do Admin
       if (document.getElementById("cfg-pix")) document.getElementById("cfg-pix").value = pixChaveGlobal;
       if (document.getElementById("cfg-cartao")) document.getElementById("cfg-cartao").value = linkCartaoGlobal;
 
-      // Preenche os campos da Rafa
       if (document.getElementById("cfg-pix-rafa")) document.getElementById("cfg-pix-rafa").value = pixChaveGlobal;
       if (document.getElementById("cfg-cartao-rafa")) document.getElementById("cfg-cartao-rafa").value = linkCartaoGlobal;
     }
@@ -263,7 +345,6 @@ async function carregarConfiguracoesGlobais() {
   }
 }
 
-// SALVAR CONFIGURAÇÕES NA NUVEM DE FORMA CORRETA
 async function salvarConfigsGlobais(origem) {
   if (!supabaseClient) return;
 
@@ -284,17 +365,16 @@ async function salvarConfigsGlobais(origem) {
     .eq('id', 1);
 
   if (error) {
-    alert("Erro ao salvar no banco: " + error.message);
+    await mostrarAlertaCustom("Erro ao salvar no banco: " + error.message, "Erro");
     return;
   }
 
-  alert("✓ Chave PIX e Link do Cartão salvos com sucesso na nuvem!");
+  await mostrarAlertaCustom("✓ Configurações salvas com sucesso!", "Sucesso");
   
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
-// CADASTRO MANUAL TIA RAFA
 async function cadastrarAlunoRafa(e) {
   e.preventDefault();
   if (!supabaseClient) return;
@@ -322,12 +402,11 @@ async function cadastrarAlunoRafa(e) {
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
-  alert("Aluno cadastrado com sucesso!");
+  await mostrarAlertaCustom("Aluno cadastrado com sucesso!", "Sucesso");
   document.getElementById("form-cadastrar-aluno-rafa").reset();
   carregarDadosRafa();
 }
 
-// CADASTRO MANUAL ADMIN
 async function cadastrarAlunoAdmin(e) {
   e.preventDefault();
   if (!supabaseClient) return;
@@ -355,17 +434,16 @@ async function cadastrarAlunoAdmin(e) {
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
-  alert("Aluno cadastrado com sucesso!");
+  await mostrarAlertaCustom("Aluno cadastrado com sucesso!", "Sucesso");
   document.getElementById("form-cadastrar-aluno").reset();
   carregarDadosAdmin();
 }
 
-// AUTO-CADASTRO PAIS
 async function enviarAutoCadastroPais(e) {
   e.preventDefault();
 
   if (!supabaseClient) {
-    alert("Erro: Conexão com o banco de dados não estabelecida.");
+    await mostrarAlertaCustom("Erro: Conexão com o banco de dados não estabelecida.", "Erro");
     return;
   }
 
@@ -379,14 +457,14 @@ async function enviarAutoCadastroPais(e) {
 
   const pin = pinEl ? pinEl.value.trim() : "";
   if (pin.length !== 4 || isNaN(pin)) {
-    alert("O PIN de acesso deve conter exatamente 4 números.");
+    await mostrarAlertaCustom("O PIN de acesso deve conter exatamente 4 números.", "Aviso");
     if (pinEl) pinEl.focus();
     return;
   }
 
   const turnoSelecionado = turnoEl ? turnoEl.value : "";
   if (!turnoSelecionado) {
-    alert("Selecione o turno escolar.");
+    await mostrarAlertaCustom("Selecione o turno escolar.", "Aviso");
     return;
   }
 
@@ -416,22 +494,21 @@ async function enviarAutoCadastroPais(e) {
     const { error } = await supabaseClient.from('alunos').insert([novoAluno]);
 
     if (error) {
-      alert("Erro ao enviar cadastro: " + error.message);
+      await mostrarAlertaCustom("Erro ao enviar cadastro: " + error.message, "Erro");
       return;
     }
 
-    alert("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca e aprovará o acesso do seu filho(a).");
+    await mostrarAlertaCustom("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca e aprovará o acesso do seu filho(a).", "Cadastro Enviado");
     document.getElementById("form-auto-cadastro-pais")?.reset();
     document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
     carregarDadosPais();
 
   } catch (err) {
     console.error("Exceção:", err);
-    alert("Falha de comunicação com o servidor. Tente novamente.");
+    await mostrarAlertaCustom("Falha de comunicação com o servidor. Tente novamente.", "Erro");
   }
 }
 
-// APROVAÇÃO SEGURA DE CADASTROS PENDENTES
 async function aprovarCadastroAluno(id) {
   if (!supabaseClient) return;
 
@@ -442,7 +519,7 @@ async function aprovarCadastroAluno(id) {
   const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
   
   if (!horarioBusca) {
-    alert("Por favor, preencha o horário de busca da van antes de aprovar!");
+    await mostrarAlertaCustom("Por favor, preencha o horário de busca da van antes de aprovar!", "Aviso");
     if (inputBusca) inputBusca.focus();
     return;
   }
@@ -462,11 +539,11 @@ async function aprovarCadastroAluno(id) {
       .eq('id', id);
 
     if (error) {
-      alert("Erro ao aprovar: " + error.message);
+      await mostrarAlertaCustom("Erro ao aprovar: " + error.message, "Erro");
       return;
     }
 
-    alert("✓ Cadastro aprovado e horário definido!");
+    await mostrarAlertaCustom("✓ Cadastro aprovado e horário definido!", "Aprovado");
     if (currentRole === 'rafa') carregarDadosRafa();
     if (currentRole === 'admin') carregarDadosAdmin();
 
@@ -475,14 +552,11 @@ async function aprovarCadastroAluno(id) {
   }
 }
 
-// EXCLUIR ALUNO
 async function deletarAlunoAdmin(id) {
-  if (!supabaseClient) {
-    alert("Erro de conexão com o banco de dados.");
-    return;
-  }
+  if (!supabaseClient) return;
 
-  if (confirm("Deseja realmente apagar este cadastro?")) {
+  const confirmou = await mostrarConfirmacaoCustom("Deseja realmente apagar este cadastro?", "Excluir Cadastro");
+  if (confirmou) {
     try {
       const { error } = await supabaseClient
         .from('alunos')
@@ -490,11 +564,11 @@ async function deletarAlunoAdmin(id) {
         .eq('id', id);
 
       if (error) {
-        alert("Erro ao excluir no banco: " + error.message);
+        await mostrarAlertaCustom("Erro ao excluir no banco: " + error.message, "Erro");
         return;
       }
 
-      alert("Cadastro removido com sucesso!");
+      await mostrarAlertaCustom("Cadastro removido com sucesso!", "Removido");
 
       alunosCache = alunosCache.filter(a => a.id != id);
       renderizarPendentesAprovacao();
@@ -504,12 +578,11 @@ async function deletarAlunoAdmin(id) {
 
     } catch (err) {
       console.error("Erro ao deletar:", err);
-      alert("Falha inesperada ao recusar cadastro.");
+      await mostrarAlertaCustom("Falha inesperada ao recusar cadastro.", "Erro");
     }
   }
 }
 
-// RENDERIZAR CARDS DE APROVAÇÃO PENDENTE
 function renderizarPendentesAprovacao() {
   const pendentes = alunosCache.filter(a => a.pendente_aprovacao === true);
 
@@ -576,7 +649,6 @@ function renderizarPendentesAprovacao() {
   containerAdmin?.classList.remove("hidden");
 }
 
-// ALTERNAR MODO ROTA
 function alternarModoRota(modo) {
   modoRotaAtual = modo;
   const btnIda = document.getElementById("btn-rota-ida");
@@ -592,7 +664,6 @@ function alternarModoRota(modo) {
   renderizarRotaRafa();
 }
 
-// RENDERIZAR ROTA DINÂMICA
 function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
@@ -674,7 +745,6 @@ function renderizarRotaRafa() {
   }).join('');
 }
 
-// RENDERIZAR GESTÃO DE PASSAGEIROS DA TIA RAFA
 function renderizarPassageirosGeralRafa() {
   const container = document.getElementById("lista-passageiros-geral-rafa");
   const countEl = document.getElementById("count-rafa-alunos");
@@ -730,7 +800,6 @@ function renderizarPassageirosGeralRafa() {
   }).join('');
 }
 
-// GPS RAFA
 async function carregarGpsRafa() {
   if (currentRole !== "rafa" || !supabaseClient) return;
 
@@ -805,7 +874,8 @@ async function atualizarStatusRafa(id, st) {
 
 async function resetarStatusDoDia() {
   if (!supabaseClient) return;
-  if (confirm("Deseja resetar a rota do dia?")) {
+  const confirmou = await mostrarConfirmacaoCustom("Deseja resetar a rota do dia?", "Resetar Rota");
+  if (confirmou) {
     await supabaseClient.from('alunos').update({
       status: 'Em Casa',
       levado_hoje: false,
@@ -814,25 +884,24 @@ async function resetarStatusDoDia() {
       horario_volta_hoje: ""
     }).neq('id', '0');
 
-    alert("Rota resetada para o padrão!");
+    await mostrarAlertaCustom("Rota resetada para o padrão!", "Sucesso");
     carregarDadosRafa();
   }
 }
 
-// VALIDAR LOGIN PIN PAIS
 function validarLoginPinPais() {
   const emailSelect = document.getElementById("select-email-pais")?.value;
   const pinInput = document.getElementById("input-pin-pais")?.value;
 
   if (!emailSelect) {
-    alert("Selecione seu e-mail.");
+    mostrarAlertaCustom("Selecione seu e-mail.", "Aviso");
     return;
   }
 
   const aluno = alunosCache.find(a => a.email_mae === emailSelect && !a.pendente_aprovacao);
 
   if (!aluno) {
-    alert("Cadastro não encontrado ou pendente de aprovação.");
+    mostrarAlertaCustom("Cadastro não encontrado ou pendente de aprovação.", "Aviso");
     return;
   }
 
@@ -842,11 +911,11 @@ function validarLoginPinPais() {
     document.getElementById("box-pin-pais")?.classList.add("hidden");
     renderizarPaisFilho(emailSelect);
   } else {
-    alert("PIN incorreto.");
+    mostrarAlertaCustom("PIN incorreto.", "Erro");
   }
 }
 
-// RENDERIZAR PAINEL DOS PAIS
+// PAINEL PAIS (AJUSTADO & CORRIGIDO)
 function renderizarPaisFilho(email) {
   const container = document.getElementById("conteudo-filho-pais");
   if (!email || !container) {
@@ -877,7 +946,7 @@ function renderizarPaisFilho(email) {
   const val = filho.valor || 180.00;
   const venc = filho.vencimento || 10;
   const temEspecial = filho.tem_horario_especial === true;
-  const vaiHoje = filho.vai_hoje !== false; // Padrão é TRUE (vai no transporte)
+  const vaiHoje = filho.vai_hoje !== false;
 
   container.innerHTML = `
     <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
@@ -931,7 +1000,7 @@ function renderizarPaisFilho(email) {
         </div>
       </div>
 
-      <!-- STATUS DE PRESENÇA COM CONFIRMAÇÃO -->
+      <!-- STATUS DE PRESENÇA -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
         <span class="text-xs font-bold text-slate-300">Vai no transporte hoje?</span>
         <button onclick="confirmarAlternarPresenca('${filho.id}', ${!vaiHoje}, '${filho.nome.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
@@ -998,9 +1067,8 @@ function toggleBoxHorarioEspecial(id) {
 async function confirmarAlternarPresenca(id, novoStatus, nomeAluno) {
   if (!supabaseClient) return;
 
-  // Se estiver tentando marcar que NÃO VAI, solicita confirmação
   if (novoStatus === false) {
-    const confirmou = confirm(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`);
+    const confirmou = await mostrarConfirmacaoCustom(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`, "Confirmar Ausência");
     if (!confirmou) return;
   }
 
@@ -1017,7 +1085,7 @@ async function salvarHorarioEspecialPais(id) {
   const hVolta = document.getElementById(`esp-volta-${id}`)?.value.trim() || "";
 
   if (!hIda && !hVolta) {
-    alert("Informe ao menos um horário para salvar.");
+    await mostrarAlertaCustom("Informe ao menos um horário para salvar.", "Aviso");
     return;
   }
 
@@ -1028,11 +1096,11 @@ async function salvarHorarioEspecialPais(id) {
   }).eq('id', id);
 
   if (error) {
-    alert("Erro ao salvar: " + error.message);
+    await mostrarAlertaCustom("Erro ao salvar: " + error.message, "Erro");
     return;
   }
 
-  alert("✓ Aviso enviado com sucesso!");
+  await mostrarAlertaCustom("✓ Aviso enviado com sucesso para a Tia Rafa!", "Sucesso");
   await carregarDadosPais();
   const emailSelect = document.getElementById("select-email-pais")?.value;
   if (emailSelect) renderizarPaisFilho(emailSelect);
@@ -1041,6 +1109,9 @@ async function salvarHorarioEspecialPais(id) {
 async function limparHorarioEspecialPais(id) {
   if (!supabaseClient) return;
 
+  const confirmou = await mostrarConfirmacaoCustom("Deseja cancelar esta exceção e voltar ao horário fixo?", "Cancelar Exceção");
+  if (!confirmou) return;
+
   const { error } = await supabaseClient.from('alunos').update({
     tem_horario_especial: false,
     horario_busca_hoje: "",
@@ -1048,17 +1119,16 @@ async function limparHorarioEspecialPais(id) {
   }).eq('id', id);
 
   if (error) {
-    alert("Erro ao cancelar: " + error.message);
+    await mostrarAlertaCustom("Erro ao cancelar: " + error.message, "Erro");
     return;
   }
 
-  alert("✓ Exceção cancelada! Voltando ao horário fixo.");
+  await mostrarAlertaCustom("✓ Exceção cancelada! Voltando ao horário fixo.", "Sucesso");
   await carregarDadosPais();
   const emailSelect = document.getElementById("select-email-pais")?.value;
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-// TRANSMISSÃO GPS
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
@@ -1095,7 +1165,7 @@ function alternarTransmissaoGps() {
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      alert("Dispositivo sem suporte a GPS.");
+      mostrarAlertaCustom("Dispositivo sem suporte a GPS.", "Aviso");
     }
   } else {
     if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
@@ -1107,7 +1177,6 @@ function alternarTransmissaoGps() {
   }
 }
 
-// BUSCAR GPS ADMIN
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -1168,7 +1237,6 @@ async function carregarGpsAdmin() {
   }
 }
 
-// SIRENE DE EMERGÊNCIA
 function tocarSomSirene() {
   if (audioContext) return;
   try {
@@ -1213,7 +1281,7 @@ async function dispararEmergenciaRafa() {
       ativo: true
     }]);
 
-    alert("Alerta enviado!");
+    await mostrarAlertaCustom("Alerta enviado para o Admin!", "Emergência Disparada");
   }, async () => {
     await supabaseClient.from('alertas').insert([{
       tipo: 'EMERGENCIA_ADMIN',
@@ -1262,7 +1330,6 @@ async function atenderEmergenciaAdmin() {
   document.getElementById("modal-emergencia-admin")?.classList.add("hidden");
 }
 
-// ABRIR MODAL DE EDIÇÃO DE ALUNO
 function abrirModalEditarAluno(id) {
   const aluno = alunosCache.find(a => a.id == id);
   if (!aluno) return;
@@ -1283,7 +1350,6 @@ function abrirModalEditarAluno(id) {
   document.getElementById("modal-editar-aluno")?.classList.remove("hidden");
 }
 
-// SALVAR EDIÇÃO
 async function salvarEdicaoAluno(e) {
   e.preventDefault();
   if (!supabaseClient) return;
@@ -1306,18 +1372,17 @@ async function salvarEdicaoAluno(e) {
   const { error } = await supabaseClient.from('alunos').update(updateData).eq('id', id);
 
   if (error) {
-    alert("Erro ao salvar alterações: " + error.message);
+    await mostrarAlertaCustom("Erro ao salvar alterações: " + error.message, "Erro");
     return;
   }
 
-  alert("✓ Cadastro atualizado com sucesso!");
+  await mostrarAlertaCustom("✓ Cadastro atualizado com sucesso!", "Atualizado");
   document.getElementById("modal-editar-aluno")?.classList.add("hidden");
 
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
-// ADMIN GESTÃO DE ALUNOS
 async function carregarDadosAdmin() {
   if (!supabaseClient) return;
 
@@ -1388,7 +1453,6 @@ async function alterarStatusAdmin(id, campo, valor) {
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
-// ADMIN FINANCEIRO
 function aplicarFiltroFinAdmin(status) {
   filtroFinAdminStatus = status;
   document.getElementById("btn-admin-fin-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
@@ -1480,11 +1544,10 @@ async function darBaixaAdmin(id, stP, forma) {
   carregarDadosAdmin();
 }
 
-// EXPORTAÇÃO CSV
 function exportarRelatorioFinanceiroCSV() {
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
   if (!aprovados || aprovados.length === 0) {
-    alert("Não há dados para exportar.");
+    mostrarAlertaCustom("Não há dados para exportar.", "Aviso");
     return;
   }
 
@@ -1522,7 +1585,6 @@ function exportarRelatorioFinanceiroCSV() {
   document.body.removeChild(link);
 }
 
-// NAVEGAÇÃO E TEMAS
 function inicializarTema() {
   const temaSalvo = localStorage.getItem("theme");
   const themeIcon = document.getElementById("theme-icon");
@@ -1597,7 +1659,6 @@ function entrarPerfil(role) {
   }
 }
 
-// ALERTAS PAIS
 async function verificarAlertaGlobal() {
   if (!supabaseClient) return;
   const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN').order('id', { ascending: false }).limit(1);
@@ -1616,14 +1677,14 @@ async function dispararAviso(msg) {
   if (!supabaseClient) return;
   await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
   await supabaseClient.from('alertas').insert([{ tipo: 'Aviso', mensagem: msg, ativo: true }]);
-  alert("Aviso publicado!");
+  await mostrarAlertaCustom("Aviso publicado!", "Sucesso");
   verificarAlertaGlobal();
 }
 
 async function limparAvisos() {
   if (!supabaseClient) return;
   await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
-  alert("Avisos encerrados!");
+  await mostrarAlertaCustom("Avisos encerrados!", "Sucesso");
   verificarAlertaGlobal();
 }
 
@@ -1763,7 +1824,8 @@ async function darBaixaRafa(id, stP, forma) {
 
 async function encerrarMesFinanceiro() {
   if (!supabaseClient) return;
-  if (confirm("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?")) {
+  const confirmou = await mostrarConfirmacaoCustom("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?", "Encerrar Mês");
+  if (confirmou) {
     const mesAno = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' });
     
     for (let a of alunosCache) {
@@ -1784,7 +1846,7 @@ async function encerrarMesFinanceiro() {
       }).eq('id', a.id);
     }
 
-    alert("Mês encerrado com sucesso!");
+    await mostrarAlertaCustom("Mês encerrado com sucesso!", "Sucesso");
     if (currentRole === 'rafa') carregarDadosRafa();
     if (currentRole === 'admin') carregarDadosAdmin();
   }
