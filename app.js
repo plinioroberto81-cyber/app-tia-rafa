@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
-// AUTENTICAÇÃO OFICIAL SUPABASE (MIGRADA DE TEXTO PURO PARA SUPABASE AUTH)
+// AUTENTICAÇÃO OFICIAL SUPABASE
 async function efetuarLoginComSupabase() {
   const pwdInput = document.getElementById("input-password");
   const pwd = pwdInput ? pwdInput.value.trim() : "";
@@ -202,8 +202,10 @@ async function efetuarLoginComSupabase() {
     return;
   }
 
-  // Define qual e-mail autenticar no Supabase
-  const emailLogin = (currentRole === "rafa") ? "tiarafa@van.com" : "admin@van.com";
+  // E-mails cadastrados no Supabase para login
+  const emailLogin = (currentRole === "rafa") 
+    ? "rafaeladasvirgens@gmail.com" 
+    : "plinioroberto81@gmail.com";
 
   try {
     const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -224,7 +226,6 @@ async function efetuarLoginComSupabase() {
     alert("Falha de comunicação na autenticação.");
   }
 }
-
 // LOGOUT DESCONECTA DO SUPABASE
 async function logout() {
   if (supabaseClient) {
