@@ -895,11 +895,12 @@ function renderizarPaisFilho(email) {
         ${desc}
       </div>
 
+      <!-- BLOCO HORÁRIO ESPECIAL / EXCEÇÃO -->
       <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Horário Diferente Hoje?</span>
           <button onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
-            ${temEspecial ? '✓ Ativo Hoje' : '+ Informar Exceção'}
+            ${temEspecial ? '✓ Ativo Hoje (Clique p/ fechar)' : '+ Informar Exceção'}
           </button>
         </div>
 
@@ -915,8 +916,8 @@ function renderizarPaisFilho(email) {
             </div>
           </div>
           <div class="flex gap-2">
-            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="flex-1 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg">Salvar Aviso pra Tia Rafa</button>
-            ${temEspecial ? `<button onclick="limparHorarioEspecialPais('${filho.id}')" class="px-2.5 py-1.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg">Cancelar Exceção</button>` : ''}
+            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="flex-1 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg hover:bg-amber-400 transition-all">💾 Salvar Aviso</button>
+            <button onclick="limparHorarioEspecialPais('${filho.id}')" class="px-3 py-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition-all">✕ Cancelar / Voltar ao Normal</button>
           </div>
         </div>
       </div>
@@ -967,7 +968,8 @@ function renderizarPaisFilho(email) {
 }
 
 function toggleBoxHorarioEspecial(id) {
-  document.getElementById(`box-horario-especial-${id}`)?.classList.toggle("hidden");
+  const box = document.getElementById(`box-horario-especial-${id}`);
+  if (box) box.classList.toggle("hidden");
 }
 
 async function salvarHorarioEspecialPais(id) {
@@ -987,7 +989,7 @@ async function salvarHorarioEspecialPais(id) {
     horario_volta_hoje: hVolta
   }).eq('id', id);
 
-  alert("Aviso enviado!");
+  alert("✓ Aviso enviado com sucesso para a Tia Rafa!");
   carregarDadosPais();
 }
 
@@ -1000,13 +1002,7 @@ async function limparHorarioEspecialPais(id) {
     horario_volta_hoje: ""
   }).eq('id', id);
 
-  alert("Horário especial cancelado.");
-  carregarDadosPais();
-}
-
-async function alternarPresenca(id, novoStatus) {
-  if (!supabaseClient) return;
-  await supabaseClient.from('alunos').update({ vai_hoje: novoStatus }).eq('id', id);
+  alert("✓ Horário especial cancelado! O horário voltou ao padrão fixo.");
   carregarDadosPais();
 }
 
