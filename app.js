@@ -133,6 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tab-btn-financeiro").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
     document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
     document.getElementById("tab-btn-passageiros").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    renderizarFinanceiroRafa();
   });
 
   // NAVEGAÇÃO DE ABAS ADMIN
@@ -202,7 +203,6 @@ async function efetuarLoginComSupabase() {
     return;
   }
 
-  // E-mails cadastrados no Supabase para login
   const emailLogin = (currentRole === "rafa") 
     ? "rafaeladasvirgens@gmail.com" 
     : "plinioroberto81@gmail.com";
@@ -226,6 +226,7 @@ async function efetuarLoginComSupabase() {
     alert("Falha de comunicação na autenticação.");
   }
 }
+
 // LOGOUT DESCONECTA DO SUPABASE
 async function logout() {
   if (supabaseClient) {
@@ -243,7 +244,7 @@ async function carregarConfiguracoesGlobais() {
       .from('configuracoes')
       .select('*')
       .eq('id', 1)
-      .single();
+      .maybeSingle();
 
     if (data) {
       pixChaveGlobal = data.pix_chave || pixChaveGlobal;
@@ -262,32 +263,32 @@ async function carregarConfiguracoesGlobais() {
   }
 }
 
-// SALVAR CONFIGURAÇÕES NA NUVEM
+// SALVAR CONFIGURAÇÕES NA NUVEM DE FORMA CORRETA
 async function salvarConfigsGlobais(origem) {
   if (!supabaseClient) return;
 
   if (origem === 'rafa') {
-    pixChaveGlobal = document.getElementById("cfg-pix-rafa").value.trim();
-    linkCartaoGlobal = document.getElementById("cfg-cartao-rafa").value.trim();
+    pixChaveGlobal = document.getElementById("cfg-pix-rafa")?.value.trim() || pixChaveGlobal;
+    linkCartaoGlobal = document.getElementById("cfg-cartao-rafa")?.value.trim() || linkCartaoGlobal;
   } else {
-    pixChaveGlobal = document.getElementById("cfg-pix").value.trim();
-    linkCartaoGlobal = document.getElementById("cfg-cartao").value.trim();
+    pixChaveGlobal = document.getElementById("cfg-pix")?.value.trim() || pixChaveGlobal;
+    linkCartaoGlobal = document.getElementById("cfg-cartao")?.value.trim() || linkCartaoGlobal;
   }
 
   const { error } = await supabaseClient
     .from('configuracoes')
-    .upsert({
-      id: 1,
+    .update({
       pix_chave: pixChaveGlobal,
       link_cartao: linkCartaoGlobal
-    });
+    })
+    .eq('id', 1);
 
   if (error) {
     alert("Erro ao salvar no banco: " + error.message);
     return;
   }
 
-  alert("✓ Configurações salvas com sucesso na nuvem!");
+  alert("✓ Chave PIX e Link do Cartão salvos com sucesso na nuvem!");
   
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
