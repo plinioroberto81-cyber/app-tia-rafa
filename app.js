@@ -7,8 +7,6 @@ if (window.supabase && window.supabase.createClient) {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
-let passRafa = "rafa123";
-let passAdmin = "admin123";
 let pixChaveGlobal = "11999998888";
 let linkCartaoGlobal = "https://mpago.la/";
 let currentRole = null;
@@ -57,12 +55,8 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
   document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
 
-  document.getElementById("btn-login-submit")?.addEventListener("click", () => {
-    const pwd = inputPassword ? inputPassword.value : "";
-    if (currentRole === "rafa" && pwd === passRafa) entrarPerfil("rafa");
-    else if (currentRole === "admin" && pwd === passAdmin) entrarPerfil("admin");
-    else alert("Senha incorreta!");
-  });
+  // LOGIN SEGURO VIA SUPABASE AUTH
+  document.getElementById("btn-login-submit")?.addEventListener("click", efetuarLoginComSupabase);
 
   document.getElementById("btn-toggle-gps")?.addEventListener("click", alternarTransmissaoGps);
   document.getElementById("btn-forcar-gps-test")?.addEventListener("click", carregarGpsAdmin);
@@ -198,6 +192,47 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
+// AUTENTICAÇÃO OFICIAL SUPABASE (MIGRADA DE TEXTO PURO PARA SUPABASE AUTH)
+async function efetuarLoginComSupabase() {
+  const pwdInput = document.getElementById("input-password");
+  const pwd = pwdInput ? pwdInput.value.trim() : "";
+
+  if (!pwd) {
+    alert("Por favor, digite a senha.");
+    return;
+  }
+
+  // Define qual e-mail autenticar no Supabase
+  const emailLogin = (currentRole === "rafa") ? "tiarafa@van.com" : "admin@van.com";
+
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email: emailLogin,
+      password: pwd
+    });
+
+    if (error) {
+      alert("⚠️ Senha incorreta ou acesso negado!");
+      return;
+    }
+
+    pwdInput.value = "";
+    entrarPerfil(currentRole);
+
+  } catch (err) {
+    console.error("Erro no login:", err);
+    alert("Falha de comunicação na autenticação.");
+  }
+}
+
+// LOGOUT DESCONECTA DO SUPABASE
+async function logout() {
+  if (supabaseClient) {
+    await supabaseClient.auth.signOut();
+  }
+  voltarHome();
+}
+
 // CARREGAR CONFIGURAÇÕES DO BANCO DE DADOS (SUPABASE)
 async function carregarConfiguracoesGlobais() {
   if (!supabaseClient) return;
@@ -212,14 +247,10 @@ async function carregarConfiguracoesGlobais() {
     if (data) {
       pixChaveGlobal = data.pix_chave || pixChaveGlobal;
       linkCartaoGlobal = data.link_cartao || linkCartaoGlobal;
-      passRafa = data.pass_rafa || passRafa;
-      passAdmin = data.pass_admin || passAdmin;
 
       // Preenche os campos do Admin
       if (document.getElementById("cfg-pix")) document.getElementById("cfg-pix").value = pixChaveGlobal;
       if (document.getElementById("cfg-cartao")) document.getElementById("cfg-cartao").value = linkCartaoGlobal;
-      if (document.getElementById("cfg-pass-rafa")) document.getElementById("cfg-pass-rafa").value = passRafa;
-      if (document.getElementById("cfg-pass-admin")) document.getElementById("cfg-pass-admin").value = passAdmin;
 
       // Preenche os campos da Rafa
       if (document.getElementById("cfg-pix-rafa")) document.getElementById("cfg-pix-rafa").value = pixChaveGlobal;
@@ -240,8 +271,6 @@ async function salvarConfigsGlobais(origem) {
   } else {
     pixChaveGlobal = document.getElementById("cfg-pix").value.trim();
     linkCartaoGlobal = document.getElementById("cfg-cartao").value.trim();
-    passRafa = document.getElementById("cfg-pass-rafa").value.trim();
-    passAdmin = document.getElementById("cfg-pass-admin").value.trim();
   }
 
   const { error } = await supabaseClient
@@ -249,9 +278,7 @@ async function salvarConfigsGlobais(origem) {
     .upsert({
       id: 1,
       pix_chave: pixChaveGlobal,
-      link_cartao: linkCartaoGlobal,
-      pass_rafa: passRafa,
-      pass_admin: passAdmin
+      link_cartao: linkCartaoGlobal
     });
 
   if (error) {
@@ -1496,10 +1523,6 @@ function voltarHome() {
   if (isGpsTransmitting) alternarTransmissaoGps();
   pararSomSirene();
   resetLogin();
-}
-
-function logout() {
-  voltarHome();
 }
 
 function entrarPerfil(role) {
