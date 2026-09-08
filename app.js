@@ -664,11 +664,13 @@ function alternarModoRota(modo) {
   renderizarRotaRafa();
 }
 
+// ROTA TIA RAFA (INTERLIGADA COM EXCEÇÕES E AUSÊNCIAS DOS PAIS)
 function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
 
-  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+  // Filtra apenas alunos aprovados e que VÃO HOJE
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao && a.vai_hoje !== false);
   let filtrados = aprovados;
 
   if (modoRotaAtual === "VOLTA") {
@@ -697,7 +699,7 @@ function renderizarRotaRafa() {
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2">
         <i class="fa-solid fa-van-shuttle text-2xl text-amber-400"></i>
         <p class="text-xs font-bold text-white">Nenhum passageiro nesta rota no momento.</p>
-        <p class="text-[10px] text-slate-400">${modoRotaAtual === 'VOLTA' ? 'As crianças trazidas na ida aparecerão automaticamente aqui.' : 'Selecione outro filtro de turno.'}</p>
+        <p class="text-[10px] text-slate-400">${modoRotaAtual === 'VOLTA' ? 'As crianças trazidas na ida aparecerão automaticamente aqui.' : 'Todos os alunos estão ausentes ou sem rota no momento.'}</p>
       </div>
     `;
     return;
@@ -761,12 +763,18 @@ function renderizarPassageirosGeralRafa() {
   container.innerHTML = aprovados.map(a => {
     const st = a.status || 'Em Casa';
     const stP = a.status_pagamento || 'Pendente';
+    const vaiHoje = a.vai_hoje !== false;
 
     return `
       <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2.5">
         <div class="flex justify-between items-start">
           <div>
-            <h4 class="text-xs font-bold text-white">${a.nome}</h4>
+            <div class="flex items-center gap-2">
+              <h4 class="text-xs font-bold text-white">${a.nome}</h4>
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-md ${vaiHoje ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                ${vaiHoje ? '✓ Vai Hoje' : '✕ Ausente'}
+              </span>
+            </div>
             <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
             <p class="text-[10px] text-amber-400 font-medium">📍 Busca Casa: ${a.horario_busca || '-'} | Entrada: ${a.horario_escola || '-'}</p>
             <p class="text-[10px] text-slate-400">Responsável: ${a.email_mae} (${a.whatsapp || 'S/ Whats'})</p>
@@ -1069,7 +1077,7 @@ function toggleBoxHorarioEspecial(id) {
   }
 }
 
-// MARCAR AUSÊNCIA DENTRO DA ABA DE EXCEÇÕES
+// MARCAR AUSÊNCIA DENTRO DA ABA DE EXCEÇÕES (ATUALIZA PAIS E TIA RAFA)
 async function marcarAusenciaPais(id, nomeAluno) {
   if (!supabaseClient) return;
 
@@ -1086,12 +1094,16 @@ async function marcarAusenciaPais(id, nomeAluno) {
   }
 
   await mostrarAlertaCustom(`✓ Avisado com sucesso! A Tia Rafa já sabe que ${nomeAluno} não irá hoje.`, "Ausência Confirmada");
+  
+  // Atualiza cache e re-renderiza se a Tia Rafa estiver navegando
   await carregarDadosPais();
+  if (currentRole === 'rafa') carregarDadosRafa();
+
   const emailSelect = document.getElementById("select-email-pais")?.value;
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-// SALVAR HORÁRIO ESPECIAL DENTRO DA ABA
+// SALVAR HORÁRIO ESPECIAL DENTRO DA ABA (ATUALIZA PAIS E TIA RAFA)
 async function salvarHorarioEspecialPais(id) {
   if (!supabaseClient) return;
 
@@ -1116,12 +1128,15 @@ async function salvarHorarioEspecialPais(id) {
   }
 
   await mostrarAlertaCustom("✓ Horário especial enviado para a Tia Rafa!", "Sucesso");
+  
   await carregarDadosPais();
+  if (currentRole === 'rafa') carregarDadosRafa();
+
   const emailSelect = document.getElementById("select-email-pais")?.value;
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-// RESTAURAR PADRÃO FIXO
+// RESTAURAR PADRÃO FIXO (ATUALIZA PAIS E TIA RAFA)
 async function restaurarPadraoPais(id) {
   if (!supabaseClient) return;
 
@@ -1141,7 +1156,10 @@ async function restaurarPadraoPais(id) {
   }
 
   await mostrarAlertaCustom("✓ Status restaurado ao padrão normal!", "Sucesso");
+  
   await carregarDadosPais();
+  if (currentRole === 'rafa') carregarDadosRafa();
+
   const emailSelect = document.getElementById("select-email-pais")?.value;
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
