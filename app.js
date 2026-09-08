@@ -881,7 +881,8 @@ async function resetarStatusDoDia() {
       levado_hoje: false,
       tem_horario_especial: false,
       horario_busca_hoje: "",
-      horario_volta_hoje: ""
+      horario_volta_hoje: "",
+      vai_hoje: true
     }).neq('id', '0');
 
     await mostrarAlertaCustom("Rota resetada para o padrão!", "Sucesso");
@@ -915,7 +916,7 @@ function validarLoginPinPais() {
   }
 }
 
-// PAINEL PAIS (AJUSTADO & CORRIGIDO)
+// PAINEL PAIS
 function renderizarPaisFilho(email) {
   const container = document.getElementById("conteudo-filho-pais");
   if (!email || !container) {
@@ -965,16 +966,16 @@ function renderizarPaisFilho(email) {
         ${desc}
       </div>
 
-      <!-- BLOCO HORÁRIO ESPECIAL / EXCEÇÃO -->
+      <!-- BLOCO INFORMAR EXCEÇÃO (HORÁRIO DIFERENTE OU AUSÊNCIA) -->
       <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Horário Diferente Hoje?</span>
-          <button id="btn-toggle-excecao-${filho.id}" onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
-            ${temEspecial ? '⚡ Exceção Ativa' : '+ Informar Exceção'}
+          <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Informar Exceção / Ausência</span>
+          <button id="btn-toggle-excecao-${filho.id}" onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial || !vaiHoje ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
+            ${temEspecial || !vaiHoje ? '⚡ Exceção Ativa' : '+ Informar Exceção'}
           </button>
         </div>
 
-        <div id="box-horario-especial-${filho.id}" class="${temEspecial ? '' : 'hidden'} space-y-2.5 pt-2 border-t border-slate-800">
+        <div id="box-horario-especial-${filho.id}" class="${temEspecial || !vaiHoje ? '' : 'hidden'} space-y-3 pt-2 border-t border-slate-800">
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-[9px] text-slate-400 block font-bold">Busca Ida Hoje:</label>
@@ -986,26 +987,30 @@ function renderizarPaisFilho(email) {
             </div>
           </div>
           
-          <div class="flex flex-col gap-2">
-            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
-              Salvar Aviso pra Tia Rafa
+          <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+            💾 Salvar Horário Especial pra Tia Rafa
+          </button>
+
+          <div class="pt-2 border-t border-slate-800 flex flex-col gap-2">
+            <button onclick="marcarAusenciaPais('${filho.id}', '${filho.nome.replace(/'/g, "\\'")}')" class="w-full py-2 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition-all">
+              🔴 Marcar que NÃO VAI no transporte hoje
             </button>
-            
-            ${temEspecial ? `
-              <button onclick="limparHorarioEspecialPais('${filho.id}')" class="w-full py-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[11px] rounded-lg transition-all">
-                ✕ Excluir Exceção (Voltar ao Horário Fixo)
+
+            ${temEspecial || !vaiHoje ? `
+              <button onclick="restaurarPadraoPais('${filho.id}')" class="w-full py-1.5 bg-slate-800 text-emerald-400 hover:text-emerald-300 font-bold text-[11px] rounded-lg transition-all border border-slate-700">
+                ✓ Cancelar Exceção / Voltar ao Horário e Presença Fixo
               </button>
             ` : ''}
           </div>
         </div>
       </div>
 
-      <!-- STATUS DE PRESENÇA -->
+      <!-- STATUS DE PRESENÇA DINÂMICO (VERDE OU VERMELHO) -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
-        <span class="text-xs font-bold text-slate-300">Vai no transporte hoje?</span>
-        <button onclick="confirmarAlternarPresenca('${filho.id}', ${!vaiHoje}, '${filho.nome.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-          ${vaiHoje ? '✓ Confirmado (Vai Hoje)' : '✕ Ausente Hoje'}
-        </button>
+        <span class="text-xs font-bold text-slate-300">Status de Transporte Hoje:</span>
+        <span class="px-3 py-1.5 rounded-xl text-xs font-bold ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white shadow-lg border border-rose-400'}">
+          ${vaiHoje ? '🟢 Confirmado (Vai Hoje)' : '🔴 Ausente Informado'}
+        </span>
       </div>
     </div>
 
@@ -1059,25 +1064,34 @@ function toggleBoxHorarioEspecial(id) {
   } else {
     box.classList.add("hidden");
     const filho = alunosCache.find(a => a.id == id);
-    const temEspecial = filho ? filho.tem_horario_especial : false;
+    const temEspecial = filho ? (filho.tem_horario_especial || filho.vai_hoje === false) : false;
     if (btn) btn.innerText = temEspecial ? "⚡ Exceção Ativa" : "+ Informar Exceção";
   }
 }
 
-async function confirmarAlternarPresenca(id, novoStatus, nomeAluno) {
+// MARCAR AUSÊNCIA DENTRO DA ABA DE EXCEÇÕES
+async function marcarAusenciaPais(id, nomeAluno) {
   if (!supabaseClient) return;
 
-  if (novoStatus === false) {
-    const confirmou = await mostrarConfirmacaoCustom(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`, "Confirmar Ausência");
-    if (!confirmou) return;
+  const confirmou = await mostrarConfirmacaoCustom(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`, "Confirmar Ausência");
+  if (!confirmou) return;
+
+  const { error } = await supabaseClient.from('alunos').update({ 
+    vai_hoje: false 
+  }).eq('id', id);
+
+  if (error) {
+    await mostrarAlertaCustom("Erro ao registrar ausência: " + error.message, "Erro");
+    return;
   }
 
-  await supabaseClient.from('alunos').update({ vai_hoje: novoStatus }).eq('id', id);
+  await mostrarAlertaCustom(`✓ Avisado com sucesso! A Tia Rafa já sabe que ${nomeAluno} não irá hoje.`, "Ausência Confirmada");
   await carregarDadosPais();
   const emailSelect = document.getElementById("select-email-pais")?.value;
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
+// SALVAR HORÁRIO ESPECIAL DENTRO DA ABA
 async function salvarHorarioEspecialPais(id) {
   if (!supabaseClient) return;
 
@@ -1092,7 +1106,8 @@ async function salvarHorarioEspecialPais(id) {
   const { error } = await supabaseClient.from('alunos').update({
     tem_horario_especial: true,
     horario_busca_hoje: hIda,
-    horario_volta_hoje: hVolta
+    horario_volta_hoje: hVolta,
+    vai_hoje: true
   }).eq('id', id);
 
   if (error) {
@@ -1100,30 +1115,32 @@ async function salvarHorarioEspecialPais(id) {
     return;
   }
 
-  await mostrarAlertaCustom("✓ Aviso enviado com sucesso para a Tia Rafa!", "Sucesso");
+  await mostrarAlertaCustom("✓ Horário especial enviado para a Tia Rafa!", "Sucesso");
   await carregarDadosPais();
   const emailSelect = document.getElementById("select-email-pais")?.value;
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-async function limparHorarioEspecialPais(id) {
+// RESTAURAR PADRÃO FIXO
+async function restaurarPadraoPais(id) {
   if (!supabaseClient) return;
 
-  const confirmou = await mostrarConfirmacaoCustom("Deseja cancelar esta exceção e voltar ao horário fixo?", "Cancelar Exceção");
+  const confirmou = await mostrarConfirmacaoCustom("Deseja cancelar todas as exceções e voltar ao horário e presença normais?", "Restaurar Padrão");
   if (!confirmou) return;
 
   const { error } = await supabaseClient.from('alunos').update({
     tem_horario_especial: false,
     horario_busca_hoje: "",
-    horario_volta_hoje: ""
+    horario_volta_hoje: "",
+    vai_hoje: true
   }).eq('id', id);
 
   if (error) {
-    await mostrarAlertaCustom("Erro ao cancelar: " + error.message, "Erro");
+    await mostrarAlertaCustom("Erro ao restaurar: " + error.message, "Erro");
     return;
   }
 
-  await mostrarAlertaCustom("✓ Exceção cancelada! Voltando ao horário fixo.", "Sucesso");
+  await mostrarAlertaCustom("✓ Status restaurado ao padrão normal!", "Sucesso");
   await carregarDadosPais();
   const emailSelect = document.getElementById("select-email-pais")?.value;
   if (emailSelect) renderizarPaisFilho(emailSelect);
@@ -1842,7 +1859,8 @@ async function encerrarMesFinanceiro() {
         tem_horario_especial: false,
         horario_busca_hoje: "",
         horario_volta_hoje: "",
-        levado_hoje: false
+        levado_hoje: false,
+        vai_hoje: true
       }).eq('id', a.id);
     }
 
