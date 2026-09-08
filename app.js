@@ -876,7 +876,8 @@ function renderizarPaisFilho(email) {
   const stPag = filho.status_pagamento || 'Pendente';
   const val = filho.valor || 180.00;
   const venc = filho.vencimento || 10;
-  const temEspecial = filho.tem_horario_especial;
+  const temEspecial = filho.tem_horario_especial === true;
+  const vaiHoje = filho.vai_hoje !== false; // Padrão é TRUE (vai no transporte)
 
   container.innerHTML = `
     <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
@@ -899,12 +900,12 @@ function renderizarPaisFilho(email) {
       <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Horário Diferente Hoje?</span>
-          <button onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
-            ${temEspecial ? '✓ Ativo Hoje (Clique p/ fechar)' : '+ Informar Exceção'}
+          <button id="btn-toggle-excecao-${filho.id}" onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
+            ${temEspecial ? '⚡ Exceção Ativa' : '+ Informar Exceção'}
           </button>
         </div>
 
-        <div id="box-horario-especial-${filho.id}" class="${temEspecial ? '' : 'hidden'} space-y-2 pt-2 border-t border-slate-800">
+        <div id="box-horario-especial-${filho.id}" class="${temEspecial ? '' : 'hidden'} space-y-2.5 pt-2 border-t border-slate-800">
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="text-[9px] text-slate-400 block font-bold">Busca Ida Hoje:</label>
@@ -915,17 +916,26 @@ function renderizarPaisFilho(email) {
               <input type="text" id="esp-volta-${filho.id}" value="${filho.horario_volta_hoje || ''}" placeholder="Ex: 15:00" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
             </div>
           </div>
-          <div class="flex gap-2">
-            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="flex-1 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg hover:bg-amber-400 transition-all">💾 Salvar Aviso</button>
-            <button onclick="limparHorarioEspecialPais('${filho.id}')" class="px-3 py-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition-all">✕ Cancelar / Voltar ao Normal</button>
+          
+          <div class="flex flex-col gap-2">
+            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+              Salvar Aviso pra Tia Rafa
+            </button>
+            
+            ${temEspecial ? `
+              <button onclick="limparHorarioEspecialPais('${filho.id}')" class="w-full py-1.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[11px] rounded-lg transition-all">
+                ✕ Excluir Exceção (Voltar ao Horário Fixo)
+              </button>
+            ` : ''}
           </div>
         </div>
       </div>
 
+      <!-- STATUS DE PRESENÇA COM CONFIRMAÇÃO -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
         <span class="text-xs font-bold text-slate-300">Vai no transporte hoje?</span>
-        <button onclick="alternarPresenca('${filho.id}', ${!filho.vai_hoje})" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${filho.vai_hoje !== false ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-          ${filho.vai_hoje !== false ? '✓ Confirmado' : '✕ Ausente Hoje'}
+        <button onclick="confirmarAlternarPresenca('${filho.id}', ${!vaiHoje}, '${filho.nome.replace(/'/g, "\\'")}')" class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+          ${vaiHoje ? '✓ Confirmado (Vai Hoje)' : '✕ Ausente Hoje'}
         </button>
       </div>
     </div>
@@ -969,7 +979,35 @@ function renderizarPaisFilho(email) {
 
 function toggleBoxHorarioEspecial(id) {
   const box = document.getElementById(`box-horario-especial-${id}`);
-  if (box) box.classList.toggle("hidden");
+  const btn = document.getElementById(`btn-toggle-excecao-${id}`);
+  if (!box) return;
+
+  const estaEscondido = box.classList.contains("hidden");
+
+  if (estaEscondido) {
+    box.classList.remove("hidden");
+    if (btn) btn.innerText = "✕ Fechar";
+  } else {
+    box.classList.add("hidden");
+    const filho = alunosCache.find(a => a.id == id);
+    const temEspecial = filho ? filho.tem_horario_especial : false;
+    if (btn) btn.innerText = temEspecial ? "⚡ Exceção Ativa" : "+ Informar Exceção";
+  }
+}
+
+async function confirmarAlternarPresenca(id, novoStatus, nomeAluno) {
+  if (!supabaseClient) return;
+
+  // Se estiver tentando marcar que NÃO VAI, solicita confirmação
+  if (novoStatus === false) {
+    const confirmou = confirm(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`);
+    if (!confirmou) return;
+  }
+
+  await supabaseClient.from('alunos').update({ vai_hoje: novoStatus }).eq('id', id);
+  await carregarDadosPais();
+  const emailSelect = document.getElementById("select-email-pais")?.value;
+  if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
 async function salvarHorarioEspecialPais(id) {
@@ -983,27 +1021,41 @@ async function salvarHorarioEspecialPais(id) {
     return;
   }
 
-  await supabaseClient.from('alunos').update({
+  const { error } = await supabaseClient.from('alunos').update({
     tem_horario_especial: true,
     horario_busca_hoje: hIda,
     horario_volta_hoje: hVolta
   }).eq('id', id);
 
-  alert("✓ Aviso enviado com sucesso para a Tia Rafa!");
-  carregarDadosPais();
+  if (error) {
+    alert("Erro ao salvar: " + error.message);
+    return;
+  }
+
+  alert("✓ Aviso enviado com sucesso!");
+  await carregarDadosPais();
+  const emailSelect = document.getElementById("select-email-pais")?.value;
+  if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
 async function limparHorarioEspecialPais(id) {
   if (!supabaseClient) return;
 
-  await supabaseClient.from('alunos').update({
+  const { error } = await supabaseClient.from('alunos').update({
     tem_horario_especial: false,
     horario_busca_hoje: "",
     horario_volta_hoje: ""
   }).eq('id', id);
 
-  alert("✓ Horário especial cancelado! O horário voltou ao padrão fixo.");
-  carregarDadosPais();
+  if (error) {
+    alert("Erro ao cancelar: " + error.message);
+    return;
+  }
+
+  alert("✓ Exceção cancelada! Voltando ao horário fixo.");
+  await carregarDadosPais();
+  const emailSelect = document.getElementById("select-email-pais")?.value;
+  if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
 // TRANSMISSÃO GPS
