@@ -40,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   inicializarTema();
   verificarAlertaGlobal();
+  carregarConfiguracoesGlobais();
   
   setInterval(verificarEmergenciaAdmin, 3000);
   setInterval(() => {
@@ -75,7 +76,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.getElementById("form-editar-aluno")?.addEventListener("submit", salvarEdicaoAluno);
 
-  document.getElementById("btn-salvar-configs")?.addEventListener("click", salvarConfigsGlobais);
+  document.getElementById("btn-salvar-configs")?.addEventListener("click", () => salvarConfigsGlobais('admin'));
+  document.getElementById("btn-salvar-configs-rafa")?.addEventListener("click", () => salvarConfigsGlobais('rafa'));
 
   document.getElementById("btn-abrir-auto-cadastro")?.addEventListener("click", () => {
     document.getElementById("form-auto-cadastro-container")?.classList.remove("hidden");
@@ -196,6 +198,73 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 });
 
+// CARREGAR CONFIGURAÇÕES DO BANCO DE DADOS (SUPABASE)
+async function carregarConfiguracoesGlobais() {
+  if (!supabaseClient) return;
+
+  try {
+    const { data } = await supabaseClient
+      .from('configuracoes')
+      .select('*')
+      .eq('id', 1)
+      .single();
+
+    if (data) {
+      pixChaveGlobal = data.pix_chave || pixChaveGlobal;
+      linkCartaoGlobal = data.link_cartao || linkCartaoGlobal;
+      passRafa = data.pass_rafa || passRafa;
+      passAdmin = data.pass_admin || passAdmin;
+
+      // Preenche os campos do Admin
+      if (document.getElementById("cfg-pix")) document.getElementById("cfg-pix").value = pixChaveGlobal;
+      if (document.getElementById("cfg-cartao")) document.getElementById("cfg-cartao").value = linkCartaoGlobal;
+      if (document.getElementById("cfg-pass-rafa")) document.getElementById("cfg-pass-rafa").value = passRafa;
+      if (document.getElementById("cfg-pass-admin")) document.getElementById("cfg-pass-admin").value = passAdmin;
+
+      // Preenche os campos da Rafa
+      if (document.getElementById("cfg-pix-rafa")) document.getElementById("cfg-pix-rafa").value = pixChaveGlobal;
+      if (document.getElementById("cfg-cartao-rafa")) document.getElementById("cfg-cartao-rafa").value = linkCartaoGlobal;
+    }
+  } catch (e) {
+    console.error("Erro ao carregar configuracoes:", e);
+  }
+}
+
+// SALVAR CONFIGURAÇÕES NA NUVEM
+async function salvarConfigsGlobais(origem) {
+  if (!supabaseClient) return;
+
+  if (origem === 'rafa') {
+    pixChaveGlobal = document.getElementById("cfg-pix-rafa").value.trim();
+    linkCartaoGlobal = document.getElementById("cfg-cartao-rafa").value.trim();
+  } else {
+    pixChaveGlobal = document.getElementById("cfg-pix").value.trim();
+    linkCartaoGlobal = document.getElementById("cfg-cartao").value.trim();
+    passRafa = document.getElementById("cfg-pass-rafa").value.trim();
+    passAdmin = document.getElementById("cfg-pass-admin").value.trim();
+  }
+
+  const { error } = await supabaseClient
+    .from('configuracoes')
+    .upsert({
+      id: 1,
+      pix_chave: pixChaveGlobal,
+      link_cartao: linkCartaoGlobal,
+      pass_rafa: passRafa,
+      pass_admin: passAdmin
+    });
+
+  if (error) {
+    alert("Erro ao salvar no banco: " + error.message);
+    return;
+  }
+
+  alert("✓ Configurações salvas com sucesso na nuvem!");
+  
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
+}
+
 // CADASTRO MANUAL TIA RAFA
 async function cadastrarAlunoRafa(e) {
   e.preventDefault();
@@ -227,6 +296,39 @@ async function cadastrarAlunoRafa(e) {
   alert("Aluno cadastrado com sucesso!");
   document.getElementById("form-cadastrar-aluno-rafa").reset();
   carregarDadosRafa();
+}
+
+// CADASTRO MANUAL ADMIN
+async function cadastrarAlunoAdmin(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const novoAluno = {
+    nome: document.getElementById("add-nome").value,
+    turno: document.getElementById("add-turno").value,
+    whatsapp: document.getElementById("add-wsp").value,
+    horario_busca: document.getElementById("add-horario-busca").value,
+    horario_escola: document.getElementById("add-horario-escola").value,
+    endereco_casa: document.getElementById("add-endereco-casa").value,
+    escola: document.getElementById("add-escola").value,
+    email_mae: document.getElementById("add-email-mae").value,
+    pin_pais: document.getElementById("add-pin").value || "1234",
+    valor: parseFloat(document.getElementById("add-valor").value),
+    vencimento: parseInt(document.getElementById("add-vencimento").value),
+    status: 'Em Casa',
+    status_pagamento: 'Pendente',
+    vai_hoje: true,
+    levado_hoje: false,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: "",
+    pendente_aprovacao: false
+  };
+
+  await supabaseClient.from('alunos').insert([novoAluno]);
+  alert("Aluno cadastrado com sucesso!");
+  document.getElementById("form-cadastrar-aluno").reset();
+  carregarDadosAdmin();
 }
 
 // AUTO-CADASTRO PAIS
@@ -344,7 +446,7 @@ async function aprovarCadastroAluno(id) {
   }
 }
 
-// EXCLUIR ALUNO (PARA RAFA E ADMIN)
+// EXCLUIR ALUNO
 async function deletarAlunoAdmin(id) {
   if (!supabaseClient) {
     alert("Erro de conexão com o banco de dados.");
@@ -443,6 +545,22 @@ function renderizarPendentesAprovacao() {
 
   containerRafa?.classList.remove("hidden");
   containerAdmin?.classList.remove("hidden");
+}
+
+// ALTERNAR MODO ROTA
+function alternarModoRota(modo) {
+  modoRotaAtual = modo;
+  const btnIda = document.getElementById("btn-rota-ida");
+  const btnVolta = document.getElementById("btn-rota-volta");
+
+  if (modo === "IDA") {
+    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+  } else {
+    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+  }
+  renderizarRotaRafa();
 }
 
 // RENDERIZAR ROTA DINÂMICA
@@ -583,7 +701,7 @@ function renderizarPassageirosGeralRafa() {
   }).join('');
 }
 
-// GPS RAFA (IGUAL AO ADMIN)
+// GPS RAFA
 async function carregarGpsRafa() {
   if (currentRole !== "rafa" || !supabaseClient) return;
 
@@ -1126,9 +1244,7 @@ async function salvarEdicaoAluno(e) {
 async function carregarDadosAdmin() {
   if (!supabaseClient) return;
 
-  document.getElementById("cfg-pix").value = pixChaveGlobal;
-  document.getElementById("cfg-pass-rafa").value = passRafa;
-  document.getElementById("cfg-pass-admin").value = passAdmin;
+  await carregarConfiguracoesGlobais();
 
   const { data } = await supabaseClient.from('alunos').select('*').order('nome', { ascending: true });
   const container = document.getElementById("lista-alunos-admin");
@@ -1193,13 +1309,6 @@ async function alterarStatusAdmin(id, campo, valor) {
   
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
-}
-
-function salvarConfigsGlobais() {
-  pixChaveGlobal = document.getElementById("cfg-pix").value;
-  passRafa = document.getElementById("cfg-pass-rafa").value;
-  passAdmin = document.getElementById("cfg-pass-admin").value;
-  alert("Configurações salvas!");
 }
 
 // ADMIN FINANCEIRO
@@ -1449,6 +1558,8 @@ async function carregarDadosPais() {
   if (!supabaseClient) return;
   const select = document.getElementById("select-email-pais");
   
+  await carregarConfiguracoesGlobais();
+
   const { data } = await supabaseClient.from('alunos').select('*');
   if (!data) return;
   alunosCache = data;
@@ -1464,6 +1575,9 @@ async function carregarDadosPais() {
 
 async function carregarDadosRafa() {
   if (!supabaseClient) return;
+
+  await carregarConfiguracoesGlobais();
+
   const { data } = await supabaseClient.from('alunos').select('*');
   if (!data) return;
   alunosCache = data;
