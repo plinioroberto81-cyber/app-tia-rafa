@@ -369,11 +369,12 @@ async function logout() {
   if (supabaseClient) {
     await supabaseClient.auth.signOut();
   }
+  // Limpa completamente os dados salvos no navegador
   localStorage.removeItem("app_role");
   localStorage.removeItem("app_pai_email");
+  currentRole = null;
   voltarHome();
 }
-
 async function carregarConfiguracoesGlobais() {
   if (!supabaseClient) return;
 
