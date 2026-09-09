@@ -583,6 +583,7 @@ function toggleMapaAdmin() {
   }
 }
 
+// 1. TRANSMISSÃO DO GPS VIA SENSOR DO DISPOSITIVO
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
@@ -633,6 +634,137 @@ function alternarTransmissaoGps() {
       btn.innerHTML = "⚪ GPS Desligado";
       btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
     }
+  }
+}
+
+// 2. RECEBIMENTO E EXIBIÇÃO DA ZAFIRA NO MAPA DA TIA RAFA
+async function carregarGpsRafa() {
+  if (currentRole !== "rafa" || !supabaseClient) return;
+
+  const wrapper = document.getElementById("wrapper-mapa-rafa");
+  if (wrapper && wrapper.classList.contains("hidden")) return;
+
+  const statusTxt = document.getElementById("txt-status-gps-rafa");
+  const containerMapa = document.getElementById("mapa-rafa-container");
+  if (!containerMapa) return;
+
+  try {
+    const { data } = await supabaseClient
+      .from('alertas')
+      .select('*')
+      .eq('tipo', 'GPS_VAN')
+      .order('id', { ascending: false })
+      .limit(1);
+
+    let lat = -22.7681; 
+    let lng = -43.5591;
+    let temSinal = false;
+
+    if (data && data.length > 0 && data[0].mensagem) {
+      const coords = data[0].mensagem.split(',');
+      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        lat = parseFloat(coords[0]);
+        lng = parseFloat(coords[1]);
+        temSinal = true;
+      }
+    }
+
+    if (statusTxt) {
+      statusTxt.innerText = temSinal ? "🟢 Sinal ao Vivo Detectado" : "⚪ Van Offline";
+    }
+
+    // Estrutura do Marcador com a sua Zafira sem fundo
+    const htmlMarcadorZafira = `
+      <div style="width:55px; height:55px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:2px; box-shadow:0 6px 16px rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
+      </div>
+    `;
+
+    if (!mapRafa && window.L) {
+      mapRafa = L.map('mapa-rafa-container').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapRafa);
+      
+      const iconeZafiraGps = L.divIcon({
+        className: 'custom-van-marker',
+        html: htmlMarcadorZafira,
+        iconSize: [55, 55],
+        iconAnchor: [27, 27]
+      });
+
+      markerVanRafa = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapRafa);
+    } else if (mapRafa && markerVanRafa) {
+      markerVanRafa.setLatLng([lat, lng]);
+      mapRafa.setView([lat, lng]);
+    }
+
+    setTimeout(() => { if (mapRafa) mapRafa.invalidateSize(); }, 300);
+  } catch (e) {
+    console.error("Erro mapa rafa:", e);
+  }
+}
+
+// 3. RECEBIMENTO E EXIBIÇÃO DA ZAFIRA NO MAPA DO SUPORTE (ADMIN)
+async function carregarGpsAdmin() {
+  if (currentRole !== "admin" || !supabaseClient) return;
+
+  const wrapper = document.getElementById("wrapper-mapa-admin");
+  if (wrapper && wrapper.classList.contains("hidden")) return;
+
+  const statusTxt = document.getElementById("txt-status-gps-admin");
+  const containerMapa = document.getElementById("mapa-admin-container");
+  if (!containerMapa) return;
+
+  try {
+    const { data } = await supabaseClient
+      .from('alertas')
+      .select('*')
+      .eq('tipo', 'GPS_VAN')
+      .order('id', { ascending: false })
+      .limit(1);
+
+    let lat = -22.7681; 
+    let lng = -43.5591;
+    let temSinal = false;
+
+    if (data && data.length > 0 && data[0].mensagem) {
+      const coords = data[0].mensagem.split(',');
+      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        lat = parseFloat(coords[0]);
+        lng = parseFloat(coords[1]);
+        temSinal = true;
+      }
+    }
+
+    if (statusTxt) {
+      statusTxt.innerText = temSinal ? "🟢 Sinal ao Vivo Detectado" : "⚪ Van Offline";
+    }
+
+    const htmlMarcadorZafira = `
+      <div style="width:55px; height:55px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:2px; box-shadow:0 6px 16px rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+        <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
+      </div>
+    `;
+
+    if (!mapAdmin && window.L) {
+      mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapAdmin);
+      
+      const iconeZafiraGps = L.divIcon({
+        className: 'custom-van-marker',
+        html: htmlMarcadorZafira,
+        iconSize: [55, 55],
+        iconAnchor: [27, 27]
+      });
+
+      markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin);
+    } else if (mapAdmin && markerVanAdmin) {
+      markerVanAdmin.setLatLng([lat, lng]);
+      mapAdmin.setView([lat, lng]);
+    }
+
+    setTimeout(() => { if (mapAdmin) mapAdmin.invalidateSize(); }, 300);
+  } catch (e) {
+    console.error("Erro mapa admin:", e);
   }
 }
 
