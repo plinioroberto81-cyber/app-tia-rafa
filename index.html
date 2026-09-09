@@ -40,67 +40,12 @@
   <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <style>
-    /* MODO CLARO */
-    html.light-mode {
-      background-color: #cbd5e1 !important;
-    }
-
-    html.light-mode body {
-      background-color: #cbd5e1 !important;
-      color: #020617 !important;
-    }
-
-    html.light-mode header,
-    html.light-mode nav#bottom-bar {
-      background-color: #e2e8f0 !important;
-      border-color: #94a3b8 !important;
-    }
-
-    html.light-mode #login-section h2,
-    html.light-mode #login-section p,
-    html.light-mode h1,
-    html.light-mode h2,
-    html.light-mode h3,
-    html.light-mode h4,
-    html.light-mode p,
-    html.light-mode span,
-    html.light-mode label,
-    html.light-mode .text-white,
-    html.light-mode .text-slate-100,
-    html.light-mode .text-slate-300,
-    html.light-mode .text-slate-400,
-    html.light-mode .text-slate-500 {
-      color: #020617 !important;
-    }
-
-    html.light-mode .bg-slate-900,
-    html.light-mode .bg-slate-800,
-    html.light-mode .bg-slate-900\/80,
-    html.light-mode .bg-slate-800\/80,
-    html.light-mode .bg-slate-800\/90 {
-      background-color: #f1f5f9 !important;
-      border-color: #94a3b8 !important;
-    }
-
-    html.light-mode input,
-    html.light-mode select {
-      background-color: #ffffff !important;
-      border-color: #94a3b8 !important;
-      color: #020617 !important;
-    }
-
-    html.light-mode .bg-slate-950,
-    html.light-mode .bg-slate-900\/60 {
-      background-color: #e2e8f0 !important;
-      border-color: #cbd5e1 !important;
-      color: #020617 !important;
-    }
-  </style>
+  <!-- ESTILOS DO APP -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
   
-  <!-- BARRA SUPERIOR / CABEÇALHO COM INDICADOR DE PERFIL -->
+  <!-- BARRA SUPERIOR / CABEÇALHO -->
   <header class="w-full bg-slate-900 border-b border-slate-800 relative z-40 py-3 px-4 shadow-md">
     <div class="max-w-md mx-auto flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
@@ -143,7 +88,7 @@
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="max-w-md w-full mx-auto p-4 flex-1 space-y-4">
 
-    <!-- SEÇÃO DE LOGIN -->
+    <!-- SEÇÃO DE LOGIN INICIAL -->
     <section id="login-section" class="space-y-4 py-4">
       <div class="bg-gradient-to-b from-slate-900 to-slate-900/90 border border-slate-800 rounded-3xl p-5 text-center space-y-3 shadow-xl relative overflow-hidden">
         <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
@@ -250,7 +195,20 @@
         </form>
       </div>
 
-      <div id="conteudo-filho-pais" class="space-y-4 hidden"></div>
+      <!-- PAINEL DO FILHO SELECIONADO COM ABAS INTERNAS -->
+      <div id="conteudo-filho-pais" class="space-y-4 hidden">
+        <div class="flex border-b border-slate-800">
+          <button id="tab-pais-filho" class="flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400">
+            <i class="fa-solid fa-child"></i> Status & Rota
+          </button>
+          <button id="tab-pais-financeiro" class="flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent">
+            <i class="fa-solid fa-wallet"></i> Mensalidade
+          </button>
+        </div>
+
+        <div id="aba-pais-filho" class="space-y-4"></div>
+        <div id="aba-pais-financeiro" class="space-y-4 hidden"></div>
+      </div>
     </section>
 
     <!-- DASHBOARD TIA RAFA -->
@@ -315,7 +273,7 @@
       <!-- ABA 2: GESTÃO COMPLETA DE ALUNOS & GPS (TIA RAFA) -->
       <div id="aba-passageiros-rafa" class="space-y-4 hidden">
         
-        <!-- MAPA GPS DA VAN (COM OPÇÃO DE ESCONDER) -->
+        <!-- MAPA GPS DA VAN -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2.5">
           <div class="flex justify-between items-center">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider">Localização da Van</h3>
@@ -329,7 +287,7 @@
           </div>
         </div>
 
-        <!-- ENVIAR AVISOS RÁPIDOS AOS PAIS -->
+        <!-- MURAL DE AVISOS PARA OS PAIS -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mural de Avisos (Para os Pais)</h3>
           <div class="grid grid-cols-2 gap-2">
@@ -343,7 +301,7 @@
           <button id="btn-limpar-aviso-rafa" class="w-full py-1.5 text-[10px] text-rose-400 font-bold hover:underline">Limpar Avisos Ativos</button>
         </div>
 
-        <!-- FORMULÁRIO DE CADASTRAR ALUNO MANUALMENTE (RECOLHIDO) -->
+        <!-- FORMULÁRIO DE CADASTRAR ALUNO MANUALMENTE -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
           <button id="btn-toggle-form-rafa" class="w-full p-4 text-xs font-bold text-white uppercase tracking-wider flex justify-between items-center bg-slate-900 hover:bg-slate-800 transition-all">
             <span class="flex items-center gap-2"><i class="fa-solid fa-user-plus text-amber-400"></i> Cadastrar Novo Passageiro</span>
@@ -380,7 +338,7 @@
           </div>
         </div>
 
-        <!-- CONFIGURAÇÃO DA CHAVE PIX PELA TIA RAFA -->
+        <!-- CONFIGURAÇÃO DA CHAVE PIX -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Configuração de Pagamento (PIX)</h3>
           <div class="space-y-2">
@@ -398,7 +356,7 @@
           </div>
         </div>
 
-        <!-- LISTA GERAL DE ALUNOS COM EDITAR E DELETAR -->
+        <!-- LISTA GERAL DE ALUNOS -->
         <div class="space-y-2">
           <div class="flex justify-between items-center">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider">Todos os Passageiros Cadastrados</h3>
@@ -469,6 +427,7 @@
         </button>
       </div>
 
+      <!-- ABA 1: ALUNOS & GPS ADMIN -->
       <div id="aba-admin-alunos" class="space-y-4">
         <div id="container-pendentes-admin" class="hidden bg-amber-500/10 border border-amber-500/40 p-4 rounded-2xl space-y-3">
           <div class="flex items-center justify-between">
@@ -480,7 +439,7 @@
           <div id="lista-pendentes-admin" class="space-y-2.5"></div>
         </div>
 
-        <!-- MAPA GPS DA VAN (COM OPÇÃO DE ESCONDER) -->
+        <!-- MAPA GPS DA VAN -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2.5">
           <div class="flex justify-between items-center">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider">Localização da Van em Tempo Real</h3>
@@ -508,7 +467,7 @@
           <button id="btn-limpar-aviso" class="w-full py-1.5 text-[10px] text-rose-400 font-bold hover:underline">Limpar Avisos Ativos</button>
         </div>
 
-        <!-- FORMULÁRIO DE CADASTRAR ALUNO MANUALMENTE (RECOLHIDO) -->
+        <!-- FORMULÁRIO DE CADASTRAR ALUNO MANUALMENTE -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
           <button id="btn-toggle-form-admin" class="w-full p-4 text-xs font-bold text-white uppercase tracking-wider flex justify-between items-center bg-slate-900 hover:bg-slate-800 transition-all">
             <span class="flex items-center gap-2"><i class="fa-solid fa-user-plus text-amber-400"></i> Cadastrar Novo Passageiro</span>
@@ -571,6 +530,7 @@
         </div>
       </div>
 
+      <!-- ABA 2: FINANCEIRO ADMIN -->
       <div id="aba-admin-financeiro" class="space-y-4 hidden">
         <div class="grid grid-cols-3 gap-2">
           <div class="bg-slate-900/80 border border-slate-700/80 p-3 rounded-xl text-center">
