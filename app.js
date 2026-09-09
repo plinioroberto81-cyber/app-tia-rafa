@@ -110,26 +110,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
 
-  // Área dos Pais
-  document.getElementById("select-email-pais")?.addEventListener("change", (e) => {
-    const val = e.target.value;
-    const boxPin = document.getElementById("box-pin-pais");
-    const containerFilho = document.getElementById("conteudo-filho-pais");
-    
-    // Sempre esconde os dados do filho ao trocar de nome ou selecionar um novo
-    containerFilho?.classList.add("hidden");
-    localStorage.removeItem("app_pai_pin_validado");
-
-    if (val) {
-      boxPin?.classList.remove("hidden");
-      const pinInp = document.getElementById("input-pin-pais");
-      if (pinInp) pinInp.value = "";
-    } else {
-      boxPin?.classList.add("hidden");
-    }
-  });
-
-  document.getElementById("btn-entrar-pais-pin")?.addEventListener("click", validarLoginPinPais);
+  // Área dos Pais (Login por WhatsApp + PIN)
+  document.getElementById("btn-entrar-pais-direto")?.addEventListener("click", validarLoginWhatsAppPais);
 
   // Abas da Área dos Pais
   document.getElementById("tab-pais-filho")?.addEventListener("click", () => {
@@ -180,7 +162,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderizarFinanceiroRafa();
   });
 
-  // Abas Admin
+  // Abas Suporte (Admin)
   document.getElementById("tab-admin-alunos")?.addEventListener("click", () => {
     document.getElementById("aba-admin-alunos")?.classList.remove("hidden");
     document.getElementById("aba-admin-financeiro")?.classList.add("hidden");
@@ -350,6 +332,7 @@ function mostrarFormLogin(role) {
   if (authForm) authForm.classList.remove("hidden");
   if (mainButtons) mainButtons.classList.add("hidden");
 }
+
 function resetLogin() {
   if (authForm) authForm.classList.add("hidden");
   if (mainButtons) mainButtons.className = "space-y-3";
@@ -431,7 +414,6 @@ async function logout() {
     await supabaseClient.auth.signOut();
   }
 
-  // Limpa todos os dados de sessão armazenados no dispositivo
   localStorage.removeItem("app_role");
   localStorage.removeItem("app_pai_wsp");
   localStorage.removeItem("app_pai_pin");
@@ -439,20 +421,17 @@ async function logout() {
   localStorage.removeItem("app_pai_pin_validado");
 
   currentRole = null;
-  
-  // Volta para a Tela Inicial com os 3 botões de perfil
   voltarHome();
 }
+
 async function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
   
-  // Se não houver perfil salvo, volta para a Tela Inicial com os 3 botões
   if (!roleSalva) {
     voltarHome();
     return;
   }
 
-  // Valida autenticação no Supabase se for Tia Rafa ou Admin
   if (roleSalva === "rafa" || roleSalva === "admin") {
     if (!supabaseClient) {
       localStorage.removeItem("app_role");
@@ -469,18 +448,15 @@ async function restaurarSessaoAnterior() {
     }
   }
 
-  // Restaura o perfil salvo
   currentRole = roleSalva;
   entrarPerfil(roleSalva, true);
 
-  // Se o perfil for Pais, restaura o painel do filho sem pedir PIN novamente após o refresh
   if (roleSalva === "pais") {
     const wspSalvo = localStorage.getItem("app_pai_wsp");
     const pinSalvo = localStorage.getItem("app_pai_pin");
     const emailSalvo = localStorage.getItem("app_pai_email");
 
     setTimeout(async () => {
-      // 1. Tenta restaurar pelo novo modelo (WhatsApp + PIN)
       if (wspSalvo && pinSalvo) {
         if (!alunosCache || alunosCache.length === 0) {
           const { data } = await supabaseClient.from('alunos').select('*');
@@ -500,19 +476,18 @@ async function restaurarSessaoAnterior() {
         }
       }
 
-      // 2. Fallback: Tenta restaurar pelo modelo anterior (Nome/E-mail) caso esteja salvo
       if (emailSalvo) {
         document.getElementById("box-login-pais-direto")?.classList.add("hidden");
         renderizarPaisFilho(emailSalvo);
         return;
       }
 
-      // Se não encontrou nenhuma sessão válida de pais, mostra a tela de login dos pais
       document.getElementById("box-login-pais-direto")?.classList.remove("hidden");
       document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
     }, 300);
   }
 }
+
 /* ==========================================================================
    5. CONFIGURAÇÕES GLOBAIS DE PAGAMENTO (PIX & CARTÃO)
    ========================================================================== */
@@ -608,7 +583,6 @@ function toggleMapaAdmin() {
   }
 }
 
-// 1. TRANSMISSÃO DO GPS
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
@@ -640,7 +614,7 @@ function alternarTransmissaoGps() {
           }
         },
         (err) => {
-          console.error("Erro ao acessar sensor de GPS:", err);
+          console.error("Erro no sensor GPS:", err);
           if (btn) {
             btn.innerHTML = "⚪ GPS Desligado";
             btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
@@ -661,7 +635,8 @@ function alternarTransmissaoGps() {
     }
   }
 }
-// 2. RECEBIMENTO NO MAPA TIA RAFA
+
+// RECEBIMENTO NO MAPA TIA RAFA (COM A ZAFIRA ORIGINAL)
 async function carregarGpsRafa() {
   if (currentRole !== "rafa" || !supabaseClient) return;
 
@@ -702,12 +677,12 @@ async function carregarGpsRafa() {
     const iconeZafiraGps = L.divIcon({
       className: 'custom-van-marker',
       html: `
-        <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
-          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
+        <div style="width:55px; height:55px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:2px; box-shadow:0 6px 16px rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
         </div>
       `,
-      iconSize: [50, 50],
-      iconAnchor: [25, 25]
+      iconSize: [55, 55],
+      iconAnchor: [27, 27]
     });
 
     if (!mapRafa && window.L) {
@@ -725,7 +700,7 @@ async function carregarGpsRafa() {
   }
 }
 
-// 3. RECEBIMENTO NO MAPA ADMIN
+// RECEBIMENTO NO MAPA SUPORTE (COM A ZAFIRA ORIGINAL)
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -766,12 +741,12 @@ async function carregarGpsAdmin() {
     const iconeZafiraGps = L.divIcon({
       className: 'custom-van-marker',
       html: `
-        <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
-          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
+        <div style="width:55px; height:55px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:2px; box-shadow:0 6px 16px rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
         </div>
       `,
-      iconSize: [50, 50],
-      iconAnchor: [25, 25]
+      iconSize: [55, 55],
+      iconAnchor: [27, 27]
     });
 
     if (!mapAdmin && window.L) {
@@ -788,78 +763,86 @@ async function carregarGpsAdmin() {
     console.error("Erro mapa admin:", e);
   }
 }
+
 /* ==========================================================================
    7. MÓDULO ÁREA DOS PAIS
    ========================================================================== */
 
 async function carregarDadosPais(isBackground = false) {
   if (!supabaseClient) return;
-  const select = document.getElementById("select-email-pais");
-  
+
   if (!isBackground) await carregarConfiguracoesGlobais();
 
   const { data } = await supabaseClient.from('alunos').select('*');
   if (!data) return;
   alunosCache = data;
 
-  const aprovados = data.filter(a => !a.pendente_aprovacao);
-  const nomesUnicos = [...new Set(aprovados.map(a => a.nome).filter(Boolean))];
-  
-  if (select && select.children.length <= 1) {
-    select.innerHTML = '<option value="">-- Selecione seu Cadastro --</option>' + 
-      nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
+  const wspSalvo = localStorage.getItem("app_pai_wsp");
+  const pinSalvo = localStorage.getItem("app_pai_pin");
+
+  if (wspSalvo && pinSalvo) {
+    const aluno = alunosCache.find(a => 
+      (a.whatsapp || '').replace(/\D/g, '') === wspSalvo && 
+      (a.pin_pais || '1234') === pinSalvo && 
+      !a.pendente_aprovacao
+    );
+
+    if (aluno) {
+      document.getElementById("box-login-pais-direto")?.classList.add("hidden");
+      renderizarPaisFilhoPorObjeto(aluno);
+      return;
+    }
   }
 
-  // PRIVACIDADE: Só restaura os dados se houver uma sessão de PIN já validada previamente no localStorage
-  const alunoSalvo = localStorage.getItem("app_pai_email");
-  const pinValidado = localStorage.getItem("app_pai_pin_validado");
-
-  if (alunoSalvo && pinValidado === "true") {
-    if (select) select.value = alunoSalvo;
-    document.getElementById("box-pin-pais")?.classList.add("hidden");
-    renderizarPaisFilho(alunoSalvo);
-  } else {
-    // Garante que o conteúdo do filho permaneça escondido
-    document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
-  }
+  document.getElementById("box-login-pais-direto")?.classList.remove("hidden");
+  document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
 }
 
-function validarLoginPinPais() {
-  const emailSelect = document.getElementById("select-email-pais")?.value;
-  const pinInput = document.getElementById("input-pin-pais")?.value;
+function validarLoginWhatsAppPais() {
+  const wspInput = document.getElementById("input-wsp-login-pais")?.value.trim().replace(/\D/g, '');
+  const pinInput = document.getElementById("input-pin-login-pais")?.value.trim();
 
-  if (!emailSelect) {
-    alert("Por favor, selecione o seu cadastro na lista.");
+  if (!wspInput) {
+    alert("Por favor, digite seu WhatsApp com DDD.");
     return;
   }
 
-  if (!pinInput) {
+  if (!pinInput || pinInput.length !== 4) {
     alert("Por favor, digite o seu PIN de 4 dígitos.");
     return;
   }
 
-  const aluno = alunosCache.find(a => (a.email_mae === emailSelect || a.nome === emailSelect) && !a.pendente_aprovacao);
+  const aluno = alunosCache.find(a => 
+    (a.whatsapp || '').replace(/\D/g, '') === wspInput && 
+    !a.pendente_aprovacao
+  );
 
   if (!aluno) {
-    alert("Cadastro não encontrado ou pendente de aprovação pela Tia Rafa.");
+    alert("⚠️ Nenhum aluno encontrado para esse WhatsApp ou o cadastro ainda aguarda aprovação da Tia Rafa.");
     return;
   }
 
   const pinCorreto = aluno.pin_pais || "1234";
 
   if (pinInput === pinCorreto) {
-    // Salva a validação na memória para não pedir PIN a cada clique
-    localStorage.setItem("app_pai_email", emailSelect);
-    localStorage.setItem("app_pai_pin_validado", "true");
+    localStorage.setItem("app_pai_wsp", wspInput);
+    localStorage.setItem("app_pai_pin", pinInput);
 
-    // Esconde a caixa do PIN e mostra as informações do filho
-    document.getElementById("box-pin-pais")?.classList.add("hidden");
-    renderizarPaisFilho(emailSelect);
+    document.getElementById("box-login-pais-direto")?.classList.add("hidden");
+    renderizarPaisFilhoPorObjeto(aluno);
   } else {
-    alert("⚠️ PIN incorreto! Verifique o código digitado.");
-    document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
+    alert("⚠️ PIN incorreto! Verifique o número digitado.");
   }
 }
+
+function renderizarPaisFilhoPorObjeto(filho) {
+  const container = document.getElementById("conteudo-filho-pais");
+  if (!container || !filho) return;
+
+  renderizarPaisFilho(filho.nome);
+  container.classList.remove("hidden");
+}
+
 function renderizarPaisFilho(emailOuNome) {
   const container = document.getElementById("conteudo-filho-pais");
   const abaFilho = document.getElementById("aba-pais-filho");
@@ -895,7 +878,6 @@ function renderizarPaisFilho(emailOuNome) {
   const temEspecial = filho.tem_horario_especial === true;
   const vaiHoje = filho.vai_hoje !== false;
 
-  // CONTEÚDO DA ABA 1: MEU FILHO / ROTA
   if (abaFilho) {
     abaFilho.innerHTML = `
       <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
@@ -962,7 +944,6 @@ function renderizarPaisFilho(emailOuNome) {
     `;
   }
 
-  // CONTEÚDO DA ABA 2: MENSALIDADE DA CRIANÇA
   if (abaFin) {
     abaFin.innerHTML = `
       <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
@@ -1030,7 +1011,6 @@ async function enviarAutoCadastroPais(e) {
   const wspEl = document.getElementById("auto-wsp");
   const endEl = document.getElementById("auto-endereco-casa");
   const escolaEl = document.getElementById("auto-escola");
-  const emailEl = document.getElementById("auto-email-mae");
   const pinEl = document.getElementById("auto-pin");
 
   const pin = pinEl ? pinEl.value.trim() : "";
@@ -1040,8 +1020,6 @@ async function enviarAutoCadastroPais(e) {
     return;
   }
 
-  const emailValor = emailEl ? emailEl.value.trim().toLowerCase() : "";
-
   const novoAluno = {
     nome: nomeEl ? nomeEl.value.trim() : "",
     turno: turnoEl ? turnoEl.value : "Manhã (07h às 11h)",
@@ -1050,7 +1028,7 @@ async function enviarAutoCadastroPais(e) {
     horario_busca: "",
     endereco_casa: endEl ? endEl.value.trim() : "",
     escola: escolaEl ? escolaEl.value.trim() : "",
-    email_mae: emailValor || `aluno_${Date.now()}@transporte.local`,
+    email_mae: `aluno_${Date.now()}@transporte.local`,
     pin_pais: pin,
     valor: 180,
     vencimento: 10,
@@ -1096,9 +1074,6 @@ async function marcarAusenciaPais(id, nomeAluno) {
   
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
-
-  const emailSelect = document.getElementById("select-email-pais")?.value;
-  if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
 async function salvarHorarioEspecialPais(id) {
@@ -1128,9 +1103,6 @@ async function salvarHorarioEspecialPais(id) {
   
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
-
-  const emailSelect = document.getElementById("select-email-pais")?.value;
-  if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
 async function restaurarPadraoPais(id) {
@@ -1155,9 +1127,6 @@ async function restaurarPadraoPais(id) {
   
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
-
-  const emailSelect = document.getElementById("select-email-pais")?.value;
-  if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
 /* ==========================================================================
@@ -1380,8 +1349,6 @@ async function cadastrarAlunoRafa(e) {
   e.preventDefault();
   if (!supabaseClient) return;
 
-  const emailMae = document.getElementById("add-email-mae-rafa")?.value.trim() || "";
-
   const novoAluno = {
     nome: document.getElementById("add-nome-rafa").value,
     turno: document.getElementById("add-turno-rafa").value,
@@ -1390,7 +1357,7 @@ async function cadastrarAlunoRafa(e) {
     horario_escola: document.getElementById("add-horario-escola-rafa").value,
     endereco_casa: document.getElementById("add-endereco-casa-rafa").value,
     escola: document.getElementById("add-escola-rafa").value,
-    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
+    email_mae: `aluno_${Date.now()}@transporte.local`,
     pin_pais: document.getElementById("add-pin-rafa").value || "1234",
     valor: parseFloat(document.getElementById("add-valor-rafa").value),
     vencimento: parseInt(document.getElementById("add-vencimento-rafa").value),
@@ -1517,7 +1484,7 @@ async function dispararEmergenciaRafa() {
       ativo: true
     }]);
 
-    alert("Alerta enviado para o Admin!");
+    alert("Alerta enviado para o Suporte!");
   }, async () => {
     await supabaseClient.from('alertas').insert([{
       tipo: 'EMERGENCIA_ADMIN',
@@ -1528,7 +1495,7 @@ async function dispararEmergenciaRafa() {
 }
 
 /* ==========================================================================
-   9. MÓDULO PAINEL ADMIN / GESTÃO
+   9. MÓDULO PAINEL SUPORTE (GESTAO)
    ========================================================================== */
 
 async function carregarDadosAdmin(isBackground = false) {
@@ -1720,8 +1687,6 @@ async function cadastrarAlunoAdmin(e) {
   e.preventDefault();
   if (!supabaseClient) return;
 
-  const emailMae = document.getElementById("add-email-mae")?.value.trim() || "";
-
   const novoAluno = {
     nome: document.getElementById("add-nome").value,
     turno: document.getElementById("add-turno").value,
@@ -1730,7 +1695,7 @@ async function cadastrarAlunoAdmin(e) {
     horario_escola: document.getElementById("add-horario-escola").value,
     endereco_casa: document.getElementById("add-endereco-casa").value,
     escola: document.getElementById("add-escola").value,
-    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
+    email_mae: `aluno_${Date.now()}@transporte.local`,
     pin_pais: document.getElementById("add-pin").value || "1234",
     valor: parseFloat(document.getElementById("add-valor").value),
     vencimento: parseInt(document.getElementById("add-vencimento").value),
@@ -1773,7 +1738,6 @@ function abrirModalEditarAluno(id) {
   document.getElementById("edit-horario-escola").value = aluno.horario_escola || '';
   document.getElementById("edit-endereco-casa").value = aluno.endereco_casa || '';
   document.getElementById("edit-escola").value = aluno.escola || '';
-  document.getElementById("edit-email-mae").value = (aluno.email_mae && !aluno.email_mae.includes('@transporte.local')) ? aluno.email_mae : '';
   document.getElementById("edit-pin").value = aluno.pin_pais || '1234';
   document.getElementById("edit-valor").value = aluno.valor || 180;
   document.getElementById("edit-vencimento").value = aluno.vencimento || 10;
@@ -1786,7 +1750,6 @@ async function salvarEdicaoAluno(e) {
   if (!supabaseClient) return;
 
   const id = document.getElementById("edit-id").value;
-  const emailMae = document.getElementById("edit-email-mae")?.value.trim() || "";
 
   const updateData = {
     nome: document.getElementById("edit-nome").value,
@@ -1796,7 +1759,6 @@ async function salvarEdicaoAluno(e) {
     horario_escola: document.getElementById("edit-horario-escola").value,
     endereco_casa: document.getElementById("edit-endereco-casa").value,
     escola: document.getElementById("edit-escola").value,
-    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
     pin_pais: document.getElementById("edit-pin").value,
     valor: parseFloat(document.getElementById("edit-valor").value),
     vencimento: parseInt(document.getElementById("edit-vencimento").value)
@@ -1946,7 +1908,7 @@ function exportarRelatorioFinanceiroCSV() {
   }
 
   let csvContent = "\uFEFF";
-  csvContent += "Nome do Passageiro;Escola;Turno;Horario Busca;Horario Entrada;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;Email Responsavel;WhatsApp;PIN Pais\n";
+  csvContent += "Nome do Passageiro;Escola;Turno;Horario Busca;Horario Entrada;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;WhatsApp;PIN Pais\n";
 
   aprovados.forEach(a => {
     const nome = (a.nome || "-").replace(/;/g, ",");
@@ -1958,11 +1920,10 @@ function exportarRelatorioFinanceiroCSV() {
     const vencimento = a.vencimento || 10;
     const statusPag = a.status_pagamento || "Pendente";
     const formaPag = a.forma_pagamento || "-";
-    const email = a.email_mae || "-";
     const whats = a.whatsapp || "-";
     const pin = a.pin_pais || "1234";
 
-    csvContent += `${nome};${escola};${turno};${hBusca};${hEscola};R$ ${valor};Dia ${vencimento};${statusPag};${formaPag};${email};${whats};${pin}\n`;
+    csvContent += `${nome};${escola};${turno};${hBusca};${hEscola};R$ ${valor};Dia ${vencimento};${statusPag};${formaPag};${whats};${pin}\n`;
   });
 
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
