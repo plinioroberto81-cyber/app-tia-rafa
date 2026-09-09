@@ -56,3 +56,23 @@ html.light-mode .bg-slate-900\/60 {
   border-color: #cbd5e1 !important;
   color: #020617 !important;
 }
+
+/* ==========================================================================
+   IMPEDE A SELEÇÃO DE TEXTO E O MENU DE PESQUISA DO GOOGLE NO CELULAR
+   ========================================================================== */
+
+/* Bloqueia a seleção de texto e o menu ao segurar o toque no app inteiro */
+html, body, button, div, span, p, h1, h2, h3, h4, header, nav, section, a {
+  -webkit-touch-callout: none !important; /* Desativa menu ao segurar o toque */
+  -webkit-user-select: none !important;   /* Desativa seleção no Chrome/Safari */
+  -khtml-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;           /* Bloqueia seleção padrão */
+}
+
+/* Libera a seleção APENAS nos campos digitáveis (Inputs e Selects) */
+input, textarea {
+  -webkit-user-select: text !important;
+  user-select: text !important;
+}
