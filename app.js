@@ -34,7 +34,7 @@ function mostrarAlertaCustom(mensagem, titulo = "Aviso") {
     const titleEl = document.getElementById("modal-app-title");
     const msgEl = document.getElementById("modal-app-message");
     const btnOk = document.getElementById("modal-app-btn-ok");
-    const btnCancel = document.getElementById("modal-app-btn-cancel");
+    const btnCancel = document.getElementById("btn-modal-cancel");
     const iconContainer = document.getElementById("modal-app-icon");
 
     if (!modal) {
@@ -71,7 +71,7 @@ function mostrarConfirmacaoCustom(mensagem, titulo = "Confirmação") {
     const titleEl = document.getElementById("modal-app-title");
     const msgEl = document.getElementById("modal-app-message");
     const btnOk = document.getElementById("modal-app-btn-ok");
-    const btnCancel = document.getElementById("modal-app-btn-cancel");
+    const btnCancel = document.getElementById("btn-modal-cancel");
     const iconContainer = document.getElementById("modal-app-icon");
 
     if (!modal) {
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
-  // AVISOS PAIS (MURAL AJUSTADO)
+  // AVISOS MURAL AJUSTADOS (SEM ATRASO DE 10 MIN)
   const setAvisoEvents = (suffix) => {
     document.getElementById(`btn-aviso-transito${suffix}`)?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
     document.getElementById(`btn-aviso-chuva${suffix}`)?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
@@ -320,7 +320,7 @@ async function restaurarSessaoAnterior() {
     if (!supabaseClient) return;
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
-      localStorage.clear();
+      localStorage.removeItem("app_role");
       return;
     }
   }
@@ -378,7 +378,15 @@ async function logout() {
   if (supabaseClient) {
     await supabaseClient.auth.signOut();
   }
-  localStorage.clear();
+  localStorage.removeItem("app_role");
+  localStorage.removeItem("app_pai_email");
+
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+      localStorage.removeItem(key);
+    }
+  });
+
   currentRole = null;
   voltarHome();
 }
@@ -438,9 +446,12 @@ async function salvarConfigsGlobais(origem) {
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
+// CADASTRAR ALUNO SEM OBRIGATORIEDADE DE E-MAIL
 async function cadastrarAlunoRafa(e) {
   e.preventDefault();
   if (!supabaseClient) return;
+
+  const emailMae = document.getElementById("add-email-mae-rafa")?.value.trim() || "";
 
   const novoAluno = {
     nome: document.getElementById("add-nome-rafa").value,
@@ -450,7 +461,7 @@ async function cadastrarAlunoRafa(e) {
     horario_escola: document.getElementById("add-horario-escola-rafa").value,
     endereco_casa: document.getElementById("add-endereco-casa-rafa").value,
     escola: document.getElementById("add-escola-rafa").value,
-    email_mae: document.getElementById("add-email-mae-rafa").value,
+    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`, // E-mail genérico se não for preenchido
     pin_pais: document.getElementById("add-pin-rafa").value || "1234",
     valor: parseFloat(document.getElementById("add-valor-rafa").value),
     vencimento: parseInt(document.getElementById("add-vencimento-rafa").value),
@@ -474,6 +485,8 @@ async function cadastrarAlunoAdmin(e) {
   e.preventDefault();
   if (!supabaseClient) return;
 
+  const emailMae = document.getElementById("add-email-mae")?.value.trim() || "";
+
   const novoAluno = {
     nome: document.getElementById("add-nome").value,
     turno: document.getElementById("add-turno").value,
@@ -482,7 +495,7 @@ async function cadastrarAlunoAdmin(e) {
     horario_escola: document.getElementById("add-horario-escola").value,
     endereco_casa: document.getElementById("add-endereco-casa").value,
     escola: document.getElementById("add-escola").value,
-    email_mae: document.getElementById("add-email-mae").value,
+    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
     pin_pais: document.getElementById("add-pin").value || "1234",
     valor: parseFloat(document.getElementById("add-valor").value),
     vencimento: parseInt(document.getElementById("add-vencimento").value),
@@ -531,6 +544,8 @@ async function enviarAutoCadastroPais(e) {
     return;
   }
 
+  const emailValor = emailEl ? emailEl.value.trim().toLowerCase() : "";
+
   const novoAluno = {
     nome: nomeEl ? nomeEl.value.trim() : "",
     turno: turnoSelecionado,
@@ -539,7 +554,7 @@ async function enviarAutoCadastroPais(e) {
     horario_busca: "",
     endereco_casa: endEl ? endEl.value.trim() : "",
     escola: escolaEl ? escolaEl.value.trim() : "",
-    email_mae: emailEl ? emailEl.value.trim().toLowerCase() : "",
+    email_mae: emailValor || `aluno_${Date.now()}@transporte.local`,
     pin_pais: pin,
     valor: 180,
     vencimento: 10,
@@ -672,7 +687,7 @@ function renderizarPendentesAprovacao() {
         <div>
           <h4 class="text-xs font-bold text-white">${a.nome}</h4>
           <p class="text-[10px] text-amber-300 font-semibold">${a.escola || '-'} • ${a.turno}</p>
-          <p class="text-[10px] text-slate-400 mt-0.5">Responsável: ${a.email_mae} (${a.whatsapp || 'S/ Whats'})</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">Contato: ${a.whatsapp || 'S/ Whats'}</p>
           <p class="text-[10px] text-slate-400">Endereço: ${a.endereco_casa || '-'}</p>
         </div>
       </div>
@@ -785,7 +800,7 @@ function renderizarRotaRafa() {
               <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
             </div>
             
-            ${temEspecial ? '<p class="text-[10px] font-bold text-amber-300 mt-1"><i class="fa-solid fa-clock-rotate-left"></i> ⚡ ATENÇÃO: Horário alterado pelos pais para hoje!</p>' : ''}
+            ${temEspecial ? '<p class="text-[10px] font-bold text-amber-300 mt-1"><i class="fa-solid fa-clock-rotate-left"></i> ⚡ ATENÇÃO: Horário alterado para hoje!</p>' : ''}
 
             <p class="text-xs text-slate-400 mt-1">${aluno.escola || ''} (${aluno.turno || 'Manhã'})</p>
             <p class="text-[10px] text-slate-300 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Endereço não informado'}</p>
@@ -838,7 +853,7 @@ function renderizarPassageirosGeralRafa() {
             </div>
             <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
             <p class="text-[10px] text-amber-400 font-medium">📍 Busca Casa: ${a.horario_busca || '-'} | Entrada: ${a.horario_escola || '-'}</p>
-            <p class="text-[10px] text-slate-400">Responsável: ${a.email_mae} (${a.whatsapp || 'S/ Whats'})</p>
+            <p class="text-[10px] text-slate-400">Contato: ${a.whatsapp || 'S/ Whats'}</p>
           </div>
           <div class="flex gap-1 shrink-0">
             <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
@@ -941,34 +956,16 @@ async function atualizarStatusRafa(id, st) {
   carregarDadosRafa();
 }
 
-async function resetarStatusDoDia() {
-  if (!supabaseClient) return;
-  const confirmou = await mostrarConfirmacaoCustom("Deseja resetar a rota do dia?", "Resetar Rota");
-  if (confirmou) {
-    await supabaseClient.from('alunos').update({
-      status: 'Em Casa',
-      levado_hoje: false,
-      tem_horario_especial: false,
-      horario_busca_hoje: "",
-      horario_volta_hoje: "",
-      vai_hoje: true
-    }).neq('id', '0');
-
-    await mostrarAlertaCustom("Rota resetada para o padrão!", "Sucesso");
-    carregarDadosRafa();
-  }
-}
-
 function validarLoginPinPais() {
   const emailSelect = document.getElementById("select-email-pais")?.value;
   const pinInput = document.getElementById("input-pin-pais")?.value;
 
   if (!emailSelect) {
-    mostrarAlertaCustom("Selecione seu e-mail.", "Aviso");
+    mostrarAlertaCustom("Selecione seu cadastro.", "Aviso");
     return;
   }
 
-  const aluno = alunosCache.find(a => a.email_mae === emailSelect && !a.pendente_aprovacao);
+  const aluno = alunosCache.find(a => (a.email_mae === emailSelect || a.nome === emailSelect) && !a.pendente_aprovacao);
 
   if (!aluno) {
     mostrarAlertaCustom("Cadastro não encontrado ou pendente de aprovação.", "Aviso");
@@ -987,14 +984,14 @@ function validarLoginPinPais() {
 }
 
 // PAINEL PAIS
-function renderizarPaisFilho(email) {
+function renderizarPaisFilho(emailOuNome) {
   const container = document.getElementById("conteudo-filho-pais");
-  if (!email || !container) {
+  if (!emailOuNome || !container) {
     container?.classList.add("hidden");
     return;
   }
 
-  const filho = alunosCache.find(a => a.email_mae === email && !a.pendente_aprovacao);
+  const filho = alunosCache.find(a => (a.email_mae === emailOuNome || a.nome === emailOuNome) && !a.pendente_aprovacao);
   if (!filho) return;
 
   const st = filho.status || 'Em Casa';
@@ -1435,7 +1432,7 @@ function abrirModalEditarAluno(id) {
   document.getElementById("edit-horario-escola").value = aluno.horario_escola || '';
   document.getElementById("edit-endereco-casa").value = aluno.endereco_casa || '';
   document.getElementById("edit-escola").value = aluno.escola || '';
-  document.getElementById("edit-email-mae").value = aluno.email_mae || '';
+  document.getElementById("edit-email-mae").value = (aluno.email_mae && !aluno.email_mae.includes('@transporte.local')) ? aluno.email_mae : '';
   document.getElementById("edit-pin").value = aluno.pin_pais || '1234';
   document.getElementById("edit-valor").value = aluno.valor || 180;
   document.getElementById("edit-vencimento").value = aluno.vencimento || 10;
@@ -1448,6 +1445,8 @@ async function salvarEdicaoAluno(e) {
   if (!supabaseClient) return;
 
   const id = document.getElementById("edit-id").value;
+  const emailMae = document.getElementById("edit-email-mae")?.value.trim() || "";
+
   const updateData = {
     nome: document.getElementById("edit-nome").value,
     turno: document.getElementById("edit-turno").value,
@@ -1456,7 +1455,7 @@ async function salvarEdicaoAluno(e) {
     horario_escola: document.getElementById("edit-horario-escola").value,
     endereco_casa: document.getElementById("edit-endereco-casa").value,
     escola: document.getElementById("edit-escola").value,
-    email_mae: document.getElementById("edit-email-mae").value,
+    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
     pin_pais: document.getElementById("edit-pin").value,
     valor: parseFloat(document.getElementById("edit-valor").value),
     vencimento: parseInt(document.getElementById("edit-vencimento").value)
@@ -1795,16 +1794,16 @@ async function carregarDadosPais(isBackground = false) {
   alunosCache = data;
 
   const aprovados = data.filter(a => !a.pendente_aprovacao);
-  const emailsUnicos = [...new Set(aprovados.map(a => a.email_mae).filter(Boolean))];
+  const nomesUnicos = [...new Set(aprovados.map(a => a.nome).filter(Boolean))];
   
   if (select && select.children.length <= 1) {
-    select.innerHTML = '<option value="">-- Selecione seu E-mail --</option>' + 
-      emailsUnicos.map(e => `<option value="${e}">${e}</option>`).join('');
+    select.innerHTML = '<option value="">-- Selecione seu Cadastro --</option>' + 
+      nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
   }
 
-  const emailSelecionado = select?.value || localStorage.getItem("app_pai_email");
-  if (emailSelecionado) {
-    renderizarPaisFilho(emailSelecionado);
+  const selecionado = select?.value || localStorage.getItem("app_pai_email");
+  if (selecionado) {
+    renderizarPaisFilho(selecionado);
   }
 }
 
