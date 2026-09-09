@@ -1,4 +1,25 @@
-/* FORÇA O FUNDO DA TELA E DAS CLASSES TAILWIND NO MODO CLARO */
+/* ==========================================================================
+   1. CORREÇÃO E ESTILIZAÇÃO DO MARCADOR DO GPS (ZAFIRA NO MAPA LEAFLET)
+   ========================================================================== */
+.custom-van-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-van-marker div {
+  transition: transform 0.3s ease-in-out;
+}
+
+.custom-van-marker img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+}
+
+/* ==========================================================================
+   2. FORÇA O FUNDO DA TELA E DAS CLASSES TAILWIND NO MODO CLARO
+   ========================================================================== */
 html.light-mode,
 html.light-mode body,
 html.light-mode body.bg-slate-950,
@@ -58,7 +79,7 @@ html.light-mode .bg-slate-900\/60 {
 }
 
 /* ==========================================================================
-   IMPEDE A SELEÇÃO DE TEXTO E O MENU DE PESQUISA DO GOOGLE NO CELULAR
+   3. IMPEDE A SELEÇÃO DE TEXTO E O MENU DE PESQUISA DO GOOGLE NO CELULAR
    ========================================================================== */
 
 /* Bloqueia a seleção de texto e o menu ao segurar o toque no app inteiro */
