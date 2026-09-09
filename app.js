@@ -27,92 +27,6 @@ let markerVanRafa = null;
 
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
-// CONTROLE DE MODAIS CUSTOMIZADOS
-function mostrarAlertaCustom(mensagem, titulo = "Aviso") {
-  return new Promise((resolve) => {
-    const modal = document.getElementById("modal-app-custom");
-    const titleEl = document.getElementById("modal-app-title");
-    const msgEl = document.getElementById("modal-app-message");
-    const btnOk = document.getElementById("modal-app-btn-ok");
-    const btnCancel = document.getElementById("btn-modal-cancel");
-    const iconContainer = document.getElementById("modal-app-icon");
-
-    if (!modal) {
-      alert(mensagem);
-      resolve(true);
-      return;
-    }
-
-    titleEl.innerText = titulo;
-    msgEl.innerText = mensagem;
-    if (iconContainer) iconContainer.innerHTML = `<i class="fa-solid fa-circle-info"></i>`;
-    
-    if (btnCancel) btnCancel.classList.add("hidden");
-    if (btnOk) {
-      btnOk.innerText = "Entendido";
-      btnOk.className = "w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md";
-    }
-
-    modal.classList.remove("hidden");
-
-    const handleOk = () => {
-      modal.classList.add("hidden");
-      btnOk?.removeEventListener("click", handleOk);
-      resolve(true);
-    };
-
-    btnOk?.addEventListener("click", handleOk);
-  });
-}
-
-function mostrarConfirmacaoCustom(mensagem, titulo = "Confirmação") {
-  return new Promise((resolve) => {
-    const modal = document.getElementById("modal-app-custom");
-    const titleEl = document.getElementById("modal-app-title");
-    const msgEl = document.getElementById("modal-app-message");
-    const btnOk = document.getElementById("modal-app-btn-ok");
-    const btnCancel = document.getElementById("btn-modal-cancel");
-    const iconContainer = document.getElementById("modal-app-icon");
-
-    if (!modal) {
-      const res = confirm(mensagem);
-      resolve(res);
-      return;
-    }
-
-    titleEl.innerText = titulo;
-    msgEl.innerText = mensagem;
-    if (iconContainer) iconContainer.innerHTML = `<i class="fa-solid fa-circle-question text-amber-400"></i>`;
-
-    if (btnCancel) btnCancel.classList.remove("hidden");
-    if (btnOk) {
-      btnOk.innerText = "Sim, confirmar";
-      btnOk.className = "flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md";
-    }
-
-    modal.classList.remove("hidden");
-
-    const cleanup = () => {
-      modal.classList.add("hidden");
-      btnOk?.removeEventListener("click", handleOk);
-      btnCancel?.removeEventListener("click", handleCancel);
-    };
-
-    const handleOk = () => {
-      cleanup();
-      resolve(true);
-    };
-
-    const handleCancel = () => {
-      cleanup();
-      resolve(false);
-    };
-
-    btnOk?.addEventListener("click", handleOk);
-    btnCancel?.addEventListener("click", handleCancel);
-  });
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
   loginSection = document.getElementById("login-section");
   authForm = document.getElementById("auth-form");
@@ -132,7 +46,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     carregarGpsRafa();
   }, 5000);
 
-  // AUTOMATIZADOR EM TEMPO REAL (POLLING A CADA 4s)
   setInterval(() => {
     if (currentRole === "pais") {
       carregarDadosPais(true);
@@ -152,12 +65,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
   document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
 
-  // LOGIN SEGURO VIA SUPABASE AUTH
   document.getElementById("btn-login-submit")?.addEventListener("click", efetuarLoginComSupabase);
 
   document.getElementById("btn-toggle-gps")?.addEventListener("click", alternarTransmissaoGps);
-  document.getElementById("btn-forcar-gps-test")?.addEventListener("click", carregarGpsAdmin);
-  document.getElementById("btn-forcar-gps-test-rafa")?.addEventListener("click", carregarGpsRafa);
+
+  // BOTÕES DE EXIBIR/OCULTAR MAPA
+  document.getElementById("btn-toggle-mapa-rafa")?.addEventListener("click", toggleMapaRafa);
+  document.getElementById("btn-toggle-mapa-admin")?.addEventListener("click", toggleMapaAdmin);
+
+  // BOTÕES DE SANFONA PARA FORMULÁRIOS DE CADASTRO
+  document.getElementById("btn-toggle-form-rafa")?.addEventListener("click", () => toggleFormCadastro('rafa'));
+  document.getElementById("btn-toggle-form-admin")?.addEventListener("click", () => toggleFormCadastro('admin'));
 
   document.getElementById("btn-disparar-emergencia")?.addEventListener("click", dispararEmergenciaRafa);
   document.getElementById("btn-desativar-emergencia")?.addEventListener("click", atenderEmergenciaAdmin);
@@ -179,11 +97,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
 
   document.getElementById("select-email-pais")?.addEventListener("change", (e) => {
-    const email = e.target.value;
+    const val = e.target.value;
     const boxPin = document.getElementById("box-pin-pais");
     const containerFilho = document.getElementById("conteudo-filho-pais");
     
-    if (email) {
+    if (val) {
       boxPin?.classList.remove("hidden");
       containerFilho?.classList.add("hidden");
       const pinInp = document.getElementById("input-pin-pais");
@@ -198,9 +116,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
-
-  // BOTÃO RETRÁTIL PARA EXIBIR/OCULTAR MAPA NA ROTA DA TIA RAFA
-  document.getElementById("btn-toggle-mapa-rota")?.addEventListener("click", toggleMapaRotaRafa);
 
   // NAVEGAÇÃO DE ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
@@ -264,23 +179,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
-  // AVISOS MURAL AJUSTADOS (SEM ATRASO DE 10 MIN)
-  const setAvisoEvents = (suffix) => {
-    document.getElementById(`btn-aviso-transito${suffix}`)?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
-    document.getElementById(`btn-aviso-chuva${suffix}`)?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
-    document.getElementById(`btn-aviso-pane${suffix}`)?.addEventListener("click", () => dispararAviso("🛠️ Veículo apresentou pane mecânica. Estamos resolvendo o suporte necessário!"));
-    document.getElementById(`btn-enviar-aviso-custom${suffix}`)?.addEventListener("click", () => {
-      const txt = document.getElementById(`input-aviso-custom${suffix}`)?.value;
-      if (txt) {
-        dispararAviso(`📢 ${txt}`);
-        document.getElementById(`input-aviso-custom${suffix}`).value = "";
-      }
-    });
-    document.getElementById(`btn-limpar-aviso${suffix}`)?.addEventListener("click", limparAvisos);
-  };
+  // MURAL DE AVISOS
+  document.getElementById("btn-aviso-transito")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
+  document.getElementById("btn-aviso-transito-rafa")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
 
-  setAvisoEvents("");
-  setAvisoEvents("-rafa");
+  document.getElementById("btn-aviso-chuva")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
+  document.getElementById("btn-aviso-chuva-rafa")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
+
+  document.getElementById("btn-enviar-aviso-custom")?.addEventListener("click", () => {
+    const txt = document.getElementById("input-aviso-custom")?.value;
+    if (txt) { dispararAviso(`📢 ${txt}`); document.getElementById("input-aviso-custom").value = ""; }
+  });
+  document.getElementById("btn-enviar-aviso-custom-rafa")?.addEventListener("click", () => {
+    const txt = document.getElementById("input-aviso-custom-rafa")?.value;
+    if (txt) { dispararAviso(`📢 ${txt}`); document.getElementById("input-aviso-custom-rafa").value = ""; }
+  });
+
+  document.getElementById("btn-limpar-aviso")?.addEventListener("click", limparAvisos);
+  document.getElementById("btn-limpar-aviso-rafa")?.addEventListener("click", limparAvisos);
 
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("form-cadastrar-aluno-rafa")?.addEventListener("submit", cadastrarAlunoRafa);
@@ -291,25 +207,74 @@ document.addEventListener("DOMContentLoaded", async () => {
   await restaurarSessaoAnterior();
 });
 
-// EXIBIR / OCULTAR MAPA NA ROTA DA TIA RAFA
-function toggleMapaRotaRafa() {
-  const container = document.getElementById("box-mapa-rafa-expansivel");
-  const btn = document.getElementById("btn-toggle-mapa-rota");
+// ALTERNAR VISIBILIDADE DO MAPA TIA RAFA
+function toggleMapaRafa() {
+  const wrapper = document.getElementById("wrapper-mapa-rafa");
+  const btn = document.getElementById("btn-toggle-mapa-rafa");
+  if (!wrapper || !btn) return;
+
+  if (wrapper.classList.contains("hidden")) {
+    wrapper.classList.remove("hidden");
+    btn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Ocultar Mapa`;
+    carregarGpsRafa();
+    setTimeout(() => { if (mapRafa) mapRafa.invalidateSize(); }, 300);
+  } else {
+    wrapper.classList.add("hidden");
+    btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Exibir Mapa`;
+  }
+}
+
+// ALTERNAR VISIBILIDADE DO MAPA ADMIN
+function toggleMapaAdmin() {
+  const wrapper = document.getElementById("wrapper-mapa-admin");
+  const btn = document.getElementById("btn-toggle-mapa-admin");
+  if (!wrapper || !btn) return;
+
+  if (wrapper.classList.contains("hidden")) {
+    wrapper.classList.remove("hidden");
+    btn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Ocultar Mapa`;
+    carregarGpsAdmin();
+    setTimeout(() => { if (mapAdmin) mapAdmin.invalidateSize(); }, 300);
+  } else {
+    wrapper.classList.add("hidden");
+    btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Exibir Mapa`;
+  }
+}
+
+// ALTERNAR FORMULÁRIOS DE CADASTRO (SANFONA)
+function toggleFormCadastro(role) {
+  const container = role === 'rafa' ? document.getElementById("container-form-cadastrar-rafa") : document.getElementById("container-form-cadastrar-admin");
+  const icon = role === 'rafa' ? document.getElementById("icon-toggle-form-rafa") : document.getElementById("icon-toggle-form-admin");
+  
   if (!container) return;
 
-  const estaEscondido = container.classList.contains("hidden");
-
-  if (estaEscondido) {
+  if (container.classList.contains("hidden")) {
     container.classList.remove("hidden");
-    if (btn) btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Ocultar Mapa da Van`;
-    setTimeout(() => {
-      carregarGpsRafa();
-      if (mapRafa) mapRafa.invalidateSize();
-    }, 300);
+    if (icon) icon.className = "fa-solid fa-chevron-up text-amber-400";
   } else {
     container.classList.add("hidden");
-    if (btn) btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> 📍 Exibir Mapa da Van / GPS`;
+    if (icon) icon.className = "fa-solid fa-chevron-down text-amber-400";
   }
+}
+
+// RESETAR STATUS DO DIA
+async function resetarStatusDoDia() {
+  if (!supabaseClient) return;
+  const res = confirm("Deseja resetar a chamada de todos os alunos para 'Em Casa' e restaurar a presença normal do dia?");
+  if (!res) return;
+
+  await supabaseClient.from('alunos').update({
+    status: 'Em Casa',
+    levado_hoje: false,
+    vai_hoje: true,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: ""
+  }).neq('id', '0');
+
+  alert("✓ Chamada do dia resetada com sucesso!");
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
 }
 
 async function restaurarSessaoAnterior() {
@@ -346,7 +311,7 @@ async function efetuarLoginComSupabase() {
   const pwd = pwdInput ? pwdInput.value.trim() : "";
 
   if (!pwd) {
-    await mostrarAlertaCustom("Por favor, digite a senha.", "Aviso");
+    alert("Por favor, digite a senha.");
     return;
   }
 
@@ -361,7 +326,7 @@ async function efetuarLoginComSupabase() {
     });
 
     if (error) {
-      await mostrarAlertaCustom("⚠️ Senha incorreta ou acesso negado!", "Erro de Login");
+      alert("⚠️ Senha incorreta ou acesso negado!");
       return;
     }
 
@@ -370,7 +335,7 @@ async function efetuarLoginComSupabase() {
 
   } catch (err) {
     console.error("Erro no login:", err);
-    await mostrarAlertaCustom("Falha de comunicação na autenticação.", "Erro");
+    alert("Falha de comunicação na autenticação.");
   }
 }
 
@@ -436,17 +401,16 @@ async function salvarConfigsGlobais(origem) {
     .eq('id', 1);
 
   if (error) {
-    await mostrarAlertaCustom("Erro ao salvar no banco: " + error.message, "Erro");
+    alert("Erro ao salvar no banco: " + error.message);
     return;
   }
 
-  await mostrarAlertaCustom("✓ Configurações salvas com sucesso!", "Sucesso");
+  alert("✓ Configurações salvas com sucesso!");
   
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
-// CADASTRAR ALUNO SEM OBRIGATORIEDADE DE E-MAIL
 async function cadastrarAlunoRafa(e) {
   e.preventDefault();
   if (!supabaseClient) return;
@@ -461,7 +425,7 @@ async function cadastrarAlunoRafa(e) {
     horario_escola: document.getElementById("add-horario-escola-rafa").value,
     endereco_casa: document.getElementById("add-endereco-casa-rafa").value,
     escola: document.getElementById("add-escola-rafa").value,
-    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`, // E-mail genérico se não for preenchido
+    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
     pin_pais: document.getElementById("add-pin-rafa").value || "1234",
     valor: parseFloat(document.getElementById("add-valor-rafa").value),
     vencimento: parseInt(document.getElementById("add-vencimento-rafa").value),
@@ -476,8 +440,9 @@ async function cadastrarAlunoRafa(e) {
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
-  await mostrarAlertaCustom("Aluno cadastrado com sucesso!", "Sucesso");
+  alert("Aluno cadastrado com sucesso!");
   document.getElementById("form-cadastrar-aluno-rafa").reset();
+  toggleFormCadastro('rafa');
   carregarDadosRafa();
 }
 
@@ -510,18 +475,15 @@ async function cadastrarAlunoAdmin(e) {
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
-  await mostrarAlertaCustom("Aluno cadastrado com sucesso!", "Sucesso");
+  alert("Aluno cadastrado com sucesso!");
   document.getElementById("form-cadastrar-aluno").reset();
+  toggleFormCadastro('admin');
   carregarDadosAdmin();
 }
 
 async function enviarAutoCadastroPais(e) {
   e.preventDefault();
-
-  if (!supabaseClient) {
-    await mostrarAlertaCustom("Erro: Conexão com o banco de dados não estabelecida.", "Erro");
-    return;
-  }
+  if (!supabaseClient) return;
 
   const nomeEl = document.getElementById("auto-nome");
   const turnoEl = document.getElementById("auto-turno");
@@ -533,14 +495,8 @@ async function enviarAutoCadastroPais(e) {
 
   const pin = pinEl ? pinEl.value.trim() : "";
   if (pin.length !== 4 || isNaN(pin)) {
-    await mostrarAlertaCustom("O PIN de acesso deve conter exatamente 4 números.", "Aviso");
+    alert("O PIN de acesso deve conter exatamente 4 números.");
     if (pinEl) pinEl.focus();
-    return;
-  }
-
-  const turnoSelecionado = turnoEl ? turnoEl.value : "";
-  if (!turnoSelecionado) {
-    await mostrarAlertaCustom("Selecione o turno escolar.", "Aviso");
     return;
   }
 
@@ -548,9 +504,9 @@ async function enviarAutoCadastroPais(e) {
 
   const novoAluno = {
     nome: nomeEl ? nomeEl.value.trim() : "",
-    turno: turnoSelecionado,
+    turno: turnoEl ? turnoEl.value : "Manhã (07h às 11h)",
     whatsapp: wspEl ? wspEl.value.trim() : "",
-    horario_escola: turnoSelecionado,
+    horario_escola: turnoEl ? turnoEl.value : "",
     horario_busca: "",
     endereco_casa: endEl ? endEl.value.trim() : "",
     escola: escolaEl ? escolaEl.value.trim() : "",
@@ -568,23 +524,17 @@ async function enviarAutoCadastroPais(e) {
     pendente_aprovacao: true
   };
 
-  try {
-    const { error } = await supabaseClient.from('alunos').insert([novoAluno]);
+  const { error } = await supabaseClient.from('alunos').insert([novoAluno]);
 
-    if (error) {
-      await mostrarAlertaCustom("Erro ao enviar cadastro: " + error.message, "Erro");
-      return;
-    }
-
-    await mostrarAlertaCustom("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca e aprovará o acesso do seu filho(a).", "Cadastro Enviado");
-    document.getElementById("form-auto-cadastro-pais")?.reset();
-    document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
-    carregarDadosPais();
-
-  } catch (err) {
-    console.error("Exceção:", err);
-    await mostrarAlertaCustom("Falha de comunicação com o servidor. Tente novamente.", "Erro");
+  if (error) {
+    alert("Erro ao enviar cadastro: " + error.message);
+    return;
   }
+
+  alert("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca e aprovará o acesso.");
+  document.getElementById("form-auto-cadastro-pais")?.reset();
+  document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
+  carregarDadosPais();
 }
 
 async function aprovarCadastroAluno(id) {
@@ -597,7 +547,7 @@ async function aprovarCadastroAluno(id) {
   const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
   
   if (!horarioBusca) {
-    await mostrarAlertaCustom("Por favor, preencha o horário de busca da van antes de aprovar!", "Aviso");
+    alert("Por favor, preencha o horário de busca da van antes de aprovar!");
     if (inputBusca) inputBusca.focus();
     return;
   }
@@ -605,59 +555,44 @@ async function aprovarCadastroAluno(id) {
   const val = (inputVal && inputVal.value) ? parseFloat(inputVal.value) : 180;
   const venc = (inputVenc && inputVenc.value) ? parseInt(inputVenc.value) : 10;
 
-  try {
-    const { error } = await supabaseClient
-      .from('alunos')
-      .update({ 
-        pendente_aprovacao: false,
-        horario_busca: horarioBusca,
-        valor: val,
-        vencimento: venc
-      })
-      .eq('id', id);
+  const { error } = await supabaseClient
+    .from('alunos')
+    .update({ 
+      pendente_aprovacao: false,
+      horario_busca: horarioBusca,
+      valor: val,
+      vencimento: venc
+    })
+    .eq('id', id);
 
-    if (error) {
-      await mostrarAlertaCustom("Erro ao aprovar: " + error.message, "Erro");
-      return;
-    }
-
-    await mostrarAlertaCustom("✓ Cadastro aprovado e horário definido!", "Aprovado");
-    if (currentRole === 'rafa') carregarDadosRafa();
-    if (currentRole === 'admin') carregarDadosAdmin();
-
-  } catch (err) {
-    console.error("Erro ao aprovar:", err);
+  if (error) {
+    alert("Erro ao aprovar: " + error.message);
+    return;
   }
+
+  alert("✓ Cadastro aprovado e horário definido!");
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
 }
 
 async function deletarAlunoAdmin(id) {
   if (!supabaseClient) return;
 
-  const confirmou = await mostrarConfirmacaoCustom("Deseja realmente apagar este cadastro?", "Excluir Cadastro");
+  const confirmou = confirm("Deseja realmente apagar este cadastro?");
   if (confirmou) {
-    try {
-      const { error } = await supabaseClient
-        .from('alunos')
-        .delete()
-        .eq('id', id);
+    const { error } = await supabaseClient.from('alunos').delete().eq('id', id);
 
-      if (error) {
-        await mostrarAlertaCustom("Erro ao excluir no banco: " + error.message, "Erro");
-        return;
-      }
-
-      await mostrarAlertaCustom("Cadastro removido com sucesso!", "Removido");
-
-      alunosCache = alunosCache.filter(a => a.id != id);
-      renderizarPendentesAprovacao();
-
-      if (currentRole === 'rafa') carregarDadosRafa();
-      if (currentRole === 'admin') carregarDadosAdmin();
-
-    } catch (err) {
-      console.error("Erro ao deletar:", err);
-      await mostrarAlertaCustom("Falha inesperada ao recusar cadastro.", "Erro");
+    if (error) {
+      alert("Erro ao excluir: " + error.message);
+      return;
     }
+
+    alert("Cadastro removido!");
+    alunosCache = alunosCache.filter(a => a.id != id);
+    renderizarPendentesAprovacao();
+
+    if (currentRole === 'rafa') carregarDadosRafa();
+    if (currentRole === 'admin') carregarDadosAdmin();
   }
 }
 
@@ -887,6 +822,9 @@ function renderizarPassageirosGeralRafa() {
 async function carregarGpsRafa() {
   if (currentRole !== "rafa" || !supabaseClient) return;
 
+  const wrapper = document.getElementById("wrapper-mapa-rafa");
+  if (wrapper && wrapper.classList.contains("hidden")) return;
+
   const statusTxt = document.getElementById("txt-status-gps-rafa");
   const containerMapa = document.getElementById("mapa-rafa-container");
   if (!containerMapa) return;
@@ -961,14 +899,14 @@ function validarLoginPinPais() {
   const pinInput = document.getElementById("input-pin-pais")?.value;
 
   if (!emailSelect) {
-    mostrarAlertaCustom("Selecione seu cadastro.", "Aviso");
+    alert("Selecione seu cadastro.");
     return;
   }
 
   const aluno = alunosCache.find(a => (a.email_mae === emailSelect || a.nome === emailSelect) && !a.pendente_aprovacao);
 
   if (!aluno) {
-    mostrarAlertaCustom("Cadastro não encontrado ou pendente de aprovação.", "Aviso");
+    alert("Cadastro não encontrado ou pendente de aprovação.");
     return;
   }
 
@@ -979,11 +917,10 @@ function validarLoginPinPais() {
     document.getElementById("box-pin-pais")?.classList.add("hidden");
     renderizarPaisFilho(emailSelect);
   } else {
-    mostrarAlertaCustom("PIN incorreto.", "Erro");
+    alert("PIN incorreto.");
   }
 }
 
-// PAINEL PAIS
 function renderizarPaisFilho(emailOuNome) {
   const container = document.getElementById("conteudo-filho-pais");
   if (!emailOuNome || !container) {
@@ -1139,7 +1076,7 @@ function toggleBoxHorarioEspecial(id) {
 async function marcarAusenciaPais(id, nomeAluno) {
   if (!supabaseClient) return;
 
-  const confirmou = await mostrarConfirmacaoCustom(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`, "Confirmar Ausência");
+  const confirmou = confirm(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`);
   if (!confirmou) return;
 
   const { error } = await supabaseClient.from('alunos').update({ 
@@ -1147,11 +1084,11 @@ async function marcarAusenciaPais(id, nomeAluno) {
   }).eq('id', id);
 
   if (error) {
-    await mostrarAlertaCustom("Erro ao registrar ausência: " + error.message, "Erro");
+    alert("Erro ao registrar ausência: " + error.message);
     return;
   }
 
-  await mostrarAlertaCustom(`✓ Avisado com sucesso! A Tia Rafa já sabe que ${nomeAluno} não irá hoje.`, "Ausência Confirmada");
+  alert(`✓ Avisado com sucesso! A Tia Rafa já sabe que ${nomeAluno} não irá hoje.`);
   
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
@@ -1167,7 +1104,7 @@ async function salvarHorarioEspecialPais(id) {
   const hVolta = document.getElementById(`esp-volta-${id}`)?.value.trim() || "";
 
   if (!hIda && !hVolta) {
-    await mostrarAlertaCustom("Informe ao menos um horário para salvar.", "Aviso");
+    alert("Informe ao menos um horário para salvar.");
     return;
   }
 
@@ -1179,11 +1116,11 @@ async function salvarHorarioEspecialPais(id) {
   }).eq('id', id);
 
   if (error) {
-    await mostrarAlertaCustom("Erro ao salvar: " + error.message, "Erro");
+    alert("Erro ao salvar: " + error.message);
     return;
   }
 
-  await mostrarAlertaCustom("✓ Horário especial enviado para a Tia Rafa!", "Sucesso");
+  alert("✓ Horário especial enviado para a Tia Rafa!");
   
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
@@ -1195,7 +1132,7 @@ async function salvarHorarioEspecialPais(id) {
 async function restaurarPadraoPais(id) {
   if (!supabaseClient) return;
 
-  const confirmou = await mostrarConfirmacaoCustom("Deseja cancelar todas as exceções e voltar ao horário e presença normais?", "Restaurar Padrão");
+  const confirmou = confirm("Deseja cancelar todas as exceções e voltar ao horário e presença normais?");
   if (!confirmou) return;
 
   const { error } = await supabaseClient.from('alunos').update({
@@ -1206,11 +1143,11 @@ async function restaurarPadraoPais(id) {
   }).eq('id', id);
 
   if (error) {
-    await mostrarAlertaCustom("Erro ao restaurar: " + error.message, "Erro");
+    alert("Erro ao restaurar: " + error.message);
     return;
   }
 
-  await mostrarAlertaCustom("✓ Status restaurado ao padrão normal!", "Sucesso");
+  alert("✓ Status restaurado ao padrão normal!");
   
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
@@ -1255,7 +1192,7 @@ function alternarTransmissaoGps() {
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      mostrarAlertaCustom("Dispositivo sem suporte a GPS.", "Aviso");
+      alert("Dispositivo sem suporte a GPS.");
     }
   } else {
     if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
@@ -1269,6 +1206,9 @@ function alternarTransmissaoGps() {
 
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
+
+  const wrapper = document.getElementById("wrapper-mapa-admin");
+  if (wrapper && wrapper.classList.contains("hidden")) return;
 
   const statusTxt = document.getElementById("txt-status-gps-admin");
   const containerMapa = document.getElementById("mapa-admin-container");
@@ -1371,7 +1311,7 @@ async function dispararEmergenciaRafa() {
       ativo: true
     }]);
 
-    await mostrarAlertaCustom("Alerta enviado para o Admin!", "Emergência Disparada");
+    alert("Alerta enviado para o Admin!");
   }, async () => {
     await supabaseClient.from('alertas').insert([{
       tipo: 'EMERGENCIA_ADMIN',
@@ -1464,11 +1404,11 @@ async function salvarEdicaoAluno(e) {
   const { error } = await supabaseClient.from('alunos').update(updateData).eq('id', id);
 
   if (error) {
-    await mostrarAlertaCustom("Erro ao salvar alterações: " + error.message, "Erro");
+    alert("Erro ao salvar alterações: " + error.message);
     return;
   }
 
-  await mostrarAlertaCustom("✓ Cadastro atualizado com sucesso!", "Atualizado");
+  alert("✓ Cadastro atualizado com sucesso!");
   document.getElementById("modal-editar-aluno")?.classList.add("hidden");
 
   if (currentRole === 'rafa') carregarDadosRafa();
@@ -1639,7 +1579,7 @@ async function darBaixaAdmin(id, stP, forma) {
 function exportarRelatorioFinanceiroCSV() {
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
   if (!aprovados || aprovados.length === 0) {
-    mostrarAlertaCustom("Não há dados para exportar.", "Aviso");
+    alert("Não há dados para exportar.");
     return;
   }
 
@@ -1682,10 +1622,10 @@ function inicializarTema() {
   const themeIcon = document.getElementById("theme-icon");
   if (temaSalvo === "light") {
     document.documentElement.classList.add("light-mode");
-    if (themeIcon) themeIcon.className = "fa-solid fa-moon";
+    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-xs";
   } else {
     document.documentElement.classList.remove("light-mode");
-    if (themeIcon) themeIcon.className = "fa-solid fa-sun";
+    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-xs";
   }
 }
 
@@ -1695,11 +1635,11 @@ function alternarTema() {
   if (htmlEl.classList.contains("light-mode")) {
     htmlEl.classList.remove("light-mode");
     localStorage.setItem("theme", "dark");
-    if (themeIcon) themeIcon.className = "fa-solid fa-sun";
+    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-xs";
   } else {
     htmlEl.classList.add("light-mode");
     localStorage.setItem("theme", "light");
-    if (themeIcon) themeIcon.className = "fa-solid fa-moon";
+    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-xs";
   }
 }
 
@@ -1747,10 +1687,6 @@ function entrarPerfil(role, isRestoring = false) {
   } else if (role === "admin") {
     document.getElementById("dashboard-admin")?.classList.remove("hidden");
     carregarDadosAdmin();
-    setTimeout(() => {
-      carregarGpsAdmin();
-      if (mapAdmin) mapAdmin.invalidateSize();
-    }, 400);
   }
 }
 
@@ -1772,14 +1708,14 @@ async function dispararAviso(msg) {
   if (!supabaseClient) return;
   await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
   await supabaseClient.from('alertas').insert([{ tipo: 'Aviso', mensagem: msg, ativo: true }]);
-  await mostrarAlertaCustom("Aviso publicado!", "Sucesso");
+  alert("Aviso publicado!");
   verificarAlertaGlobal();
 }
 
 async function limparAvisos() {
   if (!supabaseClient) return;
   await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
-  await mostrarAlertaCustom("Avisos encerrados!", "Sucesso");
+  alert("Avisos encerrados!");
   verificarAlertaGlobal();
 }
 
@@ -1924,7 +1860,7 @@ async function darBaixaRafa(id, stP, forma) {
 
 async function encerrarMesFinanceiro() {
   if (!supabaseClient) return;
-  const confirmou = await mostrarConfirmacaoCustom("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?", "Encerrar Mês");
+  const confirmou = confirm("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?");
   if (confirmou) {
     const mesAno = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' });
     
@@ -1947,7 +1883,7 @@ async function encerrarMesFinanceiro() {
       }).eq('id', a.id);
     }
 
-    await mostrarAlertaCustom("Mês encerrado com sucesso!", "Sucesso");
+    alert("Mês encerrado com sucesso!");
     if (currentRole === 'rafa') carregarDadosRafa();
     if (currentRole === 'admin') carregarDadosAdmin();
   }
