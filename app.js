@@ -32,6 +32,18 @@ let markerVanAdmin = null;
 let mapRafa = null;
 let markerVanRafa = null;
 
+// Ícone Oficial da Zafira para o Leaflet (Criado uma única vez)
+const iconeZafiraGps = L.divIcon({
+  className: 'custom-van-marker',
+  html: `
+    <div style="width:55px; height:55px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:2px; box-shadow:0 6px 16px rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+      <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" referrerpolicy="no-referrer" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
+    </div>
+  `,
+  iconSize: [55, 55],
+  iconAnchor: [27, 27]
+});
+
 // Elementos Globais da Interface
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
@@ -52,23 +64,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   verificarAlertaGlobal();
   carregarConfiguracoesGlobais();
   
-  // 1. Checa emergência a cada 10 segundos APENAS se estiver logado como Suporte/Admin
+  // Loops de atualização com prazos seguros para não travar o celular
   setInterval(() => {
     if (currentRole === "admin") verificarEmergenciaAdmin();
   }, 10000);
 
-  // 2. Atualiza os mapas a cada 8 segundos APENAS para quem está com o mapa aberto
   setInterval(() => {
     if (currentRole === "rafa") carregarGpsRafa();
     if (currentRole === "admin") carregarGpsAdmin();
-  }, 8000);
+  }, 6000);
 
-  // 3. Atualiza os dados das abas com espaço de 12 segundos (Sinaliza leveza ao celular)
   setInterval(() => {
     if (currentRole === "pais") carregarDadosPais(true);
     if (currentRole === "rafa") carregarDadosRafa(true);
     if (currentRole === "admin") carregarDadosAdmin(true);
-  }, 12000);
+  }, 10000);
 
   // Escutadores Globais
   btnTopBack?.addEventListener("click", voltarHome);
@@ -577,7 +587,7 @@ function toggleMapaAdmin() {
   }
 }
 
-// 1. TRANSMISSÃO DO GPS VIA SENSOR DO DISPOSITIVO
+// TRANSMISSÃO DO GPS VIA SENSOR DO DISPOSITIVO
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
@@ -631,7 +641,7 @@ function alternarTransmissaoGps() {
   }
 }
 
-// 2. RECEBIMENTO E EXIBIÇÃO DA ZAFIRA NO MAPA DA TIA RAFA
+// RECEBIMENTO E EXIBIÇÃO NO MAPA TIA RAFA
 async function carregarGpsRafa() {
   if (currentRole !== "rafa" || !supabaseClient) return;
 
@@ -667,23 +677,9 @@ async function carregarGpsRafa() {
       statusTxt.innerText = temSinal ? "🟢 Sinal ao Vivo Detectado" : "⚪ Van Offline";
     }
 
-    const htmlMarcadorZafira = `
-      <div style="width:55px; height:55px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:2px; box-shadow:0 6px 16px rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; overflow:hidden;">
-        <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" referrerpolicy="no-referrer" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
-      </div>
-    `;
-
     if (!mapRafa && window.L) {
       mapRafa = L.map('mapa-rafa-container').setView([lat, lng], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapRafa);
-      
-      const iconeZafiraGps = L.divIcon({
-        className: 'custom-van-marker',
-        html: htmlMarcadorZafira,
-        iconSize: [55, 55],
-        iconAnchor: [27, 27]
-      });
-
       markerVanRafa = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapRafa);
     } else if (mapRafa && markerVanRafa) {
       markerVanRafa.setLatLng([lat, lng]);
@@ -696,7 +692,7 @@ async function carregarGpsRafa() {
   }
 }
 
-// 3. RECEBIMENTO E EXIBIÇÃO DA ZAFIRA NO MAPA DO SUPORTE (ADMIN)
+// RECEBIMENTO E EXIBIÇÃO NO MAPA SUPORTE (ADMIN)
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -732,23 +728,9 @@ async function carregarGpsAdmin() {
       statusTxt.innerText = temSinal ? "🟢 Sinal ao Vivo Detectado" : "⚪ Van Offline";
     }
 
-    const htmlMarcadorZafira = `
-      <div style="width:55px; height:55px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:2px; box-shadow:0 6px 16px rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; overflow:hidden;">
-        <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" referrerpolicy="no-referrer" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
-      </div>
-    `;
-
     if (!mapAdmin && window.L) {
       mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapAdmin);
-      
-      const iconeZafiraGps = L.divIcon({
-        className: 'custom-van-marker',
-        html: htmlMarcadorZafira,
-        iconSize: [55, 55],
-        iconAnchor: [27, 27]
-      });
-
       markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin);
     } else if (mapAdmin && markerVanAdmin) {
       markerVanAdmin.setLatLng([lat, lng]);
