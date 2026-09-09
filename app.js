@@ -630,7 +630,7 @@ function alternarTransmissaoGps() {
                 ativo: true 
               }]);
             } catch (err) {
-              console.error("Erro ao enviar coordenadas:", err);
+              console.error("Erro ao enviar posição GPS ao Supabase:", err);
             }
           }
           
@@ -641,7 +641,7 @@ function alternarTransmissaoGps() {
           }
         },
         (err) => {
-          console.error("Erro no sensor GPS:", err);
+          console.error("Erro ao acessar sensor de GPS:", err);
           if (btn) {
             btn.innerHTML = "⚪ GPS Desligado";
             btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
@@ -662,7 +662,6 @@ function alternarTransmissaoGps() {
     }
   }
 }
-
 // 2. RECEBIMENTO NO MAPA TIA RAFA
 async function carregarGpsRafa() {
   if (currentRole !== "rafa" || !supabaseClient) return;
