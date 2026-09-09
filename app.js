@@ -25,11 +25,9 @@ let markerVanAdmin = null;
 let mapRafa = null;
 let markerVanRafa = null;
 
-let autoRefreshInterval = null;
-
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
-// CONTROLE DE MODAIS CUSTOMIZADOS (PADRÃO VISUAL DO APP)
+// CONTROLE DE MODAIS CUSTOMIZADOS
 function mostrarAlertaCustom(mensagem, titulo = "Aviso") {
   return new Promise((resolve) => {
     const modal = document.getElementById("modal-app-custom");
@@ -134,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
     carregarGpsRafa();
   }, 5000);
 
-  // AUTOMATIZADOR DE ATUALIZAÇÃO EM TEMPO REAL (POLLING A CADA 4 SEGUNDOS)
+  // AUTOMATIZADOR EM TEMPO REAL (POLLING A CADA 4s)
   setInterval(() => {
     if (currentRole === "pais") {
       carregarDadosPais(true);
@@ -201,6 +199,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
+  // BOTÃO RETRÁTIL PARA EXIBIR/OCULTAR MAPA NA ROTA DA TIA RAFA
+  document.getElementById("btn-toggle-mapa-rota")?.addEventListener("click", toggleMapaRotaRafa);
+
   // NAVEGAÇÃO DE ABAS TIA RAFA
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
@@ -219,10 +220,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
     document.getElementById("tab-btn-financeiro").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
     renderizarPassageirosGeralRafa();
-    setTimeout(() => {
-      carregarGpsRafa();
-      if (mapRafa) mapRafa.invalidateSize();
-    }, 300);
   });
 
   document.getElementById("tab-btn-financeiro")?.addEventListener("click", () => {
@@ -267,11 +264,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
-  // AVISOS PAIS (ADMIN & TIA RAFA)
+  // AVISOS PAIS (MURAL AJUSTADO)
   const setAvisoEvents = (suffix) => {
-    document.getElementById(`btn-aviso-10min${suffix}`)?.addEventListener("click", () => dispararAviso("⏱️ Pequeno atraso na rota (Aproximadamente 10 minutos). Crianças em segurança!"));
     document.getElementById(`btn-aviso-transito${suffix}`)?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
     document.getElementById(`btn-aviso-chuva${suffix}`)?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
+    document.getElementById(`btn-aviso-pane${suffix}`)?.addEventListener("click", () => dispararAviso("🛠️ Veículo apresentou pane mecânica. Estamos resolvendo o suporte necessário!"));
     document.getElementById(`btn-enviar-aviso-custom${suffix}`)?.addEventListener("click", () => {
       const txt = document.getElementById(`input-aviso-custom${suffix}`)?.value;
       if (txt) {
@@ -291,11 +288,30 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 
-  // RESTAURAR SESSÃO AO RECARREGAR A PÁGINA
   restaurarSessaoAnterior();
 });
 
-// FUNÇÃO PARA RESTAURAR A SESSÃO QUANDO RECARREGAR A PÁGINA
+// EXIBIR / OCULTAR MAPA NA ROTA DA TIA RAFA
+function toggleMapaRotaRafa() {
+  const container = document.getElementById("box-mapa-rafa-expansivel");
+  const btn = document.getElementById("btn-toggle-mapa-rota");
+  if (!container) return;
+
+  const estaEscondido = container.classList.contains("hidden");
+
+  if (estaEscondido) {
+    container.classList.remove("hidden");
+    if (btn) btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Ocultar Mapa da Van`;
+    setTimeout(() => {
+      carregarGpsRafa();
+      if (mapRafa) mapRafa.invalidateSize();
+    }, 300);
+  } else {
+    container.classList.add("hidden");
+    if (btn) btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> 📍 Exibir Mapa da Van / GPS`;
+  }
+}
+
 function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
   if (!roleSalva) return;
@@ -316,7 +332,6 @@ function restaurarSessaoAnterior() {
   }
 }
 
-// AUTENTICAÇÃO OFICIAL SUPABASE
 async function efetuarLoginComSupabase() {
   const pwdInput = document.getElementById("input-password");
   const pwd = pwdInput ? pwdInput.value.trim() : "";
@@ -582,7 +597,7 @@ async function aprovarCadastroAluno(id) {
       return;
     }
 
-    await mostrarAlertaCustom("✓ Cadastro aprovado e horário definido!", "Aprovado");
+    await mostrarAlertaCustom("✓ Cadastro approved e horário definido!", "Aprovado");
     if (currentRole === 'rafa') carregarDadosRafa();
     if (currentRole === 'admin') carregarDadosAdmin();
 
@@ -703,7 +718,6 @@ function alternarModoRota(modo) {
   renderizarRotaRafa();
 }
 
-// ROTA TIA RAFA (INTERLIGADA COM EXCEÇÕES E AUSÊNCIAS DOS PAIS)
 function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
@@ -1013,7 +1027,7 @@ function renderizarPaisFilho(email) {
         ${desc}
       </div>
 
-      <!-- BLOCO INFORMAR EXCEÇÃO (HORÁRIO DIFERENTE OU AUSÊNCIA) -->
+      <!-- BLOCO INFORMAR EXCEÇÃO -->
       <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Informar Exceção / Ausência</span>
@@ -1052,7 +1066,7 @@ function renderizarPaisFilho(email) {
         </div>
       </div>
 
-      <!-- STATUS DE PRESENÇA DINÂMICO (VERDE OU VERMELHO) -->
+      <!-- STATUS DE PRESENÇA DINÂMICO -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
         <span class="text-xs font-bold text-slate-300">Status de Transporte Hoje:</span>
         <span class="px-3 py-1.5 rounded-xl text-xs font-bold ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white shadow-lg border border-rose-400'}">
@@ -1116,7 +1130,6 @@ function toggleBoxHorarioEspecial(id) {
   }
 }
 
-// MARCAR AUSÊNCIA DENTRO DA ABA DE EXCEÇÕES
 async function marcarAusenciaPais(id, nomeAluno) {
   if (!supabaseClient) return;
 
@@ -1141,7 +1154,6 @@ async function marcarAusenciaPais(id, nomeAluno) {
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-// SALVAR HORÁRIO ESPECIAL DENTRO DA ABA
 async function salvarHorarioEspecialPais(id) {
   if (!supabaseClient) return;
 
@@ -1174,7 +1186,6 @@ async function salvarHorarioEspecialPais(id) {
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-// RESTAURAR PADRÃO FIXO
 async function restaurarPadraoPais(id) {
   if (!supabaseClient) return;
 
