@@ -5,13 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tia Rafa - Transporte Escolar</title>
   
-  <!-- MANIFEST & ÍCONES DO APP -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png">
-  <link rel="apple-touch-icon" href="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png">
-  <meta name="theme-color" content="#0f172a">
-
-  <!-- TAILWIND CSS & FONT AWESOME -->
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -20,149 +14,147 @@
         extend: {
           colors: {
             brand: {
-              50: '#fffbe1',
-              400: '#facc15',
-              500: '#f59e0b',
-              600: '#d97706',
-              900: '#0f172a'
+              amber: '#f59e0b',
+              dark: '#0f172a'
             }
           }
         }
       }
     }
   </script>
+
+  <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- LEAFLET MAPS -->
+
+  <!-- Leaflet CSS for Maps -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
-  <!-- SUPABASE -->
+
+  <!-- Supabase JS Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- ESTILOS DO APP -->
-  <link rel="stylesheet" href="style.css">
+  <!-- Custom CSS Styles -->
+  <style>
+    .light-mode {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+    }
+    .light-mode .bg-slate-950, 
+    .light-mode .bg-slate-900, 
+    .light-mode .bg-slate-800 {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #e2e8f0 !important;
+    }
+    .light-mode .text-white {
+      color: #0f172a !important;
+    }
+    .light-mode .text-slate-400, 
+    .light-mode .text-slate-300 {
+      color: #475569 !important;
+    }
+    .leaflet-container {
+      width: 100%;
+      height: 250px;
+      border-radius: 1rem;
+      z-index: 10;
+    }
+  </style>
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
-  
-  <!-- BARRA SUPERIOR / CABEÇALHO -->
-  <header class="w-full bg-slate-900 border-b border-slate-800 relative z-40 py-3 px-4 shadow-md">
-    <div class="max-w-md mx-auto flex items-center justify-between gap-3">
+
+  <!-- BANNER ALERTA GLOBAL -->
+  <div id="banner-alerta-global" class="hidden bg-amber-500 text-slate-950 px-4 py-2 font-extrabold text-xs text-center flex items-center justify-center gap-2 shadow-lg animate-pulse">
+    <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+    <span id="texto-alerta-global">Aviso de trânsito ou emergência em andamento!</span>
+  </div>
+
+  <!-- HEADER NAVEGAÇÃO -->
+  <header class="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-50 backdrop-blur-md bg-opacity-90">
+    <div class="max-w-md mx-auto flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <div class="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400/60 bg-slate-950 flex items-center justify-center shrink-0 shadow-md">
-          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" alt="Zafira Tia Rafa" class="w-full h-full object-contain p-0.5" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
-        </div>
-        <div>
-          <div class="flex items-center gap-1.5">
-            <h1 class="text-sm font-black text-white tracking-wide leading-none">Tia Rafa</h1>
-            <span id="badge-perfil-header" class="hidden text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              Início
-            </span>
+        <button id="btn-top-back" class="hidden text-amber-400 hover:text-white transition-colors p-1">
+          <i class="fa-solid fa-arrow-left text-lg"></i>
+        </button>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-black text-sm shadow-md shadow-amber-500/20">
+            <i class="fa-solid fa-van-shuttle"></i>
           </div>
-          <p class="text-[11px] font-bold text-amber-400 mt-0.5">Transporte Escolar</p>
+          <div>
+            <h1 class="text-sm font-black tracking-tight text-white flex items-center gap-1.5">
+              TIA RAFA <span id="badge-perfil-header" class="hidden text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">Área dos Pais</span>
+            </h1>
+            <p class="text-[10px] text-slate-400 font-medium">Transporte Escolar</p>
+          </div>
         </div>
       </div>
 
       <div class="flex items-center gap-2">
-        <button id="btn-theme-toggle" class="p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-amber-400 transition-all">
+        <button id="btn-theme-toggle" class="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 hover:bg-slate-700 transition-all">
           <i id="theme-icon" class="fa-solid fa-sun text-xs"></i>
-        </button>
-        <button id="btn-top-back" class="hidden p-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-rose-400 transition-all">
-          <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- BANNER DE AVISO GLOBAL -->
-  <div id="banner-alerta-global" class="hidden bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 backdrop-blur-sm">
-    <div class="max-w-md mx-auto flex items-center justify-between text-xs text-amber-300 font-medium">
-      <div class="flex items-center gap-2.5 truncate">
-        <i class="fa-solid fa-bullhorn text-amber-400 text-sm shrink-0"></i>
-        <span id="texto-alerta-global" class="truncate"></span>
-      </div>
-      <button onclick="document.getElementById('banner-alerta-global').classList.add('hidden')" class="text-amber-400 hover:text-white px-2">✕</button>
-    </div>
-  </div>
+  <!-- CONTAINER PRINCIPAL -->
+  <main class="max-w-md mx-auto w-full p-4 flex-1 space-y-4">
 
-  <!-- CONTEÚDO PRINCIPAL -->
-  <main class="max-w-md w-full mx-auto p-4 flex-1 space-y-4">
-
-    <!-- SEÇÃO DE LOGIN INICIAL -->
-    <section id="login-section" class="space-y-4 py-4">
-      <div class="bg-gradient-to-b from-slate-900 to-slate-900/90 border border-slate-800 rounded-3xl p-5 text-center space-y-3 shadow-xl relative overflow-hidden">
-        <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
-        <div class="w-28 h-28 mx-auto relative flex items-center justify-center">
-          <div class="absolute inset-0 bg-amber-400/20 rounded-full blur-md"></div>
-          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" alt="Van Tia Rafa" class="w-full h-full object-contain relative z-10 drop-shadow-lg">
+    <!-- 1. TELA INICIAL / SELEÇÃO DE PERFIL -->
+    <section id="login-section" class="space-y-6 my-auto pt-4">
+      <div class="text-center space-y-2">
+        <div class="w-20 h-20 bg-amber-500/10 border border-amber-500/30 rounded-3xl mx-auto flex items-center justify-center text-amber-400 text-3xl shadow-xl">
+          <i class="fa-solid fa-van-shuttle"></i>
         </div>
-        <div>
-          <h2 class="text-xl font-black text-white">Transporte Escolar</h2>
-          <p class="text-xs text-amber-400 font-bold mt-0.5">Segurança & Pontualidade para o seu filho</p>
-        </div>
+        <h2 class="text-xl font-black text-white">Bem-vindo(a) ao App Tia Rafa!</h2>
+        <p class="text-xs text-slate-400">Selecione o seu perfil de acesso abaixo para prosseguir:</p>
       </div>
 
-      <p class="text-xs text-slate-400 text-center font-medium">Selecione o seu perfil para acessar o painel:</p>
-
+      <!-- BOTÕES DE SELEÇÃO DE PERFIL (3 PERFIS) -->
       <div id="main-buttons" class="space-y-3">
-        <button id="btn-pais" class="w-full p-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/10 flex items-center justify-between group transition-all">
-          <span class="flex items-center gap-3">
-            <i class="fa-solid fa-users text-lg"></i>
-            Área dos Pais
-          </span>
-          <i class="fa-solid fa-chevron-right text-xs group-hover:translate-x-1 transition-transform"></i>
-        </button>
+        <button id="btn-pais" class="w-full p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-white font-bold text-sm flex items-center justify-between group transition-all"><span class="flex items-center gap-3"><i class="fa-solid fa-users text-amber-400 text-lg"></i>Área dos Responsáveis</span><i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:translate-x-1 transition-transform"></i></button>
 
-        <button id="btn-rafa" class="w-full p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-white font-bold text-sm flex items-center justify-between group transition-all">
-          <span class="flex items-center gap-3">
-            <i class="fa-solid fa-van-shuttle text-amber-400 text-lg"></i>
-            Painel Tia Rafa (Motorista)
-          </span>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:translate-x-1 transition-transform"></i>
-        </button>
+        <button id="btn-rafa" class="w-full p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-white font-bold text-sm flex items-center justify-between group transition-all"><span class="flex items-center gap-3"><i class="fa-solid fa-van-shuttle text-emerald-400 text-lg"></i>Motorista (Tia Rafa)</span><i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:translate-x-1 transition-transform"></i></button>
 
-        <button id="btn-admin" class="w-full p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-white font-bold text-sm flex items-center justify-between group transition-all">
-          <span class="flex items-center gap-3">
-            <i class="fa-solid fa-user-gear text-slate-400 text-lg"></i>
-            Painel Gestão (Admin)
-          </span>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:translate-x-1 transition-transform"></i>
-        </button>
+        <button id="btn-admin" class="w-full p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/40 text-white font-bold text-sm flex items-center justify-between group transition-all"><span class="flex items-center gap-3"><i class="fa-solid fa-headset text-rose-400 text-lg"></i>Painel Suporte</span><i class="fa-solid fa-chevron-right text-xs text-slate-500 group-hover:translate-x-1 transition-transform"></i></button>
       </div>
 
+      <!-- FORMULÁRIO DE LOGIN DE SENHA (SENSE TIA RAFA / SUPORTE) -->
       <div id="auth-form" class="hidden bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-4 shadow-xl">
         <div class="flex items-center justify-between">
-          <h3 id="auth-title" class="text-sm font-bold text-white">Digite a Senha</h3>
-          <button id="btn-back" class="text-xs text-slate-400 hover:text-white">Cancelar</button>
+          <h3 id="auth-title" class="text-sm font-bold text-amber-400 uppercase tracking-wider">Acesso com Senha</h3>
+          <button id="btn-back" class="text-xs text-slate-400 hover:text-white">✕ Voltar</button>
         </div>
-        <input type="password" id="input-password" placeholder="Sua senha de acesso" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-amber-400">
-        <button id="btn-login-submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-xl transition-all">
-          Entrar
-        </button>
+        <div class="space-y-3">
+          <input type="password" id="input-password" placeholder="Digite sua senha de acesso" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400 font-mono">
+          <button id="btn-login-submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg">
+            Acessar Painel
+          </button>
+        </div>
       </div>
     </section>
 
-    <!-- DASHBOARD PAIS -->
+    <!-- 2. DASHBOARD ÁREA DOS PAIS -->
     <section id="dashboard-pais" class="hidden space-y-4">
-      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+      
+      <!-- ACESSO DOS RESPONSÁVEIS POR WHATSAPP + PIN -->
+      <div id="box-login-pais-direto" class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
         <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Acesso dos Responsáveis</label>
         
-        <select id="select-email-pais" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400">
-          <option value="">-- Selecione seu E-mail / Aluno --</option>
-        </select>
-
-        <div id="box-pin-pais" class="space-y-2 hidden">
-          <input type="password" id="input-pin-pais" maxlength="4" placeholder="Digite seu PIN de 4 dígitos" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-center tracking-widest text-white focus:outline-none focus:border-amber-400 font-mono text-base">
-          <button id="btn-entrar-pais-pin" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
+        <div class="space-y-2">
+          <input type="tel" id="input-wsp-login-pais" placeholder="Digite seu WhatsApp (DDD + Número)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-400">
+          <input type="password" id="input-pin-login-pais" maxlength="4" placeholder="Digite seu PIN (4 dígitos)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-center tracking-widest text-white focus:outline-none focus:border-amber-400 font-mono text-base">
+          
+          <button id="btn-entrar-pais-direto" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg">
             Acessar Painel do Filho(a)
           </button>
         </div>
 
-        <button id="btn-abrir-auto-cadastro" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs rounded-xl border border-amber-500/30 transition-all flex items-center justify-center gap-2">
+        <button id="btn-abrir-auto-cadastro" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs rounded-xl border border-amber-500/30 transition-all flex items-center justify-center gap-2 mt-2">
           <i class="fa-solid fa-user-plus"></i> Novo por aqui? Cadastrar Passageiro
         </button>
       </div>
 
+      <!-- FORMULÁRIO DE AUTO CADASTRO DOS PAIS -->
       <div id="form-auto-cadastro-container" class="hidden bg-slate-900 border border-amber-500/40 p-4 rounded-2xl space-y-3 shadow-xl">
         <div class="flex justify-between items-center">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Cadastro de Novo Aluno</h3>
@@ -178,24 +170,23 @@
               <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
               <option value="Tarde">Tarde</option>
             </select>
-            <input type="text" id="auto-wsp" placeholder="WhatsApp dos Pais *" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <input type="tel" id="auto-wsp" placeholder="WhatsApp dos Pais *" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
           </div>
           
           <input type="text" id="auto-endereco-casa" placeholder="Endereço Residencial Completo *" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
           <input type="text" id="auto-escola" placeholder="Nome da Escola *" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
           
-          <div class="grid grid-cols-2 gap-2">
-            <input type="email" id="auto-email-mae" placeholder="E-mail (Opcional)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-            <input type="password" id="auto-pin" maxlength="4" placeholder="Crie PIN (4 dígitos) *" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
+          <div>
+            <input type="password" id="auto-pin" maxlength="4" placeholder="Crie seu PIN de acesso (4 dígitos) *" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
           </div>
 
-          <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
+          <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg">
             Enviar Cadastro para Aprovação
           </button>
         </form>
       </div>
 
-      <!-- PAINEL DO FILHO SELECIONADO COM ABAS INTERNAS -->
+      <!-- PAINEL DO FILHO (EXIBIDO APÓS AUTENTICAÇÃO COM SUCESSO) -->
       <div id="conteudo-filho-pais" class="space-y-4 hidden">
         <div class="flex border-b border-slate-800">
           <button id="tab-pais-filho" class="flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400">
@@ -211,435 +202,436 @@
       </div>
     </section>
 
-    <!-- DASHBOARD TIA RAFA -->
+    <!-- 3. DASHBOARD TIA RAFA (MOTORISTA) -->
     <section id="dashboard-rafa" class="hidden space-y-4">
-      <div class="flex items-center justify-between bg-slate-900 border border-slate-800 p-3.5 rounded-2xl">
-        <span class="text-xs font-bold text-white">Transmissão GPS</span>
-        <button id="btn-toggle-gps" class="px-3 py-1.5 bg-slate-800 text-slate-300 font-bold text-[11px] rounded-lg transition-all">
-          ⚪ GPS Desligado
-        </button>
+      
+      <!-- PAINEL DE CONTROLE DE ROTA & GPS -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Painel de Controle da Rota</h3>
+          <button id="btn-toggle-gps" class="px-3 py-1.5 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all">
+            ⚪ GPS Desligado
+          </button>
+        </div>
+
+        <div class="flex gap-2">
+          <button id="btn-toggle-mapa-rafa" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-map-location-dot"></i> Exibir Mapa
+          </button>
+          <button id="btn-disparar-emergencia" class="px-4 py-2 bg-rose-500/20 hover:bg-rose-600 text-rose-400 hover:text-white font-bold text-xs rounded-xl border border-rose-500/30 transition-all flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-bell"></i> Emergência
+          </button>
+        </div>
+
+        <!-- CONTAINER MAPA DA TIA RAFA -->
+        <div id="wrapper-mapa-rafa" class="hidden space-y-2">
+          <div id="mapa-rafa-container"></div>
+          <p id="txt-status-gps-rafa" class="text-[10px] text-center font-mono text-slate-400">Aguardando Sinal de GPS...</p>
+        </div>
       </div>
 
-      <!-- SEÇÃO DE APROVAÇÕES PENDENTES -->
+      <!-- MENSAGENS DE AUTO CADASTROS PENDENTES -->
       <div id="container-pendentes-rafa" class="hidden bg-amber-500/10 border border-amber-500/40 p-4 rounded-2xl space-y-3">
         <div class="flex items-center justify-between">
-          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-user-clock text-sm"></i> Cadastros Pendentes de Aprovação
-          </h3>
-          <span id="badge-pendentes-count-rafa" class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">0</span>
+          <span class="text-xs font-bold text-amber-400 flex items-center gap-2">
+            <i class="fa-solid fa-user-clock"></i> Cadastros Pendentes de Aprovação
+          </span>
+          <span id="badge-pendentes-count-rafa" class="px-2 py-0.5 bg-amber-500 text-slate-950 font-black text-[10px] rounded-full">0</span>
         </div>
-        <div id="lista-pendentes-rafa" class="space-y-2.5"></div>
+        <div id="lista-pendentes-rafa" class="space-y-2"></div>
       </div>
 
-      <!-- ABAS DE NAVEGAÇÃO DA TIA RAFA -->
+      <!-- ABAS TIA RAFA -->
       <div class="flex border-b border-slate-800">
         <button id="tab-btn-chamada" class="flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400">
-          <i class="fa-solid fa-route"></i> Rota
+          <i class="fa-solid fa-clipboard-check"></i> Chamada
         </button>
         <button id="tab-btn-passageiros" class="flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent">
-          <i class="fa-solid fa-users"></i> Gestão Alunos
+          <i class="fa-solid fa-users"></i> Passageiros
         </button>
         <button id="tab-btn-financeiro" class="flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent">
-          <i class="fa-solid fa-wallet"></i> Financeiro
+          <i class="fa-solid fa-sack-dollar"></i> Financeiro
         </button>
       </div>
 
-      <!-- ABA 1: ROTA E CHAMADA DA TIA RAFA -->
+      <!-- ABA 1: CHAMADA / ROTA DO DIA -->
       <div id="aba-chamada-rafa" class="space-y-3">
-        <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
-          <button id="btn-rota-ida" class="py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-van-shuttle"></i> Rota da Ida
-          </button>
-          <button id="btn-rota-volta" class="py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-house"></i> Rota da Volta
-          </button>
+        
+        <!-- CONTROLES DA ROTA (IDA / VOLTA E FILTROS) -->
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-2.5">
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-rota-ida" class="py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-sun"></i> Rota IDA
+            </button>
+            <button id="btn-rota-volta" class="py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-moon"></i> Rota VOLTA
+            </button>
+          </div>
+
+          <div class="flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+            <button id="btn-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950 shrink-0">Todos</button>
+            <button id="btn-filtro-manha7" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 shrink-0">Manhã (07h-11h)</button>
+            <button id="btn-filtro-manha8" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 shrink-0">Manhã (08h-12h)</button>
+            <button id="btn-filtro-tarde" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 shrink-0">Tarde</button>
+          </div>
         </div>
 
-        <div class="flex gap-1.5 overflow-x-auto pb-1">
-          <button id="btn-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950 whitespace-nowrap">Todos</button>
-          <button id="btn-filtro-manha7" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 whitespace-nowrap">Manhã 07h</button>
-          <button id="btn-filtro-manha8" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 whitespace-nowrap">Manhã 08h</button>
-          <button id="btn-filtro-tarde" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300 whitespace-nowrap">Tarde</button>
+        <!-- MURAL RÁPIDO DE AVISOS PARA OS PAIS -->
+        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-2">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mural de Avisos Rápido aos Pais</span>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="btn-aviso-transito-rafa" class="py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px] font-bold text-left border border-slate-700">🚗 Trânsito Intenso</button>
+            <button id="btn-aviso-chuva-rafa" class="py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-[10px] font-bold text-left border border-slate-700">🌧️ Chuva Forte</button>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="input-aviso-custom-rafa" placeholder="Outro aviso..." class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white">
+            <button id="btn-enviar-aviso-custom-rafa" class="px-3 py-1 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg">Enviar</button>
+            <button id="btn-limpar-aviso-rafa" class="px-2 py-1 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg">Limpar</button>
+          </div>
         </div>
 
-        <div id="info-contexto-rota" class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-[11px] text-slate-300 flex items-center justify-between">
-          <span>Exibindo rota ordenada por horário</span>
-          <button onclick="resetarStatusDoDia()" class="text-[10px] text-amber-400 font-bold hover:underline">🔄 Resetar Dia</button>
-        </div>
-
+        <!-- CARDS DA LISTA DE CHAMADA -->
         <div id="lista-chamada-rafa-cards" class="space-y-3"></div>
       </div>
 
-      <!-- ABA 2: GESTÃO COMPLETA DE ALUNOS & GPS (TIA RAFA) -->
-      <div id="aba-passageiros-rafa" class="space-y-4 hidden">
-        
-        <!-- MAPA GPS DA VAN -->
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2.5">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Localização da Van</h3>
-            <button id="btn-toggle-mapa-rafa" class="text-[11px] text-amber-400 font-bold hover:underline flex items-center gap-1">
-              <i class="fa-solid fa-map-location-dot"></i> Exibir Mapa
-            </button>
-          </div>
-          <p id="txt-status-gps-rafa" class="text-[10px] text-slate-400">⚪ Van Offline</p>
-          <div id="wrapper-mapa-rafa" class="hidden">
-            <div id="mapa-rafa-container" class="w-full h-48 rounded-xl overflow-hidden border border-slate-800 z-10"></div>
-          </div>
-        </div>
-
-        <!-- MURAL DE AVISOS PARA OS PAIS -->
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mural de Avisos (Para os Pais)</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <button id="btn-aviso-transito-rafa" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold text-slate-300">🚗 Trânsito Intenso</button>
-            <button id="btn-aviso-chuva-rafa" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-300">🌧️ Chuva Forte</button>
-          </div>
-          <div class="flex gap-2">
-            <input type="text" id="input-aviso-custom-rafa" placeholder="Mensagem personalizada..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-400">
-            <button id="btn-enviar-aviso-custom-rafa" class="px-3 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl">Enviar</button>
-          </div>
-          <button id="btn-limpar-aviso-rafa" class="w-full py-1.5 text-[10px] text-rose-400 font-bold hover:underline">Limpar Avisos Ativos</button>
-        </div>
-
-        <!-- FORMULÁRIO DE CADASTRAR ALUNO MANUALMENTE -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-          <button id="btn-toggle-form-rafa" class="w-full p-4 text-xs font-bold text-white uppercase tracking-wider flex justify-between items-center bg-slate-900 hover:bg-slate-800 transition-all">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-user-plus text-amber-400"></i> Cadastrar Novo Passageiro</span>
-            <i id="icon-toggle-form-rafa" class="fa-solid fa-chevron-down text-amber-400"></i>
+      <!-- ABA 2: LISTA GERAL DE PASSAGEIROS E CADASTRO -->
+      <div id="aba-passageiros-rafa" class="space-y-3 hidden">
+        <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+          <span id="count-rafa-alunos" class="text-xs font-bold text-amber-400">0 Alunos</span>
+          <button id="btn-toggle-form-rafa" class="px-3 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg flex items-center gap-1.5">
+            <i class="fa-solid fa-user-plus"></i> Novo Passageiro <i id="icon-toggle-form-rafa" class="fa-solid fa-chevron-down text-amber-950"></i>
           </button>
-          
-          <div id="container-form-cadastrar-rafa" class="hidden p-4 pt-0 space-y-3 border-t border-slate-800/80">
-            <form id="form-cadastrar-aluno-rafa" class="space-y-2.5 mt-3">
-              <input type="text" id="add-nome-rafa" placeholder="Nome Completo do Aluno *" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              <div class="grid grid-cols-2 gap-2">
-                <select id="add-turno-rafa" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                  <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
-                  <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
-                  <option value="Tarde">Tarde</option>
-                </select>
-                <input type="text" id="add-wsp-rafa" placeholder="WhatsApp dos Pais (DDD)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <input type="text" id="add-horario-busca-rafa" placeholder="Horário Busca (ex: 06:40)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                <input type="text" id="add-horario-escola-rafa" placeholder="Entrada Escola (ex: 07:30)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              </div>
-              <input type="text" id="add-endereco-casa-rafa" placeholder="Endereço Residencial" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              <input type="text" id="add-escola-rafa" placeholder="Nome da Escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              <div class="grid grid-cols-2 gap-2">
-                <input type="email" id="add-email-mae-rafa" placeholder="E-mail (Opcional)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                <input type="password" id="add-pin-rafa" maxlength="4" placeholder="PIN Pais" value="1234" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <input type="number" id="add-valor-rafa" placeholder="Mensalidade (R$)" value="180" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                <input type="number" id="add-vencimento-rafa" placeholder="Dia Vencimento" value="10" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              </div>
-              <button type="submit" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all">+ Salvar Novo Cadastro</button>
-            </form>
-          </div>
         </div>
 
-        <!-- CONFIGURAÇÃO DA CHAVE PIX -->
+        <!-- FORMULÁRIO DE NOVO PASSAGEIRO -->
+        <div id="container-form-cadastrar-rafa" class="hidden bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+          <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Cadastrar Novo Aluno</h4>
+          <form id="form-cadastrar-aluno-rafa" class="space-y-2.5">
+            <input type="text" id="add-nome-rafa" placeholder="Nome do Aluno *" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <div class="grid grid-cols-2 gap-2">
+              <select id="add-turno-rafa" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
+                <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
+                <option value="Tarde">Tarde</option>
+              </select>
+              <input type="tel" id="add-wsp-rafa" placeholder="WhatsApp Responsável *" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="add-horario-busca-rafa" placeholder="Horário Busca Casa (ex: 06:40)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+              <input type="text" id="add-horario-escola-rafa" placeholder="Horário Entrada Escola" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <input type="text" id="add-endereco-casa-rafa" placeholder="Endereço da Casa" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <input type="text" id="add-escola-rafa" placeholder="Nome da Escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="add-pin-rafa" maxlength="4" placeholder="PIN Pais (Padrão 1234)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
+              <input type="number" id="add-valor-rafa" value="180" placeholder="Mensalidade (R$)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <input type="number" id="add-vencimento-rafa" value="10" placeholder="Dia do Vencimento" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">Salvar Passageiro</button>
+          </form>
+        </div>
+
+        <div id="lista-passageiros-geral-rafa" class="space-y-3"></div>
+      </div>
+
+      <!-- ABA 3: FINANCEIRO TIA RAFA -->
+      <div id="aba-financeiro-rafa" class="space-y-3 hidden">
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Configuração de Pagamento (PIX)</h3>
-          <div class="space-y-2">
-            <div>
-              <label class="text-[10px] text-slate-400 font-bold block mb-1">Chave PIX do Transporte</label>
-              <input type="text" id="cfg-pix-rafa" placeholder="Ex: CPF, Celular, E-mail..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-[9px] text-slate-400 font-bold uppercase block">Total</span>
+              <span id="metrica-faturamento-total" class="text-xs font-black text-white">R$ 0,00</span>
             </div>
-            <div>
-              <label class="text-[10px] text-slate-400 font-bold block mb-1">Link do Cartão</label>
-              <input type="text" id="cfg-cartao-rafa" placeholder="https://mpago.la/..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-[9px] text-emerald-400 font-bold uppercase block">Recebido</span>
+              <span id="metrica-recebido" class="text-xs font-black text-emerald-400">R$ 0,00</span>
             </div>
-            <button id="btn-salvar-configs-rafa" class="w-full py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-amber-400 transition-all">
-              💾 Salvar Chave PIX
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-[9px] text-rose-400 font-bold uppercase block">Pendente</span>
+              <span id="metrica-pendente" class="text-xs font-black text-rose-400">R$ 0,00</span>
+            </div>
+          </div>
+
+          <div>
+            <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
+              <span>Progresso de Arrecadação</span>
+              <span id="progresso-percentual">0%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+              <div id="barra-progresso-financeiro" class="h-full bg-emerald-500 transition-all" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="flex gap-2 pt-2 border-t border-slate-800">
+            <button id="btn-rafa-exportar-csv" class="flex-1 py-2 bg-slate-800 text-amber-400 font-bold text-xs rounded-xl border border-amber-500/30 flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-file-csv"></i> Exportar CSV
+            </button>
+            <button id="btn-encerrar-mes-rafa" class="flex-1 py-2 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-xl border border-rose-500/30 flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-calendar-check"></i> Encerrar Mês
             </button>
           </div>
         </div>
 
-        <!-- LISTA GERAL DE ALUNOS -->
-        <div class="space-y-2">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Todos os Passageiros Cadastrados</h3>
-            <span id="count-rafa-alunos" class="text-[10px] font-bold text-slate-400">0 Alunos</span>
-          </div>
-          <div id="lista-passageiros-geral-rafa" class="space-y-2.5"></div>
+        <div class="flex gap-1">
+          <button id="btn-fin-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950">Todos</button>
+          <button id="btn-fin-filtro-pendentes" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-700 text-slate-300">Pendentes</button>
+          <button id="btn-fin-filtro-pagos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-700 text-slate-300">Quitados</button>
         </div>
+
+        <div id="lista-financeiro-rafa-cards" class="space-y-3"></div>
       </div>
-
-      <!-- ABA 3: FINANCEIRO DA TIA RAFA -->
-      <div id="aba-financeiro-rafa" class="space-y-4 hidden">
-        <div class="grid grid-cols-3 gap-2">
-          <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl text-center">
-            <span class="text-[10px] text-slate-400 font-bold uppercase block">Total</span>
-            <p id="metrica-faturamento-total" class="text-xs font-extrabold text-white mt-0.5">R$ 0,00</p>
-          </div>
-          <div class="bg-slate-900 border border-emerald-500/20 p-3 rounded-xl text-center">
-            <span class="text-[10px] text-emerald-400 font-bold uppercase block">Recebido</span>
-            <p id="metrica-recebido" class="text-xs font-extrabold text-emerald-400 mt-0.5">R$ 0,00</p>
-          </div>
-          <div class="bg-slate-900 border border-rose-500/20 p-3 rounded-xl text-center">
-            <span class="text-[10px] text-rose-400 font-bold uppercase block">Pendente</span>
-            <p id="metrica-pendente" class="text-xs font-extrabold text-rose-400 mt-0.5">R$ 0,00</p>
-          </div>
-        </div>
-
-        <div class="bg-slate-900 border border-slate-800 p-3 rounded-xl space-y-1.5">
-          <div class="flex justify-between items-center text-[10px] font-bold">
-            <span class="text-slate-400">Progresso da Arrecadação</span>
-            <span id="progresso-percentual" class="text-amber-400">0%</span>
-          </div>
-          <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-            <div id="barra-progresso-financeiro" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex gap-1.5">
-            <button id="btn-fin-filtro-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950">Todos</button>
-            <button id="btn-fin-filtro-pendentes" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300">Pendentes</button>
-            <button id="btn-fin-filtro-pagos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-800 text-slate-300">Pagos</button>
-          </div>
-          <button id="btn-encerrar-mes-rafa" class="px-2.5 py-1 bg-rose-600/20 border border-rose-500/40 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">
-            🔒 Fechar Mês
-          </button>
-        </div>
-
-        <button id="btn-rafa-exportar-csv" class="w-full py-2 bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 font-bold text-xs rounded-xl hover:bg-emerald-600 hover:text-slate-950 transition-all flex items-center justify-center gap-2">
-          <i class="fa-solid fa-file-excel"></i> 📥 Baixar Relatório Financeiro (.CSV)
-        </button>
-
-        <div id="lista-financeiro-rafa-cards" class="space-y-2.5"></div>
-      </div>
-
-      <button id="btn-disparar-emergencia" class="w-full py-3 bg-rose-600/10 border border-rose-500/30 hover:bg-rose-600 text-rose-400 hover:text-white font-bold text-xs rounded-2xl transition-all flex items-center justify-center gap-2">
-        <i class="fa-solid fa-triangle-exclamation"></i> Botão de Emergência
-      </button>
     </section>
 
-    <!-- DASHBOARD ADMIN -->
+    <!-- 4. DASHBOARD SUPORTE (PAINEL ADMINISTRATIVO) -->
     <section id="dashboard-admin" class="hidden space-y-4">
+      
+      <!-- PAINEL DE MONITORAMENTO DE GPS SUPORTE -->
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs font-bold text-rose-400 uppercase tracking-wider">Monitoramento da Frota (Suporte)</h3>
+          <button id="btn-toggle-mapa-admin" class="px-3 py-1.5 bg-slate-800 text-amber-400 font-bold text-xs rounded-lg border border-slate-700 flex items-center gap-1.5">
+            <i class="fa-solid fa-map-location-dot"></i> Exibir Mapa
+          </button>
+        </div>
+
+        <div id="wrapper-mapa-admin" class="hidden space-y-2">
+          <div id="mapa-admin-container"></div>
+          <p id="txt-status-gps-admin" class="text-[10px] text-center font-mono text-slate-400">Aguardando Sinal da Van...</p>
+        </div>
+      </div>
+
+      <!-- AUTO CADASTROS PENDENTES DE APROVAÇÃO (SUPORTE) -->
+      <div id="container-pendentes-admin" class="hidden bg-amber-500/10 border border-amber-500/40 p-4 rounded-2xl space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-amber-400 flex items-center gap-2">
+            <i class="fa-solid fa-user-clock"></i> Solicitações de Cadastro Pendentes
+          </span>
+          <span id="badge-pendentes-count-admin" class="px-2 py-0.5 bg-amber-500 text-slate-950 font-black text-[10px] rounded-full">0</span>
+        </div>
+        <div id="lista-pendentes-admin" class="space-y-2"></div>
+      </div>
+
+      <!-- ABAS SUPORTE -->
       <div class="flex border-b border-slate-800">
         <button id="tab-admin-alunos" class="flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400">
-          <i class="fa-solid fa-users"></i> Alunos & GPS
+          <i class="fa-solid fa-users-gear"></i> Gestão Alunos
         </button>
         <button id="tab-admin-financeiro" class="flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent">
-          <i class="fa-solid fa-chart-line"></i> Financeiro
+          <i class="fa-solid fa-chart-pie"></i> Relatório Geral
         </button>
       </div>
 
-      <!-- ABA 1: ALUNOS & GPS ADMIN -->
-      <div id="aba-admin-alunos" class="space-y-4">
-        <div id="container-pendentes-admin" class="hidden bg-amber-500/10 border border-amber-500/40 p-4 rounded-2xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-              <i class="fa-solid fa-user-clock text-sm"></i> Cadastros Pendentes de Aprovação
-            </h3>
-            <span id="badge-pendentes-count-admin" class="bg-amber-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full">0</span>
-          </div>
-          <div id="lista-pendentes-admin" class="space-y-2.5"></div>
+      <!-- ABA 1 SUPORTE: GESTÃO DE ALUNOS -->
+      <div id="aba-admin-alunos" class="space-y-3">
+        <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+          <span id="count-admin-alunos" class="text-xs font-bold text-amber-400">0 Alunos</span>
+          <button id="btn-toggle-form-admin" class="px-3 py-1.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg flex items-center gap-1.5">
+            <i class="fa-solid fa-user-plus"></i> Adicionar Aluno <i id="icon-toggle-form-admin" class="fa-solid fa-chevron-down text-amber-950"></i>
+          </button>
         </div>
 
-        <!-- MAPA GPS DA VAN -->
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2.5">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Localização da Van em Tempo Real</h3>
-            <button id="btn-toggle-mapa-admin" class="text-[11px] text-amber-400 font-bold hover:underline flex items-center gap-1">
-              <i class="fa-solid fa-map-location-dot"></i> Exibir Mapa
-            </button>
-          </div>
-          <p id="txt-status-gps-admin" class="text-[10px] text-slate-400">⚪ Van Offline</p>
-          <div id="wrapper-mapa-admin" class="hidden">
-            <div id="mapa-admin-container" class="w-full h-48 rounded-xl overflow-hidden border border-slate-800 z-10"></div>
-          </div>
+        <!-- FORMULÁRIO SUPORTE -->
+        <div id="container-form-cadastrar-admin" class="hidden bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+          <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Novo Cadastro de Aluno</h4>
+          <form id="form-cadastrar-aluno" class="space-y-2.5">
+            <input type="text" id="add-nome" placeholder="Nome Completo *" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <div class="grid grid-cols-2 gap-2">
+              <select id="add-turno" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+                <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
+                <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
+                <option value="Tarde">Tarde</option>
+              </select>
+              <input type="tel" id="add-wsp" placeholder="WhatsApp *" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="add-horario-busca" placeholder="Horário Busca Casa" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+              <input type="text" id="add-horario-escola" placeholder="Horário Escola" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <input type="text" id="add-endereco-casa" placeholder="Endereço da Casa" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <input type="text" id="add-escola" placeholder="Nome da Escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="add-pin" maxlength="4" placeholder="PIN Pais" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
+              <input type="number" id="add-valor" value="180" placeholder="Valor (R$)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            </div>
+            <input type="number" id="add-vencimento" value="10" placeholder="Dia Vencimento" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+            <button type="submit" class="w-full py-3 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl">Salvar Aluno</button>
+          </form>
         </div>
 
-        <!-- MURAL DE AVISOS ADMIN -->
+        <div id="lista-alunos-admin" class="space-y-3"></div>
+      </div>
+
+      <!-- ABA 2 SUPORTE: FINANCEIRO GERAL & CONFIGURAÇÕES -->
+      <div id="aba-admin-financeiro" class="space-y-3 hidden">
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mural de Avisos (Para os Pais)</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <button id="btn-aviso-transito" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold text-slate-300">🚗 Trânsito Intenso</button>
-            <button id="btn-aviso-chuva" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs font-bold text-slate-300">🌧️ Chuva Forte</button>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-[9px] text-slate-400 font-bold uppercase block">Previsto</span>
+              <span id="admin-metrica-total" class="text-xs font-black text-white">R$ 0,00</span>
+            </div>
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-[9px] text-emerald-400 font-bold uppercase block">Entrou</span>
+              <span id="admin-metrica-recebido" class="text-xs font-black text-emerald-400">R$ 0,00</span>
+            </div>
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+              <span class="text-[9px] text-rose-400 font-bold uppercase block">Falta</span>
+              <span id="admin-metrica-pendente" class="text-xs font-black text-rose-400">R$ 0,00</span>
+            </div>
           </div>
+
+          <div>
+            <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-1">
+              <span>Arrecadação do Mês</span>
+              <span id="admin-progresso-percentual">0%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+              <div id="admin-barra-progresso" class="h-full bg-emerald-500 transition-all" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- CONFIGURAÇÕES DE DADOS DE PAGAMENTO GLOBAR -->
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+            <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">Dados Globais de Pagamento (PIX / Cartão)</span>
+            <div class="space-y-2">
+              <input type="text" id="cfg-pix" placeholder="Chave PIX (E-mail / Whats / CPF)" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white">
+              <input type="text" id="cfg-cartao" placeholder="Link do Mercado Pago / Cartão" class="w-full bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white">
+              <button id="btn-salvar-configs" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+                💾 Salvar Dados de Pagamento
+              </button>
+            </div>
+          </div>
+
           <div class="flex gap-2">
-            <input type="text" id="input-aviso-custom" placeholder="Mensagem personalizada..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-amber-400">
-            <button id="btn-enviar-aviso-custom" class="px-3 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl">Enviar</button>
-          </div>
-          <button id="btn-limpar-aviso" class="w-full py-1.5 text-[10px] text-rose-400 font-bold hover:underline">Limpar Avisos Ativos</button>
-        </div>
-
-        <!-- FORMULÁRIO DE CADASTRAR ALUNO MANUALMENTE -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-          <button id="btn-toggle-form-admin" class="w-full p-4 text-xs font-bold text-white uppercase tracking-wider flex justify-between items-center bg-slate-900 hover:bg-slate-800 transition-all">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-user-plus text-amber-400"></i> Cadastrar Novo Passageiro</span>
-            <i id="icon-toggle-form-admin" class="fa-solid fa-chevron-down text-amber-400"></i>
-          </button>
-          
-          <div id="container-form-cadastrar-admin" class="hidden p-4 pt-0 space-y-3 border-t border-slate-800/80">
-            <form id="form-cadastrar-aluno" class="space-y-2.5 mt-3">
-              <input type="text" id="add-nome" placeholder="Nome Completo do Aluno *" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              <div class="grid grid-cols-2 gap-2">
-                <select id="add-turno" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                  <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
-                  <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
-                  <option value="Tarde">Tarde</option>
-                </select>
-                <input type="text" id="add-wsp" placeholder="WhatsApp dos Pais (DDD)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <input type="text" id="add-horario-busca" placeholder="Horário Busca Casa (ex: 06:40)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                <input type="text" id="add-horario-escola" placeholder="Entrada Escola (ex: 07:30)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              </div>
-              <input type="text" id="add-endereco-casa" placeholder="Endereço Residencial" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              <input type="text" id="add-escola" placeholder="Nome da Escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              <div class="grid grid-cols-2 gap-2">
-                <input type="email" id="add-email-mae" placeholder="E-mail (Opcional)" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                <input type="password" id="add-pin" maxlength="4" placeholder="PIN Pais (ex: 1234)" value="1234" required class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <input type="number" id="add-valor" placeholder="Valor Mensalidade (R$)" value="180" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-                <input type="number" id="add-vencimento" placeholder="Dia Vencimento" value="10" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
-              </div>
-              <button type="submit" class="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition-all">+ Salvar Cadastro</button>
-            </form>
-          </div>
-        </div>
-
-        <div class="space-y-2">
-          <div class="flex justify-between items-center">
-            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Passageiros Cadastrados</h3>
-            <span id="count-admin-alunos" class="text-[10px] font-bold text-slate-400">0 Alunos</span>
-          </div>
-          <div id="lista-alunos-admin" class="space-y-2.5"></div>
-        </div>
-
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-          <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Configurações do Sistema</h3>
-          <div class="space-y-2">
-            <div>
-              <label class="text-[10px] text-slate-400 font-bold block mb-1">Chave PIX Global</label>
-              <input type="text" id="cfg-pix" placeholder="Ex: CPF, CNPJ, Celular ou E-mail" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-            </div>
-            <div>
-              <label class="text-[10px] text-slate-400 font-bold block mb-1">Link Cartão de Crédito/Débito</label>
-              <input type="text" id="cfg-cartao" placeholder="https://mpago.la/..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-            </div>
-            <button id="btn-salvar-configs" class="w-full py-2 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl hover:bg-amber-400 transition-all">
-              💾 Salvar Ajustes Globais
+            <button id="btn-admin-exportar-csv" class="flex-1 py-2 bg-slate-800 text-amber-400 font-bold text-xs rounded-xl border border-amber-500/30 flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-file-csv"></i> Exportar CSV
+            </button>
+            <button id="btn-encerrar-mes" class="flex-1 py-2 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-xl border border-rose-500/30 flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-calendar-check"></i> Encerrar Mês
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- ABA 2: FINANCEIRO ADMIN -->
-      <div id="aba-admin-financeiro" class="space-y-4 hidden">
-        <div class="grid grid-cols-3 gap-2">
-          <div class="bg-slate-900/80 border border-slate-700/80 p-3 rounded-xl text-center">
-            <span class="text-[10px] text-slate-400 font-bold uppercase block">Total</span>
-            <p id="admin-metrica-total" class="text-xs font-extrabold text-white mt-0.5">R$ 0,00</p>
-          </div>
-          <div class="bg-slate-900/80 border border-emerald-500/30 p-3 rounded-xl text-center">
-            <span class="text-[10px] text-emerald-400 font-bold uppercase block">Recebido</span>
-            <p id="admin-metrica-recebido" class="text-xs font-extrabold text-emerald-400 mt-0.5">R$ 0,00</p>
-          </div>
-          <div class="bg-slate-900/80 border border-rose-500/30 p-3 rounded-xl text-center">
-            <span class="text-[10px] text-rose-400 font-bold uppercase block">Pendente</span>
-            <p id="admin-metrica-pendente" class="text-xs font-extrabold text-rose-400 mt-0.5">R$ 0,00</p>
-          </div>
+        <div class="flex gap-1">
+          <button id="btn-admin-fin-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950">Todos</button>
+          <button id="btn-admin-fin-pendentes" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-700 text-slate-300">Pendentes</button>
+          <button id="btn-admin-fin-pagos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-700 text-slate-300">Quitados</button>
         </div>
 
-        <div class="bg-slate-900/80 border border-slate-700/80 p-3 rounded-xl space-y-1.5">
-          <div class="flex justify-between items-center text-[10px] font-bold">
-            <span class="text-slate-400">Progresso da Arrecadação</span>
-            <span id="admin-progresso-percentual" class="text-amber-400">0%</span>
-          </div>
-          <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
-            <div id="admin-barra-progresso" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex gap-1">
-            <button id="btn-admin-fin-todos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500 text-slate-950">Todos</button>
-            <button id="btn-admin-fin-pendentes" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-700 text-slate-300">Pendentes</button>
-            <button id="btn-admin-fin-pagos" class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-700 text-slate-300">Pagos</button>
-          </div>
-          <button id="btn-encerrar-mes" class="px-2.5 py-1 bg-rose-600/20 border border-rose-500/40 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">
-            🔒 Fechar Mês
-          </button>
-        </div>
-
-        <button id="btn-admin-exportar-csv" class="w-full py-2 bg-emerald-600/20 border border-emerald-500/40 text-emerald-400 font-bold text-xs rounded-xl hover:bg-emerald-600 hover:text-slate-950 transition-all flex items-center justify-center gap-2">
-          <i class="fa-solid fa-file-excel"></i> 📥 Baixar Backup Financeiro (.CSV)
-        </button>
-
-        <div id="lista-financeiro-admin-cards" class="space-y-2.5"></div>
+        <div id="lista-financeiro-admin-cards" class="space-y-3"></div>
       </div>
     </section>
+
   </main>
 
-  <nav id="bottom-bar" class="hidden bg-slate-900/90 border-t border-slate-800 p-2 sticky bottom-0 z-40 backdrop-blur-md">
-    <div class="max-w-md mx-auto flex justify-center">
-      <button id="nav-btn-logout" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-rose-400">
-        <i class="fa-solid fa-right-from-bracket text-sm"></i>
-        <span class="text-[10px] font-bold">Sair</span>
-      </button>
-    </div>
-  </nav>
-
-  <!-- MODAL DE EMERGÊNCIA SIRENE -->
-  <div id="modal-emergencia-admin" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-rose-950 border-2 border-rose-500 p-6 rounded-3xl max-w-sm w-full text-center space-y-4 animate-bounce">
-      <i class="fa-solid fa-triangle-exclamation text-4xl text-rose-500"></i>
-      <h3 class="text-lg font-black text-white">ALERTA DE EMERGÊNCIA!</h3>
-      <p id="detalhes-emergencia-admin" class="text-xs text-rose-200 font-medium bg-rose-900/50 p-3 rounded-xl border border-rose-700/50"></p>
-      <div class="space-y-2">
-        <a id="btn-rota-maps-emergencia" target="_blank" class="block w-full py-3 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-lg">
-          📍 Abrir Localização no Google Maps
-        </a>
-        <button id="btn-desativar-emergencia" class="w-full py-2.5 bg-slate-900 border border-slate-700 text-slate-300 font-bold text-xs rounded-xl">
-          Atender / Desativar Alarme
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL EDIÇÃO ALUNO -->
-  <div id="modal-editar-aluno" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 p-5 rounded-3xl max-w-sm w-full space-y-4 max-h-[90vh] overflow-y-auto">
-      <div class="flex justify-between items-center">
-        <h3 class="text-sm font-bold text-white">Editar Dados do Passageiro</h3>
+  <!-- MODAL EDITAR ALUNO (COMPARTILHADO SUPORTE / TIA RAFA) -->
+  <div id="modal-editar-aluno" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl w-full max-w-md space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+        <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Editar Cadastro do Passageiro</h3>
         <button id="btn-fechar-modal-edit" class="text-xs text-slate-400 hover:text-white">✕</button>
       </div>
+
       <form id="form-editar-aluno" class="space-y-2.5">
         <input type="hidden" id="edit-id">
-        <input type="text" id="edit-nome" placeholder="Nome Completo *" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-        <div class="grid grid-cols-2 gap-2">
-          <select id="edit-turno" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-            <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
-            <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
-            <option value="Tarde">Tarde</option>
-          </select>
-          <input type="text" id="edit-wsp" placeholder="WhatsApp" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+        <div>
+          <label class="text-[10px] text-slate-400 block font-bold">Nome do Aluno:</label>
+          <input type="text" id="edit-nome" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
         </div>
+
         <div class="grid grid-cols-2 gap-2">
-          <input type="text" id="edit-horario-busca" placeholder="Horário Busca Casa" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-          <input type="text" id="edit-horario-escola" placeholder="Entrada Escola" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+          <div>
+            <label class="text-[10px] text-slate-400 block font-bold">Turno:</label>
+            <select id="edit-turno" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+              <option value="Manhã (07h às 11h)">Manhã (07h às 11h)</option>
+              <option value="Manhã (08h às 12h)">Manhã (08h às 12h)</option>
+              <option value="Tarde">Tarde</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block font-bold">WhatsApp Pais:</label>
+            <input type="tel" id="edit-wsp" required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          </div>
         </div>
-        <input type="text" id="edit-endereco-casa" placeholder="Endereço Casa" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-        <input type="text" id="edit-escola" placeholder="Escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+
         <div class="grid grid-cols-2 gap-2">
-          <input type="email" id="edit-email-mae" placeholder="E-mail (Opcional)" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-          <input type="text" id="edit-pin" maxlength="4" placeholder="PIN Pais" required class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs font-mono text-center text-white">
+          <div>
+            <label class="text-[10px] text-slate-400 block font-bold">Horário Busca Casa:</label>
+            <input type="text" id="edit-horario-busca" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block font-bold">Horário Entrada Escola:</label>
+            <input type="text" id="edit-horario-escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          </div>
         </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block font-bold">Endereço Residencial:</label>
+          <input type="text" id="edit-endereco-casa" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+        </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block font-bold">Escola:</label>
+          <input type="text" id="edit-escola" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+        </div>
+
         <div class="grid grid-cols-2 gap-2">
-          <input type="number" id="edit-valor" placeholder="Valor Mensalidade" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
-          <input type="number" id="edit-vencimento" placeholder="Dia Vencimento" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white">
+          <div>
+            <label class="text-[10px] text-slate-400 block font-bold">PIN dos Pais (4 Dígitos):</label>
+            <input type="text" id="edit-pin" maxlength="4" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs font-mono text-center text-white">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block font-bold">Mensalidade (R$):</label>
+            <input type="number" id="edit-valor" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+          </div>
         </div>
-        <button type="submit" class="w-full py-2.5 bg-amber-500 text-slate-950 font-bold text-xs rounded-xl">Salvar Alterações</button>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block font-bold">Dia Vencimento:</label>
+          <input type="number" id="edit-vencimento" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white">
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-lg">
+          💾 Salvar Alterações
+        </button>
       </form>
     </div>
   </div>
 
+  <!-- MODAL ALERTA DE EMERGÊNCIA DISPARADO PELA TIA RAFA -->
+  <div id="modal-emergencia-admin" class="hidden fixed inset-0 z-50 bg-rose-950/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-rose-500 p-6 rounded-3xl w-full max-w-sm text-center space-y-4 shadow-2xl animate-bounce">
+      <div class="w-16 h-16 bg-rose-500/20 text-rose-500 border border-rose-500/40 rounded-full flex items-center justify-center mx-auto text-3xl">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="text-lg font-black text-rose-500">ALERTA DE EMERGÊNCIA!</h3>
+      <p id="detalhes-emergencia-admin" class="text-xs text-slate-300 font-medium">A Tia Rafa acionou a sirene de socorro!</p>
+      
+      <div class="space-y-2 pt-2">
+        <a id="btn-rota-maps-emergencia" href="#" target="_blank" class="block w-full py-3 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition-all shadow-lg">
+          📍 Abrir Posição da Van no Google Maps
+        </a>
+        <button id="btn-desativar-emergencia" class="w-full py-2.5 bg-slate-800 text-slate-300 hover:text-white font-bold text-xs rounded-xl border border-slate-700">
+          Ciente / Desativar Alerta
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BARRA DE NAVEGAÇÃO INFERIOR (SÓ EXIBIDA QUANDO LOGADO) -->
+  <nav id="bottom-bar" class="hidden bg-slate-900 border-t border-slate-800 p-3 sticky bottom-0 z-40 backdrop-blur-md bg-opacity-90">
+    <div class="max-w-md mx-auto flex justify-around items-center">
+      <button id="nav-btn-logout" class="flex flex-col items-center gap-1 text-rose-400 hover:text-rose-300 text-[10px] font-bold">
+        <i class="fa-solid fa-right-from-bracket text-base"></i>
+        <span>Sair / Home</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Leaflet Maps Script -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Main Application Logic Script -->
   <script src="app.js"></script>
+
 </body>
 </html>
