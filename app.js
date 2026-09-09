@@ -431,19 +431,19 @@ async function logout() {
   if (supabaseClient) {
     await supabaseClient.auth.signOut();
   }
-  localStorage.removeItem("app_role");
-  localStorage.removeItem("app_pai_email");
 
-  Object.keys(localStorage).forEach(key => {
-    if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
-      localStorage.removeItem(key);
-    }
-  });
+  // Limpa todos os dados de sessão armazenados no dispositivo
+  localStorage.removeItem("app_role");
+  localStorage.removeItem("app_pai_wsp");
+  localStorage.removeItem("app_pai_pin");
+  localStorage.removeItem("app_pai_email");
+  localStorage.removeItem("app_pai_pin_validado");
 
   currentRole = null;
+  
+  // Volta para a Tela Inicial com os 3 botões de perfil
   voltarHome();
 }
-
 async function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
   
