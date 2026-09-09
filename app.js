@@ -40,7 +40,6 @@ let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, bt
    ========================================================================== */
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Mapeamento de Elementos Fixos
   loginSection = document.getElementById("login-section");
   authForm = document.getElementById("auth-form");
   authTitle = document.getElementById("auth-title");
@@ -49,12 +48,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   bottomBar = document.getElementById("bottom-bar");
   btnTopBack = document.getElementById("btn-top-back");
 
-  // Inicializações Iniciais
   inicializarTema();
   verificarAlertaGlobal();
   carregarConfiguracoesGlobais();
   
-  // Temporizadores do Sistema (GPS, Alertas e Atualização automática)
   setInterval(verificarEmergenciaAdmin, 3000);
   setInterval(() => {
     carregarGpsAdmin();
@@ -71,13 +68,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }, 4000);
 
-  // Escutadores de Eventos Globais
+  // Escutadores Globais
   btnTopBack?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
   document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
   document.getElementById("btn-theme-toggle")?.addEventListener("click", alternarTema);
 
-  // Botões de Entrada nos Perfis
+  // Seleção de Perfis
   document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
   document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
@@ -88,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-toggle-mapa-rafa")?.addEventListener("click", toggleMapaRafa);
   document.getElementById("btn-toggle-mapa-admin")?.addEventListener("click", toggleMapaAdmin);
 
-  // Sanfonas dos Formulários de Cadastro
+  // Sanfonas
   document.getElementById("btn-toggle-form-rafa")?.addEventListener("click", () => toggleFormCadastro('rafa'));
   document.getElementById("btn-toggle-form-admin")?.addEventListener("click", () => toggleFormCadastro('admin'));
 
@@ -104,7 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-salvar-configs")?.addEventListener("click", () => salvarConfigsGlobais('admin'));
   document.getElementById("btn-salvar-configs-rafa")?.addEventListener("click", () => salvarConfigsGlobais('rafa'));
 
-  // Auto Cadastro dos Pais
+  // Auto Cadastro
   document.getElementById("btn-abrir-auto-cadastro")?.addEventListener("click", () => {
     document.getElementById("form-auto-cadastro-container")?.classList.remove("hidden");
   });
@@ -113,7 +110,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
 
-  // Seleção e Login por PIN na Área dos Pais
+  // Área dos Pais
   document.getElementById("select-email-pais")?.addEventListener("change", (e) => {
     const val = e.target.value;
     const boxPin = document.getElementById("box-pin-pais");
@@ -132,11 +129,26 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("btn-entrar-pais-pin")?.addEventListener("click", validarLoginPinPais);
 
-  // Navegação Rota (Ida / Volta)
+  // Abas da Área dos Pais
+  document.getElementById("tab-pais-filho")?.addEventListener("click", () => {
+    document.getElementById("aba-pais-filho")?.classList.remove("hidden");
+    document.getElementById("aba-pais-financeiro")?.classList.add("hidden");
+    document.getElementById("tab-pais-filho").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
+    document.getElementById("tab-pais-financeiro").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+  });
+
+  document.getElementById("tab-pais-financeiro")?.addEventListener("click", () => {
+    document.getElementById("aba-pais-filho")?.classList.add("hidden");
+    document.getElementById("aba-pais-financeiro")?.classList.remove("hidden");
+    document.getElementById("tab-pais-financeiro").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
+    document.getElementById("tab-pais-filho").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+  });
+
+  // Alternador de Rota Ida/Volta
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
-  // Navegação por Abas (Tia Rafa)
+  // Abas Tia Rafa
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
     document.getElementById("aba-passageiros-rafa")?.classList.add("hidden");
@@ -166,7 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderizarFinanceiroRafa();
   });
 
-  // Navegação por Abas (Admin)
+  // Abas Admin
   document.getElementById("tab-admin-alunos")?.addEventListener("click", () => {
     document.getElementById("aba-admin-alunos")?.classList.remove("hidden");
     document.getElementById("aba-admin-financeiro")?.classList.add("hidden");
@@ -222,11 +234,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("form-cadastrar-aluno-rafa")?.addEventListener("submit", cadastrarAlunoRafa);
   
-  // Encerrar / Fechar Mês
+  // Encerrar Mês
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 
-  // Restauração de Sessão Salva
   await restaurarSessaoAnterior();
 });
 
@@ -234,7 +245,6 @@ document.addEventListener("DOMContentLoaded", async () => {
    3. INTERFACE, TEMA CLARO/ESCURO & COMPONENTES VISUAIS
    ========================================================================== */
 
-// Atualiza o Indicador/Badge no Cabeçalho
 function atualizarBadgeHeader(role) {
   const badge = document.getElementById("badge-perfil-header");
   if (!badge) return;
@@ -258,7 +268,6 @@ function atualizarBadgeHeader(role) {
   }
 }
 
-// Alternância de Tema Claro e Escuro
 function inicializarTema() {
   const temaSalvo = localStorage.getItem("theme");
   const themeIcon = document.getElementById("theme-icon");
@@ -285,7 +294,6 @@ function alternarTema() {
   }
 }
 
-// Efeito Sanfona nos Formulários de Cadastro
 function toggleFormCadastro(role) {
   const container = role === 'rafa' ? document.getElementById("container-form-cadastrar-rafa") : document.getElementById("container-form-cadastrar-admin");
   const icon = role === 'rafa' ? document.getElementById("icon-toggle-form-rafa") : document.getElementById("icon-toggle-form-admin");
@@ -301,7 +309,6 @@ function toggleFormCadastro(role) {
   }
 }
 
-// Avisos Globais do Sistema
 async function verificarAlertaGlobal() {
   if (!supabaseClient) return;
   const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN').order('id', { ascending: false }).limit(1);
@@ -442,7 +449,6 @@ async function restaurarSessaoAnterior() {
     return;
   }
 
-  // Se for Tia Rafa ou Admin, verifica se existe uma sessão real no Supabase
   if (roleSalva === "rafa" || roleSalva === "admin") {
     if (!supabaseClient) {
       localStorage.removeItem("app_role");
@@ -452,7 +458,6 @@ async function restaurarSessaoAnterior() {
 
     const { data: { session } } = await supabaseClient.auth.getSession();
     
-    // Se não houver sessão ativa (ex: após fechar navegador ou dar Ctrl+Shift+R sem login permanente), volta pra Home
     if (!session) {
       localStorage.removeItem("app_role");
       voltarHome();
@@ -460,7 +465,6 @@ async function restaurarSessaoAnterior() {
     }
   }
 
-  // Se passou na validação, restaura a tela
   currentRole = roleSalva;
   entrarPerfil(roleSalva, true);
 
@@ -803,6 +807,9 @@ function validarLoginPinPais() {
 
 function renderizarPaisFilho(emailOuNome) {
   const container = document.getElementById("conteudo-filho-pais");
+  const abaFilho = document.getElementById("aba-pais-filho");
+  const abaFin = document.getElementById("aba-pais-financeiro");
+
   if (!emailOuNome || !container) {
     container?.classList.add("hidden");
     return;
@@ -833,104 +840,110 @@ function renderizarPaisFilho(emailOuNome) {
   const temEspecial = filho.tem_horario_especial === true;
   const vaiHoje = filho.vai_hoje !== false;
 
-  container.innerHTML = `
-    <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
-      <div class="flex justify-between items-start">
-        <div>
-          <h3 class="text-base font-extrabold text-white">${filho.nome}</h3>
-          <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-graduation-cap"></i> ${filho.escola || '-'} (${filho.turno || 'Manhã'})</p>
-          <p class="text-[11px] text-amber-400 font-medium mt-1"><i class="fa-regular fa-clock"></i> Horário Fixo: Busca ${filho.horario_busca || 'A definir'} | Entrada ${filho.horario_escola || '-'}</p>
-        </div>
-        <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor} flex items-center gap-1.5">
-          <i class="fa-solid ${icon}"></i> ${st}
-        </span>
-      </div>
-
-      <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs text-slate-300">
-        ${desc}
-      </div>
-
-      <!-- BLOCO INFORMAR EXCEÇÃO -->
-      <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Informar Exceção / Ausência</span>
-          <button id="btn-toggle-excecao-${filho.id}" onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial || !vaiHoje ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
-            ${temEspecial || !vaiHoje ? '⚡ Exceção Ativa' : '+ Informar Exceção'}
-          </button>
-        </div>
-
-        <div id="box-horario-especial-${filho.id}" class="${temEspecial || !vaiHoje ? '' : 'hidden'} space-y-3 pt-2 border-t border-slate-800">
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[9px] text-slate-400 block font-bold">Busca Ida Hoje:</label>
-              <input type="text" id="esp-ida-${filho.id}" value="${filho.horario_busca_hoje || ''}" placeholder="Ex: 09:30" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
-            </div>
-            <div>
-              <label class="text-[9px] text-slate-400 block font-bold">Volta Hoje:</label>
-              <input type="text" id="esp-volta-${filho.id}" value="${filho.horario_volta_hoje || ''}" placeholder="Ex: 15:00" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
-            </div>
+  // CONTEÚDO DA ABA 1: MEU FILHO / ROTA
+  if (abaFilho) {
+    abaFilho.innerHTML = `
+      <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="text-base font-extrabold text-white">${filho.nome}</h3>
+            <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-graduation-cap"></i> ${filho.escola || '-'} (${filho.turno || 'Manhã'})</p>
+            <p class="text-[11px] text-amber-400 font-medium mt-1"><i class="fa-regular fa-clock"></i> Horário Fixo: Busca ${filho.horario_busca || 'A definir'} | Entrada ${filho.horario_escola || '-'}</p>
           </div>
-          
-          <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
-            💾 Salvar Horário Especial pra Tia Rafa
-          </button>
+          <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor} flex items-center gap-1.5">
+            <i class="fa-solid ${icon}"></i> ${st}
+          </span>
+        </div>
 
-          <div class="pt-2 border-t border-slate-800 flex flex-col gap-2">
-            <button onclick="marcarAusenciaPais('${filho.id}', '${filho.nome.replace(/'/g, "\\'")}')" class="w-full py-2 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition-all">
-              🔴 Marcar que NÃO VAI no transporte hoje
+        <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs text-slate-300">
+          ${desc}
+        </div>
+
+        <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Informar Exceção / Ausência</span>
+            <button id="btn-toggle-excecao-${filho.id}" onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial || !vaiHoje ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
+              ${temEspecial || !vaiHoje ? '⚡ Exceção Ativa' : '+ Informar Exceção'}
+            </button>
+          </div>
+
+          <div id="box-horario-especial-${filho.id}" class="${temEspecial || !vaiHoje ? '' : 'hidden'} space-y-3 pt-2 border-t border-slate-800">
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[9px] text-slate-400 block font-bold">Busca Ida Hoje:</label>
+                <input type="text" id="esp-ida-${filho.id}" value="${filho.horario_busca_hoje || ''}" placeholder="Ex: 09:30" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
+              </div>
+              <div>
+                <label class="text-[9px] text-slate-400 block font-bold">Volta Hoje:</label>
+                <input type="text" id="esp-volta-${filho.id}" value="${filho.horario_volta_hoje || ''}" placeholder="Ex: 15:00" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
+              </div>
+            </div>
+            
+            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+              💾 Salvar Horário Especial pra Tia Rafa
             </button>
 
-            ${temEspecial || !vaiHoje ? `
-              <button onclick="restaurarPadraoPais('${filho.id}')" class="w-full py-1.5 bg-slate-800 text-emerald-400 hover:text-emerald-300 font-bold text-[11px] rounded-lg transition-all border border-slate-700">
-                ✓ Cancelar Exceção / Voltar ao Horário e Presença Fixo
+            <div class="pt-2 border-t border-slate-800 flex flex-col gap-2">
+              <button onclick="marcarAusenciaPais('${filho.id}', '${filho.nome.replace(/'/g, "\\'")}')" class="w-full py-2 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition-all">
+                🔴 Marcar que NÃO VAI no transporte hoje
               </button>
-            ` : ''}
+
+              ${temEspecial || !vaiHoje ? `
+                <button onclick="restaurarPadraoPais('${filho.id}')" class="w-full py-1.5 bg-slate-800 text-emerald-400 hover:text-emerald-300 font-bold text-[11px] rounded-lg transition-all border border-slate-700">
+                  ✓ Cancelar Exceção / Voltar ao Horário Fixo
+                </button>
+              ` : ''}
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- STATUS DE PRESENÇA DINÂMICO -->
-      <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
-        <span class="text-xs font-bold text-slate-300">Status de Transporte Hoje:</span>
-        <span class="px-3 py-1.5 rounded-xl text-xs font-bold ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white shadow-lg border border-rose-400'}">
-          ${vaiHoje ? '🟢 Confirmado (Vai Hoje)' : '🔴 Ausente Informado'}
-        </span>
-      </div>
-    </div>
-
-    <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
-      <div class="flex justify-between items-center">
-        <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mensalidade Escolar</h4>
-        <span class="text-xs font-bold ${stPag === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stPag === 'Pago' ? '🟢 Quitado' : '🔴 Pendente'}</span>
-      </div>
-
-      <div class="flex justify-between items-baseline">
-        <p class="text-2xl font-extrabold text-white">R$ ${val.toFixed(2)}</p>
-        <p class="text-xs text-slate-400">Vencimento: Dia ${venc}</p>
-      </div>
-
-      ${stPag !== 'Pago' ? `
-        <div class="space-y-3 pt-2">
-          <div class="p-3 bg-teal-950/40 border border-teal-500/30 rounded-xl space-y-1.5">
-            <p class="text-xs font-bold text-teal-300"><i class="fa-brands fa-pix"></i> Pagamento via PIX</p>
-            <p class="text-xs font-mono bg-slate-900 p-2 rounded border border-slate-700 text-teal-200 select-all">${pixChaveGlobal}</p>
-          </div>
-
-          <div class="p-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-xs text-slate-400">
-            <i class="fa-solid fa-money-bill-wave text-amber-400"></i> <strong>Dinheiro:</strong> Entregar diretamente para a Tia Rafa no embarque.
-          </div>
-
-          <a href="${linkCartaoGlobal}" target="_blank" class="block w-full py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-bold text-xs rounded-xl transition-all">
-            <i class="fa-solid fa-credit-card"></i> Pagar no Cartão de Crédito/Débito
-          </a>
+        <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
+          <span class="text-xs font-bold text-slate-300">Status de Transporte Hoje:</span>
+          <span class="px-3 py-1.5 rounded-xl text-xs font-bold ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white shadow-lg border border-rose-400'}">
+            ${vaiHoje ? '🟢 Confirmado (Vai Hoje)' : '🔴 Ausente Informado'}
+          </span>
         </div>
-      ` : `
-        <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-semibold text-center">
-          ✓ Obrigado! A mensalidade deste mês está quitada.
+      </div>
+    `;
+  }
+
+  // CONTEÚDO DA ABA 2: MENSALIDADE DA CRIANÇA
+  if (abaFin) {
+    abaFin.innerHTML = `
+      <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
+        <div class="flex justify-between items-center">
+          <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mensalidade Escolar</h4>
+          <span class="text-xs font-bold ${stPag === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stPag === 'Pago' ? '🟢 Quitado' : '🔴 Pendente'}</span>
         </div>
-      `}
-    </div>
-  `;
+
+        <div class="flex justify-between items-baseline">
+          <p class="text-2xl font-extrabold text-white">R$ ${val.toFixed(2)}</p>
+          <p class="text-xs text-slate-400">Vencimento: Dia ${venc}</p>
+        </div>
+
+        ${stPag !== 'Pago' ? `
+          <div class="space-y-3 pt-2">
+            <div class="p-3 bg-teal-950/40 border border-teal-500/30 rounded-xl space-y-1.5">
+              <p class="text-xs font-bold text-teal-300"><i class="fa-brands fa-pix"></i> Pagamento via PIX</p>
+              <p class="text-xs font-mono bg-slate-900 p-2 rounded border border-slate-700 text-teal-200 select-all">${pixChaveGlobal}</p>
+            </div>
+
+            <div class="p-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-xs text-slate-400">
+              <i class="fa-solid fa-money-bill-wave text-amber-400"></i> <strong>Dinheiro:</strong> Entregar diretamente para a Tia Rafa no embarque.
+            </div>
+
+            <a href="${linkCartaoGlobal}" target="_blank" class="block w-full py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-bold text-xs rounded-xl transition-all">
+              <i class="fa-solid fa-credit-card"></i> Pagar no Cartão de Crédito/Débito
+            </a>
+          </div>
+        ` : `
+          <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-semibold text-center">
+            ✓ Obrigado! A mensalidade deste mês está quitada.
+          </div>
+        `}
+      </div>
+    `;
+  }
 
   container.classList.remove("hidden");
 }
