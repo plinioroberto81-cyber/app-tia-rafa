@@ -312,9 +312,21 @@ function toggleMapaRotaRafa() {
   }
 }
 
-function restaurarSessaoAnterior() {
+async function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
   if (!roleSalva) return;
+
+  // Se o perfil salvo for Tia Rafa ou Admin, confirma se o token do Supabase ainda é válido
+  if (roleSalva === "rafa" || roleSalva === "admin") {
+    if (!supabaseClient) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    
+    // Se a sessão expirou ou o usuário deslogou, não entra automaticamente
+    if (!session) {
+      localStorage.removeItem("app_role");
+      return;
+    }
+  }
 
   currentRole = roleSalva;
   entrarPerfil(roleSalva, true);
