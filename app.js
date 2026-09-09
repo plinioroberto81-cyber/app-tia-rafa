@@ -25,6 +25,8 @@ let markerVanAdmin = null;
 let mapRafa = null;
 let markerVanRafa = null;
 
+let autoRefreshInterval = null;
+
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
 // CONTROLE DE MODAIS CUSTOMIZADOS (PADRÃO VISUAL DO APP)
@@ -131,6 +133,17 @@ document.addEventListener("DOMContentLoaded", () => {
     carregarGpsAdmin();
     carregarGpsRafa();
   }, 5000);
+
+  // AUTOMATIZADOR DE ATUALIZAÇÃO EM TEMPO REAL (POLLING A CADA 4 SEGUNDOS)
+  setInterval(() => {
+    if (currentRole === "pais") {
+      carregarDadosPais(true);
+    } else if (currentRole === "rafa") {
+      carregarDadosRafa(true);
+    } else if (currentRole === "admin") {
+      carregarDadosAdmin(true);
+    }
+  }, 4000);
 
   btnTopBack?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
@@ -277,7 +290,31 @@ document.addEventListener("DOMContentLoaded", () => {
   
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
+
+  // RESTAURAR SESSÃO AO RECARREGAR A PÁGINA
+  restaurarSessaoAnterior();
 });
+
+// FUNÇÃO PARA RESTAURAR A SESSÃO QUANDO RECARREGAR A PÁGINA
+function restaurarSessaoAnterior() {
+  const roleSalva = localStorage.getItem("app_role");
+  if (!roleSalva) return;
+
+  currentRole = roleSalva;
+  entrarPerfil(roleSalva, true);
+
+  if (roleSalva === "pais") {
+    const emailSalvo = localStorage.getItem("app_pai_email");
+    if (emailSalvo) {
+      setTimeout(() => {
+        const select = document.getElementById("select-email-pais");
+        if (select) select.value = emailSalvo;
+        document.getElementById("box-pin-pais")?.classList.add("hidden");
+        renderizarPaisFilho(emailSalvo);
+      }, 500);
+    }
+  }
+}
 
 // AUTENTICAÇÃO OFICIAL SUPABASE
 async function efetuarLoginComSupabase() {
@@ -317,6 +354,8 @@ async function logout() {
   if (supabaseClient) {
     await supabaseClient.auth.signOut();
   }
+  localStorage.removeItem("app_role");
+  localStorage.removeItem("app_pai_email");
   voltarHome();
 }
 
@@ -669,7 +708,6 @@ function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
 
-  // Filtra apenas alunos aprovados e que VÃO HOJE
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao && a.vai_hoje !== false);
   let filtrados = aprovados;
 
@@ -917,6 +955,7 @@ function validarLoginPinPais() {
   const pinCorreto = aluno.pin_pais || "1234";
 
   if (pinInput === pinCorreto) {
+    localStorage.setItem("app_pai_email", emailSelect);
     document.getElementById("box-pin-pais")?.classList.add("hidden");
     renderizarPaisFilho(emailSelect);
   } else {
@@ -1077,7 +1116,7 @@ function toggleBoxHorarioEspecial(id) {
   }
 }
 
-// MARCAR AUSÊNCIA DENTRO DA ABA DE EXCEÇÕES (ATUALIZA PAIS E TIA RAFA)
+// MARCAR AUSÊNCIA DENTRO DA ABA DE EXCEÇÕES
 async function marcarAusenciaPais(id, nomeAluno) {
   if (!supabaseClient) return;
 
@@ -1095,7 +1134,6 @@ async function marcarAusenciaPais(id, nomeAluno) {
 
   await mostrarAlertaCustom(`✓ Avisado com sucesso! A Tia Rafa já sabe que ${nomeAluno} não irá hoje.`, "Ausência Confirmada");
   
-  // Atualiza cache e re-renderiza se a Tia Rafa estiver navegando
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
 
@@ -1103,7 +1141,7 @@ async function marcarAusenciaPais(id, nomeAluno) {
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-// SALVAR HORÁRIO ESPECIAL DENTRO DA ABA (ATUALIZA PAIS E TIA RAFA)
+// SALVAR HORÁRIO ESPECIAL DENTRO DA ABA
 async function salvarHorarioEspecialPais(id) {
   if (!supabaseClient) return;
 
@@ -1136,7 +1174,7 @@ async function salvarHorarioEspecialPais(id) {
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-// RESTAURAR PADRÃO FIXO (ATUALIZA PAIS E TIA RAFA)
+// RESTAURAR PADRÃO FIXO
 async function restaurarPadraoPais(id) {
   if (!supabaseClient) return;
 
@@ -1418,10 +1456,10 @@ async function salvarEdicaoAluno(e) {
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
-async function carregarDadosAdmin() {
+async function carregarDadosAdmin(isBackground = false) {
   if (!supabaseClient) return;
 
-  await carregarConfiguracoesGlobais();
+  if (!isBackground) await carregarConfiguracoesGlobais();
 
   const { data } = await supabaseClient.from('alunos').select('*').order('nome', { ascending: true });
   const container = document.getElementById("lista-alunos-admin");
@@ -1474,7 +1512,7 @@ async function carregarDadosAdmin() {
     `;
   }).join('');
 
-  carregarGpsAdmin();
+  if (!isBackground) carregarGpsAdmin();
   renderizarFinanceiroAdmin();
 }
 
@@ -1672,7 +1710,10 @@ function voltarHome() {
   resetLogin();
 }
 
-function entrarPerfil(role) {
+function entrarPerfil(role, isRestoring = false) {
+  currentRole = role;
+  localStorage.setItem("app_role", role);
+
   loginSection?.classList.add("hidden");
   bottomBar?.classList.remove("hidden");
   btnTopBack?.classList.remove("hidden");
@@ -1723,11 +1764,11 @@ async function limparAvisos() {
   verificarAlertaGlobal();
 }
 
-async function carregarDadosPais() {
+async function carregarDadosPais(isBackground = false) {
   if (!supabaseClient) return;
   const select = document.getElementById("select-email-pais");
   
-  await carregarConfiguracoesGlobais();
+  if (!isBackground) await carregarConfiguracoesGlobais();
 
   const { data } = await supabaseClient.from('alunos').select('*');
   if (!data) return;
@@ -1736,16 +1777,21 @@ async function carregarDadosPais() {
   const aprovados = data.filter(a => !a.pendente_aprovacao);
   const emailsUnicos = [...new Set(aprovados.map(a => a.email_mae).filter(Boolean))];
   
-  if (select) {
+  if (select && select.children.length <= 1) {
     select.innerHTML = '<option value="">-- Selecione seu E-mail --</option>' + 
       emailsUnicos.map(e => `<option value="${e}">${e}</option>`).join('');
   }
+
+  const emailSelecionado = select?.value || localStorage.getItem("app_pai_email");
+  if (emailSelecionado) {
+    renderizarPaisFilho(emailSelecionado);
+  }
 }
 
-async function carregarDadosRafa() {
+async function carregarDadosRafa(isBackground = false) {
   if (!supabaseClient) return;
 
-  await carregarConfiguracoesGlobais();
+  if (!isBackground) await carregarConfiguracoesGlobais();
 
   const { data } = await supabaseClient.from('alunos').select('*');
   if (!data) return;
