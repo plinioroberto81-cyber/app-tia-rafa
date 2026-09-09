@@ -609,12 +609,13 @@ function toggleMapaAdmin() {
   }
 }
 
+// 1. TRANSMISSÃO DO GPS
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
     if ("geolocation" in navigator) {
-      if (btn) btn.innerHTML = "🟡 Enviando ao Banco...";
-      
+      if (btn) btn.innerHTML = "🟡 Obtendo Sinal...";
+
       gpsWatchId = navigator.geolocation.watchPosition(
         async (pos) => {
           const lat = pos.coords.latitude;
@@ -622,11 +623,15 @@ function alternarTransmissaoGps() {
           const precisao = pos.coords.accuracy;
 
           if (supabaseClient) {
-            await supabaseClient.from('alertas').insert([{ 
-              tipo: 'GPS_VAN', 
-              mensagem: `${lat},${lng}`, 
-              ativo: true 
-            }]);
+            try {
+              await supabaseClient.from('alertas').insert([{ 
+                tipo: 'GPS_VAN', 
+                mensagem: `${lat},${lng}`, 
+                ativo: true 
+              }]);
+            } catch (err) {
+              console.error("Erro ao enviar coordenadas:", err);
+            }
           }
           
           isGpsTransmitting = true;
@@ -636,6 +641,7 @@ function alternarTransmissaoGps() {
           }
         },
         (err) => {
+          console.error("Erro no sensor GPS:", err);
           if (btn) {
             btn.innerHTML = "⚪ GPS Desligado";
             btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
@@ -657,6 +663,7 @@ function alternarTransmissaoGps() {
   }
 }
 
+// 2. RECEBIMENTO NO MAPA TIA RAFA
 async function carregarGpsRafa() {
   if (currentRole !== "rafa" || !supabaseClient) return;
 
@@ -720,6 +727,7 @@ async function carregarGpsRafa() {
   }
 }
 
+// 3. RECEBIMENTO NO MAPA ADMIN
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -782,7 +790,6 @@ async function carregarGpsAdmin() {
     console.error("Erro mapa admin:", e);
   }
 }
-
 /* ==========================================================================
    7. MÓDULO ÁREA DOS PAIS
    ========================================================================== */
