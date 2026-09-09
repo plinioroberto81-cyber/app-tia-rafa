@@ -1,4 +1,7 @@
-// CONEXAO SUPABASE
+/* ==========================================================================
+   1. CONFIGURAÇÕES, BANCO DE DADOS (SUPABASE) & VARIÁVEIS GLOBAIS
+   ========================================================================== */
+
 const SUPABASE_URL = "https://sxrexcmtanpwljimfqpk.supabase.co";
 const SUPABASE_KEY = "sb_publishable_NM0fvyA5X1zlFVy39gvrYA_pyTXBisb";
 
@@ -7,6 +10,7 @@ if (window.supabase && window.supabase.createClient) {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
+// Estados Globais da Aplicação
 let pixChaveGlobal = "11999998888";
 let linkCartaoGlobal = "https://mpago.la/";
 let currentRole = null;
@@ -15,9 +19,12 @@ let modoRotaAtual = "IDA";
 let filtroTurnoAtual = "Todos";
 let filtroFinStatus = "Todos";
 let filtroFinAdminStatus = "Todos";
+
+// Áudio / Sirene
 let audioContext = null;
 let audioOscillator = null;
 
+// GPS & Mapas
 let gpsWatchId = null;
 let isGpsTransmitting = false;
 let mapAdmin = null;
@@ -25,9 +32,15 @@ let markerVanAdmin = null;
 let mapRafa = null;
 let markerVanRafa = null;
 
+// Elementos Globais da Interface
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
+/* ==========================================================================
+   2. INICIALIZAÇÃO & EVENTOS DO SISTEMA (MAIN)
+   ========================================================================== */
+
 document.addEventListener("DOMContentLoaded", async () => {
+  // Mapeamento de Elementos Fixos
   loginSection = document.getElementById("login-section");
   authForm = document.getElementById("auth-form");
   authTitle = document.getElementById("auth-title");
@@ -36,10 +49,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   bottomBar = document.getElementById("bottom-bar");
   btnTopBack = document.getElementById("btn-top-back");
 
+  // Inicializações Iniciais
   inicializarTema();
   verificarAlertaGlobal();
   carregarConfiguracoesGlobais();
   
+  // Temporizadores do Sistema (GPS, Alertas e Atualização automática)
   setInterval(verificarEmergenciaAdmin, 3000);
   setInterval(() => {
     carregarGpsAdmin();
@@ -56,38 +71,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }, 4000);
 
+  // Escutadores de Eventos Globais
   btnTopBack?.addEventListener("click", voltarHome);
   document.getElementById("btn-back")?.addEventListener("click", resetLogin);
   document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
   document.getElementById("btn-theme-toggle")?.addEventListener("click", alternarTema);
 
+  // Botões de Entrada nos Perfis
   document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
   document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
-
   document.getElementById("btn-login-submit")?.addEventListener("click", efetuarLoginComSupabase);
 
+  // GPS & Mapas
   document.getElementById("btn-toggle-gps")?.addEventListener("click", alternarTransmissaoGps);
-
-  // BOTÕES DE EXIBIR/OCULTAR MAPA
   document.getElementById("btn-toggle-mapa-rafa")?.addEventListener("click", toggleMapaRafa);
   document.getElementById("btn-toggle-mapa-admin")?.addEventListener("click", toggleMapaAdmin);
 
-  // BOTÕES DE SANFONA PARA FORMULÁRIOS DE CADASTRO
+  // Sanfonas dos Formulários de Cadastro
   document.getElementById("btn-toggle-form-rafa")?.addEventListener("click", () => toggleFormCadastro('rafa'));
   document.getElementById("btn-toggle-form-admin")?.addEventListener("click", () => toggleFormCadastro('admin'));
 
+  // Emergências & Modais
   document.getElementById("btn-disparar-emergencia")?.addEventListener("click", dispararEmergenciaRafa);
   document.getElementById("btn-desativar-emergencia")?.addEventListener("click", atenderEmergenciaAdmin);
-
   document.getElementById("btn-fechar-modal-edit")?.addEventListener("click", () => {
     document.getElementById("modal-editar-aluno")?.classList.add("hidden");
   });
   document.getElementById("form-editar-aluno")?.addEventListener("submit", salvarEdicaoAluno);
 
+  // Configurações Globais
   document.getElementById("btn-salvar-configs")?.addEventListener("click", () => salvarConfigsGlobais('admin'));
   document.getElementById("btn-salvar-configs-rafa")?.addEventListener("click", () => salvarConfigsGlobais('rafa'));
 
+  // Auto Cadastro dos Pais
   document.getElementById("btn-abrir-auto-cadastro")?.addEventListener("click", () => {
     document.getElementById("form-auto-cadastro-container")?.classList.remove("hidden");
   });
@@ -96,6 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
 
+  // Seleção e Login por PIN na Área dos Pais
   document.getElementById("select-email-pais")?.addEventListener("change", (e) => {
     const val = e.target.value;
     const boxPin = document.getElementById("box-pin-pais");
@@ -114,10 +132,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.getElementById("btn-entrar-pais-pin")?.addEventListener("click", validarLoginPinPais);
 
+  // Navegação Rota (Ida / Volta)
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
-  // NAVEGAÇÃO DE ABAS TIA RAFA
+  // Navegação por Abas (Tia Rafa)
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
     document.getElementById("aba-passageiros-rafa")?.classList.add("hidden");
@@ -147,7 +166,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderizarFinanceiroRafa();
   });
 
-  // NAVEGAÇÃO DE ABAS ADMIN
+  // Navegação por Abas (Admin)
   document.getElementById("tab-admin-alunos")?.addEventListener("click", () => {
     document.getElementById("aba-admin-alunos")?.classList.remove("hidden");
     document.getElementById("aba-admin-financeiro")?.classList.add("hidden");
@@ -163,6 +182,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderizarFinanceiroAdmin();
   });
 
+  // Filtros
   document.getElementById("btn-filtro-todos")?.addEventListener("click", () => aplicarFiltroTurno("Todos"));
   document.getElementById("btn-filtro-manha7")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (07h às 11h)"));
   document.getElementById("btn-filtro-manha8")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (08h às 12h)"));
@@ -176,13 +196,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-admin-fin-pendentes")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pendente"));
   document.getElementById("btn-admin-fin-pagos")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pago"));
 
+  // Exportar Relatórios CSV
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
-  // MURAL DE AVISOS
+  // Mural de Avisos
   document.getElementById("btn-aviso-transito")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
   document.getElementById("btn-aviso-transito-rafa")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
-
   document.getElementById("btn-aviso-chuva")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
   document.getElementById("btn-aviso-chuva-rafa")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
 
@@ -198,16 +218,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-limpar-aviso")?.addEventListener("click", limparAvisos);
   document.getElementById("btn-limpar-aviso-rafa")?.addEventListener("click", limparAvisos);
 
+  // Formulários de Cadastro de Passageiro
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("form-cadastrar-aluno-rafa")?.addEventListener("submit", cadastrarAlunoRafa);
   
+  // Encerrar / Fechar Mês
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 
+  // Restauração de Sessão Salva
   await restaurarSessaoAnterior();
 });
 
-// ATUALIZA O INDICADOR DE PERFIL NO CABEÇALHO
+/* ==========================================================================
+   3. INTERFACE, TEMA CLARO/ESCURO & COMPONENTES VISUAIS
+   ========================================================================== */
+
+// Atualiza o Indicador/Badge no Cabeçalho
 function atualizarBadgeHeader(role) {
   const badge = document.getElementById("badge-perfil-header");
   if (!badge) return;
@@ -231,41 +258,34 @@ function atualizarBadgeHeader(role) {
   }
 }
 
-// ALTERNAR VISIBILIDADE DO MAPA TIA RAFA
-function toggleMapaRafa() {
-  const wrapper = document.getElementById("wrapper-mapa-rafa");
-  const btn = document.getElementById("btn-toggle-mapa-rafa");
-  if (!wrapper || !btn) return;
-
-  if (wrapper.classList.contains("hidden")) {
-    wrapper.classList.remove("hidden");
-    btn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Ocultar Mapa`;
-    carregarGpsRafa();
-    setTimeout(() => { if (mapRafa) mapRafa.invalidateSize(); }, 300);
+// Alternância de Tema Claro e Escuro
+function inicializarTema() {
+  const temaSalvo = localStorage.getItem("theme");
+  const themeIcon = document.getElementById("theme-icon");
+  if (temaSalvo === "light") {
+    document.documentElement.classList.add("light-mode");
+    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-xs";
   } else {
-    wrapper.classList.add("hidden");
-    btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Exibir Mapa`;
+    document.documentElement.classList.remove("light-mode");
+    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-xs";
   }
 }
 
-// ALTERNAR VISIBILIDADE DO MAPA ADMIN
-function toggleMapaAdmin() {
-  const wrapper = document.getElementById("wrapper-mapa-admin");
-  const btn = document.getElementById("btn-toggle-mapa-admin");
-  if (!wrapper || !btn) return;
-
-  if (wrapper.classList.contains("hidden")) {
-    wrapper.classList.remove("hidden");
-    btn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Ocultar Mapa`;
-    carregarGpsAdmin();
-    setTimeout(() => { if (mapAdmin) mapAdmin.invalidateSize(); }, 300);
+function alternarTema() {
+  const htmlEl = document.documentElement;
+  const themeIcon = document.getElementById("theme-icon");
+  if (htmlEl.classList.contains("light-mode")) {
+    htmlEl.classList.remove("light-mode");
+    localStorage.setItem("theme", "dark");
+    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-xs";
   } else {
-    wrapper.classList.add("hidden");
-    btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Exibir Mapa`;
+    htmlEl.classList.add("light-mode");
+    localStorage.setItem("theme", "light");
+    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-xs";
   }
 }
 
-// ALTERNAR FORMULÁRIOS DE CADASTRO (SANFONA)
+// Efeito Sanfona nos Formulários de Cadastro
 function toggleFormCadastro(role) {
   const container = role === 'rafa' ? document.getElementById("container-form-cadastrar-rafa") : document.getElementById("container-form-cadastrar-admin");
   const icon = role === 'rafa' ? document.getElementById("icon-toggle-form-rafa") : document.getElementById("icon-toggle-form-admin");
@@ -281,53 +301,88 @@ function toggleFormCadastro(role) {
   }
 }
 
-// RESETAR STATUS DO DIA
-async function resetarStatusDoDia() {
+// Avisos Globais do Sistema
+async function verificarAlertaGlobal() {
   if (!supabaseClient) return;
-  const res = confirm("Deseja resetar a chamada de todos os alunos para 'Em Casa' e restaurar a presença normal do dia?");
-  if (!res) return;
-
-  await supabaseClient.from('alunos').update({
-    status: 'Em Casa',
-    levado_hoje: false,
-    vai_hoje: true,
-    tem_horario_especial: false,
-    horario_busca_hoje: "",
-    horario_volta_hoje: ""
-  }).neq('id', '0');
-
-  alert("✓ Chamada do dia resetada com sucesso!");
-  if (currentRole === 'rafa') carregarDadosRafa();
-  if (currentRole === 'admin') carregarDadosAdmin();
+  const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN').order('id', { ascending: false }).limit(1);
+  const banner = document.getElementById("banner-alerta-global");
+  const txt = document.getElementById("texto-alerta-global");
+  
+  if (data && data.length > 0) {
+    if (txt) txt.innerText = data[0].mensagem;
+    banner?.classList.remove("hidden");
+  } else {
+    banner?.classList.add("hidden");
+  }
 }
 
-async function restaurarSessaoAnterior() {
-  const roleSalva = localStorage.getItem("app_role");
-  if (!roleSalva) return;
+async function dispararAviso(msg) {
+  if (!supabaseClient) return;
+  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
+  await supabaseClient.from('alertas').insert([{ tipo: 'Aviso', mensagem: msg, ativo: true }]);
+  alert("Aviso publicado!");
+  verificarAlertaGlobal();
+}
 
-  if (roleSalva === "rafa" || roleSalva === "admin") {
-    if (!supabaseClient) return;
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-      localStorage.removeItem("app_role");
-      return;
-    }
+async function limparAvisos() {
+  if (!supabaseClient) return;
+  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
+  alert("Avisos encerrados!");
+  verificarAlertaGlobal();
+}
+
+/* ==========================================================================
+   4. AUTENTICAÇÃO, TROCA DE PERFIL E GERENCIAMENTO DE SESSÃO
+   ========================================================================== */
+
+function mostrarFormLogin(role) {
+  currentRole = role;
+  if (authTitle) authTitle.innerText = role === "rafa" ? "Senha Tia Rafa" : "Senha Admin";
+  if (authForm) authForm.classList.remove("hidden");
+  if (mainButtons) mainButtons.classList.add("hidden");
+}
+
+function resetLogin() {
+  if (authForm) authForm.classList.add("hidden");
+  if (mainButtons) mainButtons.className = "space-y-3";
+  if (inputPassword) inputPassword.value = "";
+}
+
+function entrarPerfil(role, isRestoring = false) {
+  currentRole = role;
+  localStorage.setItem("app_role", role);
+
+  loginSection?.classList.add("hidden");
+  bottomBar?.classList.remove("hidden");
+  btnTopBack?.classList.remove("hidden");
+
+  atualizarBadgeHeader(role);
+
+  if (role === "pais") {
+    document.getElementById("dashboard-pais")?.classList.remove("hidden");
+    carregarDadosPais();
+  } else if (role === "rafa") {
+    document.getElementById("dashboard-rafa")?.classList.remove("hidden");
+    carregarDadosRafa();
+    if (!isGpsTransmitting) alternarTransmissaoGps();
+  } else if (role === "admin") {
+    document.getElementById("dashboard-admin")?.classList.remove("hidden");
+    carregarDadosAdmin();
   }
+}
 
-  currentRole = roleSalva;
-  entrarPerfil(roleSalva, true);
-
-  if (roleSalva === "pais") {
-    const emailSalvo = localStorage.getItem("app_pai_email");
-    if (emailSalvo) {
-      setTimeout(() => {
-        const select = document.getElementById("select-email-pais");
-        if (select) select.value = emailSalvo;
-        document.getElementById("box-pin-pais")?.classList.add("hidden");
-        renderizarPaisFilho(emailSalvo);
-      }, 500);
-    }
-  }
+function voltarHome() {
+  document.getElementById("dashboard-pais")?.classList.add("hidden");
+  document.getElementById("dashboard-rafa")?.classList.add("hidden");
+  document.getElementById("dashboard-admin")?.classList.add("hidden");
+  bottomBar?.classList.add("hidden");
+  btnTopBack?.classList.add("hidden");
+  loginSection?.classList.remove("hidden");
+  
+  if (isGpsTransmitting) alternarTransmissaoGps();
+  pararSomSirene();
+  resetLogin();
+  atualizarBadgeHeader(null);
 }
 
 async function efetuarLoginComSupabase() {
@@ -379,6 +434,39 @@ async function logout() {
   currentRole = null;
   voltarHome();
 }
+
+async function restaurarSessaoAnterior() {
+  const roleSalva = localStorage.getItem("app_role");
+  if (!roleSalva) return;
+
+  if (roleSalva === "rafa" || roleSalva === "admin") {
+    if (!supabaseClient) return;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+      localStorage.removeItem("app_role");
+      return;
+    }
+  }
+
+  currentRole = roleSalva;
+  entrarPerfil(roleSalva, true);
+
+  if (roleSalva === "pais") {
+    const emailSalvo = localStorage.getItem("app_pai_email");
+    if (emailSalvo) {
+      setTimeout(() => {
+        const select = document.getElementById("select-email-pais");
+        if (select) select.value = emailSalvo;
+        document.getElementById("box-pin-pais")?.classList.add("hidden");
+        renderizarPaisFilho(emailSalvo);
+      }, 500);
+    }
+  }
+}
+
+/* ==========================================================================
+   5. CONFIGURAÇÕES GLOBAIS DE PAGAMENTO (PIX & CARTÃO)
+   ========================================================================== */
 
 async function carregarConfiguracoesGlobais() {
   if (!supabaseClient) return;
@@ -435,412 +523,88 @@ async function salvarConfigsGlobais(origem) {
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
-async function cadastrarAlunoRafa(e) {
-  e.preventDefault();
-  if (!supabaseClient) return;
+/* ==========================================================================
+   6. GEOLOCALIZAÇÃO (GPS) E MAPAS
+   ========================================================================== */
 
-  const emailMae = document.getElementById("add-email-mae-rafa")?.value.trim() || "";
+function toggleMapaRafa() {
+  const wrapper = document.getElementById("wrapper-mapa-rafa");
+  const btn = document.getElementById("btn-toggle-mapa-rafa");
+  if (!wrapper || !btn) return;
 
-  const novoAluno = {
-    nome: document.getElementById("add-nome-rafa").value,
-    turno: document.getElementById("add-turno-rafa").value,
-    whatsapp: document.getElementById("add-wsp-rafa").value,
-    horario_busca: document.getElementById("add-horario-busca-rafa").value,
-    horario_escola: document.getElementById("add-horario-escola-rafa").value,
-    endereco_casa: document.getElementById("add-endereco-casa-rafa").value,
-    escola: document.getElementById("add-escola-rafa").value,
-    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
-    pin_pais: document.getElementById("add-pin-rafa").value || "1234",
-    valor: parseFloat(document.getElementById("add-valor-rafa").value),
-    vencimento: parseInt(document.getElementById("add-vencimento-rafa").value),
-    status: 'Em Casa',
-    status_pagamento: 'Pendente',
-    vai_hoje: true,
-    levado_hoje: false,
-    tem_horario_especial: false,
-    horario_busca_hoje: "",
-    horario_volta_hoje: "",
-    pendente_aprovacao: false
-  };
-
-  await supabaseClient.from('alunos').insert([novoAluno]);
-  alert("Aluno cadastrado com sucesso!");
-  document.getElementById("form-cadastrar-aluno-rafa").reset();
-  toggleFormCadastro('rafa');
-  carregarDadosRafa();
-}
-
-async function cadastrarAlunoAdmin(e) {
-  e.preventDefault();
-  if (!supabaseClient) return;
-
-  const emailMae = document.getElementById("add-email-mae")?.value.trim() || "";
-
-  const novoAluno = {
-    nome: document.getElementById("add-nome").value,
-    turno: document.getElementById("add-turno").value,
-    whatsapp: document.getElementById("add-wsp").value,
-    horario_busca: document.getElementById("add-horario-busca").value,
-    horario_escola: document.getElementById("add-horario-escola").value,
-    endereco_casa: document.getElementById("add-endereco-casa").value,
-    escola: document.getElementById("add-escola").value,
-    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
-    pin_pais: document.getElementById("add-pin").value || "1234",
-    valor: parseFloat(document.getElementById("add-valor").value),
-    vencimento: parseInt(document.getElementById("add-vencimento").value),
-    status: 'Em Casa',
-    status_pagamento: 'Pendente',
-    vai_hoje: true,
-    levado_hoje: false,
-    tem_horario_especial: false,
-    horario_busca_hoje: "",
-    horario_volta_hoje: "",
-    pendente_aprovacao: false
-  };
-
-  await supabaseClient.from('alunos').insert([novoAluno]);
-  alert("Aluno cadastrado com sucesso!");
-  document.getElementById("form-cadastrar-aluno").reset();
-  toggleFormCadastro('admin');
-  carregarDadosAdmin();
-}
-
-async function enviarAutoCadastroPais(e) {
-  e.preventDefault();
-  if (!supabaseClient) return;
-
-  const nomeEl = document.getElementById("auto-nome");
-  const turnoEl = document.getElementById("auto-turno");
-  const wspEl = document.getElementById("auto-wsp");
-  const endEl = document.getElementById("auto-endereco-casa");
-  const escolaEl = document.getElementById("auto-escola");
-  const emailEl = document.getElementById("auto-email-mae");
-  const pinEl = document.getElementById("auto-pin");
-
-  const pin = pinEl ? pinEl.value.trim() : "";
-  if (pin.length !== 4 || isNaN(pin)) {
-    alert("O PIN de acesso deve conter exatamente 4 números.");
-    if (pinEl) pinEl.focus();
-    return;
-  }
-
-  const emailValor = emailEl ? emailEl.value.trim().toLowerCase() : "";
-
-  const novoAluno = {
-    nome: nomeEl ? nomeEl.value.trim() : "",
-    turno: turnoEl ? turnoEl.value : "Manhã (07h às 11h)",
-    whatsapp: wspEl ? wspEl.value.trim() : "",
-    horario_escola: turnoEl ? turnoEl.value : "",
-    horario_busca: "",
-    endereco_casa: endEl ? endEl.value.trim() : "",
-    escola: escolaEl ? escolaEl.value.trim() : "",
-    email_mae: emailValor || `aluno_${Date.now()}@transporte.local`,
-    pin_pais: pin,
-    valor: 180,
-    vencimento: 10,
-    status: 'Em Casa',
-    status_pagamento: 'Pendente',
-    vai_hoje: true,
-    levado_hoje: false,
-    tem_horario_especial: false,
-    horario_busca_hoje: "",
-    horario_volta_hoje: "",
-    pendente_aprovacao: true
-  };
-
-  const { error } = await supabaseClient.from('alunos').insert([novoAluno]);
-
-  if (error) {
-    alert("Erro ao enviar cadastro: " + error.message);
-    return;
-  }
-
-  alert("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca e aprovará o acesso.");
-  document.getElementById("form-auto-cadastro-pais")?.reset();
-  document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
-  carregarDadosPais();
-}
-
-async function aprovarCadastroAluno(id) {
-  if (!supabaseClient) return;
-
-  const inputBusca = document.getElementById(`hor-busca-aprov-${id}`);
-  const inputVal = document.getElementById(`val-aprov-${id}`);
-  const inputVenc = document.getElementById(`venc-aprov-${id}`);
-
-  const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
-  
-  if (!horarioBusca) {
-    alert("Por favor, preencha o horário de busca da van antes de aprovar!");
-    if (inputBusca) inputBusca.focus();
-    return;
-  }
-
-  const val = (inputVal && inputVal.value) ? parseFloat(inputVal.value) : 180;
-  const venc = (inputVenc && inputVenc.value) ? parseInt(inputVenc.value) : 10;
-
-  const { error } = await supabaseClient
-    .from('alunos')
-    .update({ 
-      pendente_aprovacao: false,
-      horario_busca: horarioBusca,
-      valor: val,
-      vencimento: venc
-    })
-    .eq('id', id);
-
-  if (error) {
-    alert("Erro ao aprovar: " + error.message);
-    return;
-  }
-
-  alert("✓ Cadastro aprovado e horário definido!");
-  if (currentRole === 'rafa') carregarDadosRafa();
-  if (currentRole === 'admin') carregarDadosAdmin();
-}
-
-async function deletarAlunoAdmin(id) {
-  if (!supabaseClient) return;
-
-  const confirmou = confirm("Deseja realmente apagar este cadastro?");
-  if (confirmou) {
-    const { error } = await supabaseClient.from('alunos').delete().eq('id', id);
-
-    if (error) {
-      alert("Erro ao excluir: " + error.message);
-      return;
-    }
-
-    alert("Cadastro removido!");
-    alunosCache = alunosCache.filter(a => a.id != id);
-    renderizarPendentesAprovacao();
-
-    if (currentRole === 'rafa') carregarDadosRafa();
-    if (currentRole === 'admin') carregarDadosAdmin();
-  }
-}
-
-function renderizarPendentesAprovacao() {
-  const pendentes = alunosCache.filter(a => a.pendente_aprovacao === true);
-
-  const containerRafa = document.getElementById("container-pendentes-rafa");
-  const listaRafa = document.getElementById("lista-pendentes-rafa");
-  const countRafa = document.getElementById("badge-pendentes-count-rafa");
-
-  const containerAdmin = document.getElementById("container-pendentes-admin");
-  const listaAdmin = document.getElementById("lista-pendentes-admin");
-  const countAdmin = document.getElementById("badge-pendentes-count-admin");
-
-  if (pendentes.length === 0) {
-    containerRafa?.classList.add("hidden");
-    containerAdmin?.classList.add("hidden");
-    return;
-  }
-
-  if (countRafa) countRafa.innerText = pendentes.length;
-  if (countAdmin) countAdmin.innerText = pendentes.length;
-
-  const htmlContent = pendentes.map(a => `
-    <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
-      <div class="flex justify-between items-start">
-        <div>
-          <h4 class="text-xs font-bold text-white">${a.nome}</h4>
-          <p class="text-[10px] text-amber-300 font-semibold">${a.escola || '-'} • ${a.turno}</p>
-          <p class="text-[10px] text-slate-400 mt-0.5">Contato: ${a.whatsapp || 'S/ Whats'}</p>
-          <p class="text-[10px] text-slate-400">Endereço: ${a.endereco_casa || '-'}</p>
-        </div>
-      </div>
-
-      <div class="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
-        <div>
-          <label class="text-[10px] text-amber-400 block font-bold">⏰ Horário que vai passar pra buscar:</label>
-          <input type="text" id="hor-busca-aprov-${a.id}" placeholder="Ex: 06:40" class="w-full bg-slate-900 border border-amber-500/50 rounded p-1.5 text-xs text-white font-bold">
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-[9px] text-slate-400 block font-bold">Mensalidade (R$)</label>
-            <input type="number" id="val-aprov-${a.id}" value="${a.valor || 180}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
-          </div>
-          <div>
-            <label class="text-[9px] text-slate-400 block font-bold">Vencimento (Dia)</label>
-            <input type="number" id="venc-aprov-${a.id}" value="${a.vencimento || 10}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
-          </div>
-        </div>
-      </div>
-
-      <div class="flex gap-2">
-        <button onclick="aprovarCadastroAluno('${a.id}')" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
-          ✓ Aprovar & Definir Horário
-        </button>
-        <button onclick="deletarAlunoAdmin('${a.id}')" class="px-3 py-2 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg hover:bg-rose-600 hover:text-white transition-all">
-          ✕ Recusar
-        </button>
-      </div>
-    </div>
-  `).join('');
-
-  if (listaRafa) listaRafa.innerHTML = htmlContent;
-  if (listaAdmin) listaAdmin.innerHTML = htmlContent;
-
-  containerRafa?.classList.remove("hidden");
-  containerAdmin?.classList.remove("hidden");
-}
-
-function alternarModoRota(modo) {
-  modoRotaAtual = modo;
-  const btnIda = document.getElementById("btn-rota-ida");
-  const btnVolta = document.getElementById("btn-rota-volta");
-
-  if (modo === "IDA") {
-    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
-    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+  if (wrapper.classList.contains("hidden")) {
+    wrapper.classList.remove("hidden");
+    btn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Ocultar Mapa`;
+    carregarGpsRafa();
+    setTimeout(() => { if (mapRafa) mapRafa.invalidateSize(); }, 300);
   } else {
-    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
-    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+    wrapper.classList.add("hidden");
+    btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Exibir Mapa`;
   }
-  renderizarRotaRafa();
 }
 
-function renderizarRotaRafa() {
-  const container = document.getElementById("lista-chamada-rafa-cards");
-  if (!container) return;
+function toggleMapaAdmin() {
+  const wrapper = document.getElementById("wrapper-mapa-admin");
+  const btn = document.getElementById("btn-toggle-mapa-admin");
+  if (!wrapper || !btn) return;
 
-  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao && a.vai_hoje !== false);
-  let filtrados = aprovados;
-
-  if (modoRotaAtual === "VOLTA") {
-    filtrados = aprovados.filter(a => a.levado_hoje === true || a.status === 'Na Escola' || a.status === 'Na Van');
+  if (wrapper.classList.contains("hidden")) {
+    wrapper.classList.remove("hidden");
+    btn.innerHTML = `<i class="fa-solid fa-eye-slash"></i> Ocultar Mapa`;
+    carregarGpsAdmin();
+    setTimeout(() => { if (mapAdmin) mapAdmin.invalidateSize(); }, 300);
+  } else {
+    wrapper.classList.add("hidden");
+    btn.innerHTML = `<i class="fa-solid fa-map-location-dot"></i> Exibir Mapa`;
   }
+}
 
-  if (filtroTurnoAtual !== "Todos") {
-    filtrados = filtrados.filter(a => a.turno === filtroTurnoAtual);
-  }
+function alternarTransmissaoGps() {
+  const btn = document.getElementById("btn-toggle-gps");
+  if (!isGpsTransmitting) {
+    if ("geolocation" in navigator) {
+      if (btn) btn.innerHTML = "🟡 Enviando ao Banco...";
+      
+      gpsWatchId = navigator.geolocation.watchPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const precisao = pos.coords.accuracy;
 
-  filtrados.sort((a, b) => {
-    let hA = a.horario_busca || '99:99';
-    let hB = b.horario_busca || '99:99';
-
-    if (modoRotaAtual === "IDA" && a.horario_busca_hoje) hA = a.horario_busca_hoje;
-    if (modoRotaAtual === "IDA" && b.horario_busca_hoje) hB = b.horario_busca_hoje;
-
-    if (modoRotaAtual === "VOLTA" && a.horario_volta_hoje) hA = a.horario_volta_hoje;
-    if (modoRotaAtual === "VOLTA" && b.horario_volta_hoje) hB = b.horario_volta_hoje;
-
-    return hA.localeCompare(hB);
-  });
-
-  if (filtrados.length === 0) {
-    container.innerHTML = `
-      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2">
-        <i class="fa-solid fa-van-shuttle text-2xl text-amber-400"></i>
-        <p class="text-xs font-bold text-white">Nenhum passageiro nesta rota no momento.</p>
-        <p class="text-[10px] text-slate-400">${modoRotaAtual === 'VOLTA' ? 'As crianças trazidas na ida aparecerão automaticamente aqui.' : 'Todos os alunos estão ausentes ou sem rota no momento.'}</p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = filtrados.map(aluno => {
-    const st = aluno.status || 'Em Casa';
-    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
-    const temEspecial = aluno.tem_horario_especial;
-    
-    const horBuscaExibicao = (aluno.horario_busca_hoje) ? `${aluno.horario_busca_hoje} (Especial)` : (aluno.horario_busca || 'S/ hor.');
-    const horVoltaExibicao = (aluno.horario_volta_hoje) ? `${aluno.horario_volta_hoje} (Especial)` : (aluno.horario_escola || '-');
-
-    return `
-      <div class="bg-slate-800/80 border ${temEspecial ? 'border-amber-400 bg-amber-500/10' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 ${temEspecial ? 'bg-amber-400 text-slate-950 font-black' : 'bg-slate-700 text-amber-400 font-bold'} text-xs rounded-lg">
-                ${modoRotaAtual === 'IDA' ? horBuscaExibicao : horVoltaExibicao}
-              </span>
-              <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
-            </div>
-            
-            ${temEspecial ? '<p class="text-[10px] font-bold text-amber-300 mt-1"><i class="fa-solid fa-clock-rotate-left"></i> ⚡ ATENÇÃO: Horário alterado para hoje!</p>' : ''}
-
-            <p class="text-xs text-slate-400 mt-1">${aluno.escola || ''} (${aluno.turno || 'Manhã'})</p>
-            <p class="text-[10px] text-slate-300 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Endereço não informado'}</p>
-          </div>
+          if (supabaseClient) {
+            await supabaseClient.from('alertas').insert([{ 
+              tipo: 'GPS_VAN', 
+              mensagem: `${lat},${lng}`, 
+              ativo: true 
+            }]);
+          }
           
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="abrirModalEditarAluno('${aluno.id}')" class="text-amber-400 text-xs bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️</button>
-            <button onclick="deletarAlunoAdmin('${aluno.id}')" class="text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️</button>
-            ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Em Casa')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Em Casa' ? 'bg-slate-600 text-white' : 'bg-slate-900/60 text-slate-400'}">🏡 Casa</button>
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Van')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Van' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🚌 Na Van</button>
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Escola')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Escola' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🏫 Na Escola</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function renderizarPassageirosGeralRafa() {
-  const container = document.getElementById("lista-passageiros-geral-rafa");
-  const countEl = document.getElementById("count-rafa-alunos");
-  if (!container) return;
-
-  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
-  if (countEl) countEl.innerText = `${aprovados.length} Alunos`;
-
-  if (aprovados.length === 0) {
-    container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum aluno cadastrado.</p>`;
-    return;
+          isGpsTransmitting = true;
+          if (btn) {
+            btn.innerHTML = `🟢 GPS Transmitindo (~${Math.round(precisao)}m)`;
+            btn.className = "px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg transition-all animate-pulse";
+          }
+        },
+        (err) => {
+          if (btn) {
+            btn.innerHTML = "⚪ GPS Desligado";
+            btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
+          }
+          isGpsTransmitting = false;
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    } else {
+      alert("Dispositivo sem suporte a GPS.");
+    }
+  } else {
+    if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
+    isGpsTransmitting = false;
+    if (btn) {
+      btn.innerHTML = "⚪ GPS Desligado";
+      btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
+    }
   }
-
-  container.innerHTML = aprovados.map(a => {
-    const st = a.status || 'Em Casa';
-    const stP = a.status_pagamento || 'Pendente';
-    const vaiHoje = a.vai_hoje !== false;
-
-    return `
-      <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2.5">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="flex items-center gap-2">
-              <h4 class="text-xs font-bold text-white">${a.nome}</h4>
-              <span class="text-[9px] font-bold px-2 py-0.5 rounded-md ${vaiHoje ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
-                ${vaiHoje ? '✓ Vai Hoje' : '✕ Ausente'}
-              </span>
-            </div>
-            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
-            <p class="text-[10px] text-amber-400 font-medium">📍 Busca Casa: ${a.horario_busca || '-'} | Entrada: ${a.horario_escola || '-'}</p>
-            <p class="text-[10px] text-slate-400">Contato: ${a.whatsapp || 'S/ Whats'}</p>
-          </div>
-          <div class="flex gap-1 shrink-0">
-            <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
-            <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️ Deletar</button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
-          <div>
-            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Rota</span>
-            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
-              <option value="Em Casa" ${st === 'Em Casa' ? 'selected' : ''}>🏡 Em Casa</option>
-              <option value="Na Van" ${st === 'Na Van' ? 'selected' : ''}>🚌 Na Van</option>
-              <option value="Na Escola" ${st === 'Na Escola' ? 'selected' : ''}>🏫 Na Escola</option>
-            </select>
-          </div>
-
-          <div>
-            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Financeiro</span>
-            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
-              <option value="Pendente" ${stP === 'Pendente' ? 'selected' : ''}>🔴 Pendente</option>
-              <option value="Pago" ${stP === 'Pago' ? 'selected' : ''}>🟢 Quitado</option>
-            </select>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
 async function carregarGpsRafa() {
@@ -906,16 +670,95 @@ async function carregarGpsRafa() {
   }
 }
 
-async function atualizarStatusRafa(id, st) {
-  if (!supabaseClient) return;
+async function carregarGpsAdmin() {
+  if (currentRole !== "admin" || !supabaseClient) return;
 
-  let updateData = { status: st };
-  if (st === 'Na Van' || st === 'Na Escola') {
-    updateData.levado_hoje = true;
+  const wrapper = document.getElementById("wrapper-mapa-admin");
+  if (wrapper && wrapper.classList.contains("hidden")) return;
+
+  const statusTxt = document.getElementById("txt-status-gps-admin");
+  const containerMapa = document.getElementById("mapa-admin-container");
+  if (!containerMapa) return;
+
+  try {
+    const { data } = await supabaseClient
+      .from('alertas')
+      .select('*')
+      .eq('tipo', 'GPS_VAN')
+      .order('id', { ascending: false })
+      .limit(1);
+
+    let lat = -22.7681; 
+    let lng = -43.5591;
+    let temSinal = false;
+
+    if (data && data.length > 0 && data[0].mensagem) {
+      const coords = data[0].mensagem.split(',');
+      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        lat = parseFloat(coords[0]);
+        lng = parseFloat(coords[1]);
+        temSinal = true;
+      }
+    }
+
+    if (statusTxt) {
+      statusTxt.innerText = temSinal 
+        ? "🟢 Sinal ao Vivo Detectado" 
+        : "⚪ Van Offline";
+    }
+
+    const iconeZafiraGps = L.divIcon({
+      className: 'custom-van-marker',
+      html: `
+        <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
+          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
+        </div>
+      `,
+      iconSize: [50, 50],
+      iconAnchor: [25, 25]
+    });
+
+    if (!mapAdmin && window.L) {
+      mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapAdmin);
+      markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin);
+    } else if (mapAdmin && markerVanAdmin) {
+      markerVanAdmin.setLatLng([lat, lng]);
+      mapAdmin.setView([lat, lng]);
+    }
+
+    setTimeout(() => { if (mapAdmin) mapAdmin.invalidateSize(); }, 300);
+  } catch (e) {
+    console.error("Erro mapa admin:", e);
+  }
+}
+
+/* ==========================================================================
+   7. MÓDULO ÁREA DOS PAIS
+   ========================================================================== */
+
+async function carregarDadosPais(isBackground = false) {
+  if (!supabaseClient) return;
+  const select = document.getElementById("select-email-pais");
+  
+  if (!isBackground) await carregarConfiguracoesGlobais();
+
+  const { data } = await supabaseClient.from('alunos').select('*');
+  if (!data) return;
+  alunosCache = data;
+
+  const aprovados = data.filter(a => !a.pendente_aprovacao);
+  const nomesUnicos = [...new Set(aprovados.map(a => a.nome).filter(Boolean))];
+  
+  if (select && select.children.length <= 1) {
+    select.innerHTML = '<option value="">-- Selecione seu Cadastro --</option>' + 
+      nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
   }
 
-  await supabaseClient.from('alunos').update(updateData).eq('id', id);
-  carregarDadosRafa();
+  const selecionado = select?.value || localStorage.getItem("app_pai_email");
+  if (selecionado) {
+    renderizarPaisFilho(selecionado);
+  }
 }
 
 function validarLoginPinPais() {
@@ -1097,6 +940,62 @@ function toggleBoxHorarioEspecial(id) {
   }
 }
 
+async function enviarAutoCadastroPais(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const nomeEl = document.getElementById("auto-nome");
+  const turnoEl = document.getElementById("auto-turno");
+  const wspEl = document.getElementById("auto-wsp");
+  const endEl = document.getElementById("auto-endereco-casa");
+  const escolaEl = document.getElementById("auto-escola");
+  const emailEl = document.getElementById("auto-email-mae");
+  const pinEl = document.getElementById("auto-pin");
+
+  const pin = pinEl ? pinEl.value.trim() : "";
+  if (pin.length !== 4 || isNaN(pin)) {
+    alert("O PIN de acesso deve conter exatamente 4 números.");
+    if (pinEl) pinEl.focus();
+    return;
+  }
+
+  const emailValor = emailEl ? emailEl.value.trim().toLowerCase() : "";
+
+  const novoAluno = {
+    nome: nomeEl ? nomeEl.value.trim() : "",
+    turno: turnoEl ? turnoEl.value : "Manhã (07h às 11h)",
+    whatsapp: wspEl ? wspEl.value.trim() : "",
+    horario_escola: turnoEl ? turnoEl.value : "",
+    horario_busca: "",
+    endereco_casa: endEl ? endEl.value.trim() : "",
+    escola: escolaEl ? escolaEl.value.trim() : "",
+    email_mae: emailValor || `aluno_${Date.now()}@transporte.local`,
+    pin_pais: pin,
+    valor: 180,
+    vencimento: 10,
+    status: 'Em Casa',
+    status_pagamento: 'Pendente',
+    vai_hoje: true,
+    levado_hoje: false,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: "",
+    pendente_aprovacao: true
+  };
+
+  const { error } = await supabaseClient.from('alunos').insert([novoAluno]);
+
+  if (error) {
+    alert("Erro ao enviar cadastro: " + error.message);
+    return;
+  }
+
+  alert("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca e aprovará o acesso.");
+  document.getElementById("form-auto-cadastro-pais")?.reset();
+  document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
+  carregarDadosPais();
+}
+
 async function marcarAusenciaPais(id, nomeAluno) {
   if (!supabaseClient) return;
 
@@ -1180,144 +1079,346 @@ async function restaurarPadraoPais(id) {
   if (emailSelect) renderizarPaisFilho(emailSelect);
 }
 
-function alternarTransmissaoGps() {
-  const btn = document.getElementById("btn-toggle-gps");
-  if (!isGpsTransmitting) {
-    if ("geolocation" in navigator) {
-      if (btn) btn.innerHTML = "🟡 Enviando ao Banco...";
-      
-      gpsWatchId = navigator.geolocation.watchPosition(
-        async (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          const precisao = pos.coords.accuracy;
+/* ==========================================================================
+   8. MÓDULO PAINEL TIA RAFA (MOTORISTA)
+   ========================================================================== */
 
-          if (supabaseClient) {
-            await supabaseClient.from('alertas').insert([{ 
-              tipo: 'GPS_VAN', 
-              mensagem: `${lat},${lng}`, 
-              ativo: true 
-            }]);
-          }
-          
-          isGpsTransmitting = true;
-          if (btn) {
-            btn.innerHTML = `🟢 GPS Transmitindo (~${Math.round(precisao)}m)`;
-            btn.className = "px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg transition-all animate-pulse";
-          }
-        },
-        (err) => {
-          if (btn) {
-            btn.innerHTML = "⚪ GPS Desligado";
-            btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
-          }
-          isGpsTransmitting = false;
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-      );
-    } else {
-      alert("Dispositivo sem suporte a GPS.");
-    }
+async function carregarDadosRafa(isBackground = false) {
+  if (!supabaseClient) return;
+
+  if (!isBackground) await carregarConfiguracoesGlobais();
+
+  const { data } = await supabaseClient.from('alunos').select('*');
+  if (!data) return;
+  alunosCache = data;
+
+  renderizarPendentesAprovacao();
+  renderizarRotaRafa();
+  renderizarPassageirosGeralRafa();
+  renderizarFinanceiroRafa();
+}
+
+function alternarModoRota(modo) {
+  modoRotaAtual = modo;
+  const btnIda = document.getElementById("btn-rota-ida");
+  const btnVolta = document.getElementById("btn-rota-volta");
+
+  if (modo === "IDA") {
+    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
   } else {
-    if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
-    isGpsTransmitting = false;
-    if (btn) {
-      btn.innerHTML = "⚪ GPS Desligado";
-      btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
-    }
+    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
   }
+  renderizarRotaRafa();
 }
 
-async function carregarGpsAdmin() {
-  if (currentRole !== "admin" || !supabaseClient) return;
+function aplicarFiltroTurno(turno) {
+  filtroTurnoAtual = turno;
+  document.getElementById("btn-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha7").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã (07h às 11h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha8").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã (08h às 12h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-tarde").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Tarde' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  renderizarRotaRafa();
+}
 
-  const wrapper = document.getElementById("wrapper-mapa-admin");
-  if (wrapper && wrapper.classList.contains("hidden")) return;
+function renderizarRotaRafa() {
+  const container = document.getElementById("lista-chamada-rafa-cards");
+  if (!container) return;
 
-  const statusTxt = document.getElementById("txt-status-gps-admin");
-  const containerMapa = document.getElementById("mapa-admin-container");
-  if (!containerMapa) return;
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao && a.vai_hoje !== false);
+  let filtrados = aprovados;
 
-  try {
-    const { data } = await supabaseClient
-      .from('alertas')
-      .select('*')
-      .eq('tipo', 'GPS_VAN')
-      .order('id', { ascending: false })
-      .limit(1);
+  if (modoRotaAtual === "VOLTA") {
+    filtrados = aprovados.filter(a => a.levado_hoje === true || a.status === 'Na Escola' || a.status === 'Na Van');
+  }
 
-    let lat = -22.7681; 
-    let lng = -43.5591;
-    let temSinal = false;
+  if (filtroTurnoAtual !== "Todos") {
+    filtrados = filtrados.filter(a => a.turno === filtroTurnoAtual);
+  }
 
-    if (data && data.length > 0 && data[0].mensagem) {
-      const coords = data[0].mensagem.split(',');
-      if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
-        lat = parseFloat(coords[0]);
-        lng = parseFloat(coords[1]);
-        temSinal = true;
-      }
-    }
+  filtrados.sort((a, b) => {
+    let hA = a.horario_busca || '99:99';
+    let hB = b.horario_busca || '99:99';
 
-    if (statusTxt) {
-      statusTxt.innerText = temSinal 
-        ? "🟢 Sinal ao Vivo Detectado" 
-        : "⚪ Van Offline";
-    }
+    if (modoRotaAtual === "IDA" && a.horario_busca_hoje) hA = a.horario_busca_hoje;
+    if (modoRotaAtual === "IDA" && b.horario_busca_hoje) hB = b.horario_busca_hoje;
 
-    const iconeZafiraGps = L.divIcon({
-      className: 'custom-van-marker',
-      html: `
-        <div style="width:50px; height:50px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:3px; box-shadow:0 6px 16px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;">
-          <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
+    if (modoRotaAtual === "VOLTA" && a.horario_volta_hoje) hA = a.horario_volta_hoje;
+    if (modoRotaAtual === "VOLTA" && b.horario_volta_hoje) hB = b.horario_volta_hoje;
+
+    return hA.localeCompare(hB);
+  });
+
+  if (filtrados.length === 0) {
+    container.innerHTML = `
+      <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2">
+        <i class="fa-solid fa-van-shuttle text-2xl text-amber-400"></i>
+        <p class="text-xs font-bold text-white">Nenhum passageiro nesta rota no momento.</p>
+        <p class="text-[10px] text-slate-400">${modoRotaAtual === 'VOLTA' ? 'As crianças trazidas na ida aparecerão automaticamente aqui.' : 'Todos os alunos estão ausentes ou sem rota no momento.'}</p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtrados.map(aluno => {
+    const st = aluno.status || 'Em Casa';
+    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
+    const temEspecial = aluno.tem_horario_especial;
+    
+    const horBuscaExibicao = (aluno.horario_busca_hoje) ? `${aluno.horario_busca_hoje} (Especial)` : (aluno.horario_busca || 'S/ hor.');
+    const horVoltaExibicao = (aluno.horario_volta_hoje) ? `${aluno.horario_volta_hoje} (Especial)` : (aluno.horario_escola || '-');
+
+    return `
+      <div class="bg-slate-800/80 border ${temEspecial ? 'border-amber-400 bg-amber-500/10' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 ${temEspecial ? 'bg-amber-400 text-slate-950 font-black' : 'bg-slate-700 text-amber-400 font-bold'} text-xs rounded-lg">
+                ${modoRotaAtual === 'IDA' ? horBuscaExibicao : horVoltaExibicao}
+              </span>
+              <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
+            </div>
+            
+            ${temEspecial ? '<p class="text-[10px] font-bold text-amber-300 mt-1"><i class="fa-solid fa-clock-rotate-left"></i> ⚡ ATENÇÃO: Horário alterado para hoje!</p>' : ''}
+
+            <p class="text-xs text-slate-400 mt-1">${aluno.escola || ''} (${aluno.turno || 'Manhã'})</p>
+            <p class="text-[10px] text-slate-300 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Endereço não informado'}</p>
+          </div>
+          
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="abrirModalEditarAluno('${aluno.id}')" class="text-amber-400 text-xs bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️</button>
+            <button onclick="deletarAlunoAdmin('${aluno.id}')" class="text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️</button>
+            ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
+          </div>
         </div>
-      `,
-      iconSize: [50, 50],
-      iconAnchor: [25, 25]
-    });
 
-    if (!mapAdmin && window.L) {
-      mapAdmin = L.map('mapa-admin-container').setView([lat, lng], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapAdmin);
-      markerVanAdmin = L.marker([lat, lng], { icon: iconeZafiraGps }).addTo(mapAdmin);
-    } else if (mapAdmin && markerVanAdmin) {
-      markerVanAdmin.setLatLng([lat, lng]);
-      mapAdmin.setView([lat, lng]);
-    }
-
-    setTimeout(() => { if (mapAdmin) mapAdmin.invalidateSize(); }, 300);
-  } catch (e) {
-    console.error("Erro mapa:", e);
-  }
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Em Casa')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Em Casa' ? 'bg-slate-600 text-white' : 'bg-slate-900/60 text-slate-400'}">🏡 Casa</button>
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Van')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Van' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🚌 Na Van</button>
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Escola')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Escola' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🏫 Na Escola</button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
-function tocarSomSirene() {
-  if (audioContext) return;
-  try {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    audioOscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+async function atualizarStatusRafa(id, st) {
+  if (!supabaseClient) return;
 
-    audioOscillator.type = 'sawtooth';
-    audioOscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-    audioOscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.5);
+  let updateData = { status: st };
+  if (st === 'Na Van' || st === 'Na Escola') {
+    updateData.levado_hoje = true;
+  }
 
-    audioOscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    audioOscillator.start();
-  } catch (e) {}
+  await supabaseClient.from('alunos').update(updateData).eq('id', id);
+  carregarDadosRafa();
 }
 
-function pararSomSirene() {
-  if (audioOscillator) {
-    audioOscillator.stop();
-    audioOscillator.disconnect();
-    audioOscillator = null;
+async function resetarStatusDoDia() {
+  if (!supabaseClient) return;
+  const res = confirm("Deseja resetar a chamada de todos os alunos para 'Em Casa' e restaurar a presença normal do dia?");
+  if (!res) return;
+
+  await supabaseClient.from('alunos').update({
+    status: 'Em Casa',
+    levado_hoje: false,
+    vai_hoje: true,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: ""
+  }).neq('id', '0');
+
+  alert("✓ Chamada do dia resetada com sucesso!");
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
+}
+
+function renderizarPassageirosGeralRafa() {
+  const container = document.getElementById("lista-passageiros-geral-rafa");
+  const countEl = document.getElementById("count-rafa-alunos");
+  if (!container) return;
+
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+  if (countEl) countEl.innerText = `${aprovados.length} Alunos`;
+
+  if (aprovados.length === 0) {
+    container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum aluno cadastrado.</p>`;
+    return;
   }
-  if (audioContext) {
-    audioContext.close();
-    audioContext = null;
-  }
+
+  container.innerHTML = aprovados.map(a => {
+    const st = a.status || 'Em Casa';
+    const stP = a.status_pagamento || 'Pendente';
+    const vaiHoje = a.vai_hoje !== false;
+
+    return `
+      <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2.5">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2">
+              <h4 class="text-xs font-bold text-white">${a.nome}</h4>
+              <span class="text-[9px] font-bold px-2 py-0.5 rounded-md ${vaiHoje ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+                ${vaiHoje ? '✓ Vai Hoje' : '✕ Ausente'}
+              </span>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
+            <p class="text-[10px] text-amber-400 font-medium">📍 Busca Casa: ${a.horario_busca || '-'} | Entrada: ${a.horario_escola || '-'}</p>
+            <p class="text-[10px] text-slate-400">Contato: ${a.whatsapp || 'S/ Whats'}</p>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
+            <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️ Deletar</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+          <div>
+            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Rota</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+              <option value="Em Casa" ${st === 'Em Casa' ? 'selected' : ''}>🏡 Em Casa</option>
+              <option value="Na Van" ${st === 'Na Van' ? 'selected' : ''}>🚌 Na Van</option>
+              <option value="Na Escola" ${st === 'Na Escola' ? 'selected' : ''}>🏫 Na Escola</option>
+            </select>
+          </div>
+
+          <div>
+            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Financeiro</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+              <option value="Pendente" ${stP === 'Pendente' ? 'selected' : ''}>🔴 Pendente</option>
+              <option value="Pago" ${stP === 'Pago' ? 'selected' : ''}>🟢 Quitado</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function cadastrarAlunoRafa(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const emailMae = document.getElementById("add-email-mae-rafa")?.value.trim() || "";
+
+  const novoAluno = {
+    nome: document.getElementById("add-nome-rafa").value,
+    turno: document.getElementById("add-turno-rafa").value,
+    whatsapp: document.getElementById("add-wsp-rafa").value,
+    horario_busca: document.getElementById("add-horario-busca-rafa").value,
+    horario_escola: document.getElementById("add-horario-escola-rafa").value,
+    endereco_casa: document.getElementById("add-endereco-casa-rafa").value,
+    escola: document.getElementById("add-escola-rafa").value,
+    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
+    pin_pais: document.getElementById("add-pin-rafa").value || "1234",
+    valor: parseFloat(document.getElementById("add-valor-rafa").value),
+    vencimento: parseInt(document.getElementById("add-vencimento-rafa").value),
+    status: 'Em Casa',
+    status_pagamento: 'Pendente',
+    vai_hoje: true,
+    levado_hoje: false,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: "",
+    pendente_aprovacao: false
+  };
+
+  await supabaseClient.from('alunos').insert([novoAluno]);
+  alert("Aluno cadastrado com sucesso!");
+  document.getElementById("form-cadastrar-aluno-rafa").reset();
+  toggleFormCadastro('rafa');
+  carregarDadosRafa();
+}
+
+function aplicarFiltroFin(status) {
+  filtroFinStatus = status;
+  document.getElementById("btn-fin-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-fin-filtro-pendentes").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Pendente' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-fin-filtro-pagos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Pago' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  renderizarFinanceiroRafa();
+}
+
+function renderizarFinanceiroRafa() {
+  const container = document.getElementById("lista-financeiro-rafa-cards");
+  if (!container) return;
+
+  let faturamentoTotal = 0;
+  let recebido = 0;
+  let pendente = 0;
+  const diaHoje = new Date().getDate();
+
+  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+
+  aprovados.forEach(a => {
+    const val = parseFloat(a.valor || 180);
+    faturamentoTotal += val;
+    if (a.status_pagamento === "Pago") recebido += val;
+    else pendente += val;
+  });
+
+  const mTot = document.getElementById("metrica-faturamento-total");
+  const mRec = document.getElementById("metrica-recebido");
+  const mPen = document.getElementById("metrica-pendente");
+  const progTexto = document.getElementById("progresso-percentual");
+  const progBarra = document.getElementById("barra-progresso-financeiro");
+
+  if (mTot) mTot.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
+  if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
+  if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
+
+  const porc = faturamentoTotal > 0 ? Math.round((recebido / faturamentoTotal) * 100) : 0;
+  if (progTexto) progTexto.innerText = `${porc}%`;
+  if (progBarra) progBarra.style.width = `${porc}%`;
+
+  let filtrados = aprovados;
+  if (filtroFinStatus === "Pendente") filtrados = aprovados.filter(a => a.status_pagamento !== "Pago");
+  if (filtroFinStatus === "Pago") filtrados = aprovados.filter(a => a.status_pagamento === "Pago");
+
+  container.innerHTML = filtrados.map(aluno => {
+    const stP = aluno.status_pagamento || 'Pendente';
+    const val = parseFloat(aluno.valor || 180);
+    const venc = parseInt(aluno.vencimento || 10);
+    const emAtraso = stP !== "Pago" && diaHoje > venc;
+    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
+
+    const msgCobranca = encodeURIComponent(`Olá! Passando para lembrar sobre a mensalidade do transporte escolar do(a) *${aluno.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 Chave PIX: ${pixChaveGlobal}\n\nQualquer dúvida estou à disposição! 😊`);
+
+    return `
+      <div class="bg-slate-800/80 border ${emAtraso ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-700'} p-3.5 rounded-2xl space-y-2">
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2">
+              <p class="text-xs font-bold text-white">${aluno.nome}</p>
+              ${emAtraso ? '<span class="text-[9px] bg-rose-500 text-white font-extrabold px-1.5 py-0.5 rounded">Em Atraso</span>' : ''}
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5">Mensalidade: <strong>R$ ${val.toFixed(2)}</strong> | Vencimento: Dia ${venc}</p>
+          </div>
+          <span class="text-xs font-bold ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Quitado' : '🔴 Devendo'}</span>
+        </div>
+
+        <div class="flex items-center gap-2 pt-1 border-t border-slate-700/50">
+          ${stP === 'Pago' ? `
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pendente', null)" class="w-full py-1.5 text-xs bg-slate-700 text-slate-300 font-bold rounded-lg">Desfazer Pagamento</button>
+          ` : `
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'PIX')" class="flex-1 py-1.5 text-xs bg-teal-500 text-slate-950 font-bold rounded-lg">PIX</button>
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Dinheiro')" class="flex-1 py-1.5 text-xs bg-amber-500 text-slate-950 font-bold rounded-lg">Dinheiro</button>
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Cartão')" class="flex-1 py-1.5 text-xs bg-slate-600 text-white font-bold rounded-lg">Cartão</button>
+            ${wsp ? `
+              <a href="https://wa.me/55${wsp}?text=${msgCobranca}" target="_blank" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg flex items-center justify-center shrink-0 shadow">
+                <i class="fa-brands fa-whatsapp text-sm"></i>
+              </a>
+            ` : ''}
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function darBaixaRafa(id, stP, forma) {
+  if (!supabaseClient) return;
+  await supabaseClient.from('alunos').update({ status_pagamento: stP, forma_pagamento: forma }).eq('id', id);
+  carregarDadosRafa();
 }
 
 async function dispararEmergenciaRafa() {
@@ -1345,99 +1446,9 @@ async function dispararEmergenciaRafa() {
   });
 }
 
-async function verificarEmergenciaAdmin() {
-  if (!supabaseClient || currentRole !== "admin") {
-    pararSomSirene();
-    return;
-  }
-
-  const { data } = await supabaseClient
-    .from('alertas')
-    .select('*')
-    .eq('tipo', 'EMERGENCIA_ADMIN')
-    .eq('ativo', true)
-    .order('id', { ascending: false })
-    .limit(1);
-
-  const modal = document.getElementById("modal-emergencia-admin");
-  const detalhes = document.getElementById("detalhes-emergencia-admin");
-  const btnMaps = document.getElementById("btn-rota-maps-emergencia");
-
-  if (data && data.length > 0) {
-    if (detalhes) detalhes.innerText = data[0].mensagem;
-    if (data[0].mensagem.includes("Pos:")) {
-      const posPart = data[0].mensagem.split("Pos:")[1].trim();
-      if (btnMaps) btnMaps.href = `https://www.google.com/maps/search/?api=1&query=${posPart}`;
-    }
-    modal?.classList.remove("hidden");
-    tocarSomSirene();
-  } else {
-    modal?.classList.add("hidden");
-    pararSomSirene();
-  }
-}
-
-async function atenderEmergenciaAdmin() {
-  if (!supabaseClient) return;
-  await supabaseClient.from('alertas').update({ ativo: false }).eq('tipo', 'EMERGENCIA_ADMIN');
-  pararSomSirene();
-  document.getElementById("modal-emergencia-admin")?.classList.add("hidden");
-}
-
-function abrirModalEditarAluno(id) {
-  const aluno = alunosCache.find(a => a.id == id);
-  if (!aluno) return;
-
-  document.getElementById("edit-id").value = aluno.id;
-  document.getElementById("edit-nome").value = aluno.nome || '';
-  document.getElementById("edit-turno").value = aluno.turno || 'Manhã (07h às 11h)';
-  document.getElementById("edit-wsp").value = aluno.whatsapp || '';
-  document.getElementById("edit-horario-busca").value = aluno.horario_busca || '';
-  document.getElementById("edit-horario-escola").value = aluno.horario_escola || '';
-  document.getElementById("edit-endereco-casa").value = aluno.endereco_casa || '';
-  document.getElementById("edit-escola").value = aluno.escola || '';
-  document.getElementById("edit-email-mae").value = (aluno.email_mae && !aluno.email_mae.includes('@transporte.local')) ? aluno.email_mae : '';
-  document.getElementById("edit-pin").value = aluno.pin_pais || '1234';
-  document.getElementById("edit-valor").value = aluno.valor || 180;
-  document.getElementById("edit-vencimento").value = aluno.vencimento || 10;
-
-  document.getElementById("modal-editar-aluno")?.classList.remove("hidden");
-}
-
-async function salvarEdicaoAluno(e) {
-  e.preventDefault();
-  if (!supabaseClient) return;
-
-  const id = document.getElementById("edit-id").value;
-  const emailMae = document.getElementById("edit-email-mae")?.value.trim() || "";
-
-  const updateData = {
-    nome: document.getElementById("edit-nome").value,
-    turno: document.getElementById("edit-turno").value,
-    whatsapp: document.getElementById("edit-wsp").value,
-    horario_busca: document.getElementById("edit-horario-busca").value,
-    horario_escola: document.getElementById("edit-horario-escola").value,
-    endereco_casa: document.getElementById("edit-endereco-casa").value,
-    escola: document.getElementById("edit-escola").value,
-    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
-    pin_pais: document.getElementById("edit-pin").value,
-    valor: parseFloat(document.getElementById("edit-valor").value),
-    vencimento: parseInt(document.getElementById("edit-vencimento").value)
-  };
-
-  const { error } = await supabaseClient.from('alunos').update(updateData).eq('id', id);
-
-  if (error) {
-    alert("Erro ao salvar alterações: " + error.message);
-    return;
-  }
-
-  alert("✓ Cadastro atualizado com sucesso!");
-  document.getElementById("modal-editar-aluno")?.classList.add("hidden");
-
-  if (currentRole === 'rafa') carregarDadosRafa();
-  if (currentRole === 'admin') carregarDadosAdmin();
-}
+/* ==========================================================================
+   9. MÓDULO PAINEL ADMIN / GESTÃO
+   ========================================================================== */
 
 async function carregarDadosAdmin(isBackground = false) {
   if (!supabaseClient) return;
@@ -1499,12 +1510,227 @@ async function carregarDadosAdmin(isBackground = false) {
   renderizarFinanceiroAdmin();
 }
 
+function renderizarPendentesAprovacao() {
+  const pendentes = alunosCache.filter(a => a.pendente_aprovacao === true);
+
+  const containerRafa = document.getElementById("container-pendentes-rafa");
+  const listaRafa = document.getElementById("lista-pendentes-rafa");
+  const countRafa = document.getElementById("badge-pendentes-count-rafa");
+
+  const containerAdmin = document.getElementById("container-pendentes-admin");
+  const listaAdmin = document.getElementById("lista-pendentes-admin");
+  const countAdmin = document.getElementById("badge-pendentes-count-admin");
+
+  if (pendentes.length === 0) {
+    containerRafa?.classList.add("hidden");
+    containerAdmin?.classList.add("hidden");
+    return;
+  }
+
+  if (countRafa) countRafa.innerText = pendentes.length;
+  if (countAdmin) countAdmin.innerText = pendentes.length;
+
+  const htmlContent = pendentes.map(a => `
+    <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
+      <div class="flex justify-between items-start">
+        <div>
+          <h4 class="text-xs font-bold text-white">${a.nome}</h4>
+          <p class="text-[10px] text-amber-300 font-semibold">${a.escola || '-'} • ${a.turno}</p>
+          <p class="text-[10px] text-slate-400 mt-0.5">Contato: ${a.whatsapp || 'S/ Whats'}</p>
+          <p class="text-[10px] text-slate-400">Endereço: ${a.endereco_casa || '-'}</p>
+        </div>
+      </div>
+
+      <div class="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+        <div>
+          <label class="text-[10px] text-amber-400 block font-bold">⏰ Horário que vai passar pra buscar:</label>
+          <input type="text" id="hor-busca-aprov-${a.id}" placeholder="Ex: 06:40" class="w-full bg-slate-900 border border-amber-500/50 rounded p-1.5 text-xs text-white font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9px] text-slate-400 block font-bold">Mensalidade (R$)</label>
+            <input type="number" id="val-aprov-${a.id}" value="${a.valor || 180}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+          </div>
+          <div>
+            <label class="text-[9px] text-slate-400 block font-bold">Vencimento (Dia)</label>
+            <input type="number" id="venc-aprov-${a.id}" value="${a.vencimento || 10}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="aprovarCadastroAluno('${a.id}')" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+          ✓ Aprovar & Definir Horário
+        </button>
+        <button onclick="deletarAlunoAdmin('${a.id}')" class="px-3 py-2 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg hover:bg-rose-600 hover:text-white transition-all">
+          ✕ Recusar
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  if (listaRafa) listaRafa.innerHTML = htmlContent;
+  if (listaAdmin) listaAdmin.innerHTML = htmlContent;
+
+  containerRafa?.classList.remove("hidden");
+  containerAdmin?.classList.remove("hidden");
+}
+
+async function aprovarCadastroAluno(id) {
+  if (!supabaseClient) return;
+
+  const inputBusca = document.getElementById(`hor-busca-aprov-${id}`);
+  const inputVal = document.getElementById(`val-aprov-${id}`);
+  const inputVenc = document.getElementById(`venc-aprov-${id}`);
+
+  const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
+  
+  if (!horarioBusca) {
+    alert("Por favor, preencha o horário de busca da van antes de aprovar!");
+    if (inputBusca) inputBusca.focus();
+    return;
+  }
+
+  const val = (inputVal && inputVal.value) ? parseFloat(inputVal.value) : 180;
+  const venc = (inputVenc && inputVenc.value) ? parseInt(inputVenc.value) : 10;
+
+  const { error } = await supabaseClient
+    .from('alunos')
+    .update({ 
+      pendente_aprovacao: false,
+      horario_busca: horarioBusca,
+      valor: val,
+      vencimento: venc
+    })
+    .eq('id', id);
+
+  if (error) {
+    alert("Erro ao aprovar: " + error.message);
+    return;
+  }
+
+  alert("✓ Cadastro aprovado e horário definido!");
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
+}
+
+async function deletarAlunoAdmin(id) {
+  if (!supabaseClient) return;
+
+  const confirmou = confirm("Deseja realmente apagar este cadastro?");
+  if (confirmou) {
+    const { error } = await supabaseClient.from('alunos').delete().eq('id', id);
+
+    if (error) {
+      alert("Erro ao excluir: " + error.message);
+      return;
+    }
+
+    alert("Cadastro removido!");
+    alunosCache = alunosCache.filter(a => a.id != id);
+    renderizarPendentesAprovacao();
+
+    if (currentRole === 'rafa') carregarDadosRafa();
+    if (currentRole === 'admin') carregarDadosAdmin();
+  }
+}
+
+async function cadastrarAlunoAdmin(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const emailMae = document.getElementById("add-email-mae")?.value.trim() || "";
+
+  const novoAluno = {
+    nome: document.getElementById("add-nome").value,
+    turno: document.getElementById("add-turno").value,
+    whatsapp: document.getElementById("add-wsp").value,
+    horario_busca: document.getElementById("add-horario-busca").value,
+    horario_escola: document.getElementById("add-horario-escola").value,
+    endereco_casa: document.getElementById("add-endereco-casa").value,
+    escola: document.getElementById("add-escola").value,
+    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
+    pin_pais: document.getElementById("add-pin").value || "1234",
+    valor: parseFloat(document.getElementById("add-valor").value),
+    vencimento: parseInt(document.getElementById("add-vencimento").value),
+    status: 'Em Casa',
+    status_pagamento: 'Pendente',
+    vai_hoje: true,
+    levado_hoje: false,
+    tem_horario_especial: false,
+    horario_busca_hoje: "",
+    horario_volta_hoje: "",
+    pendente_aprovacao: false
+  };
+
+  await supabaseClient.from('alunos').insert([novoAluno]);
+  alert("Aluno cadastrado com sucesso!");
+  document.getElementById("form-cadastrar-aluno").reset();
+  toggleFormCadastro('admin');
+  carregarDadosAdmin();
+}
+
 async function alterarStatusAdmin(id, campo, valor) {
   if (!supabaseClient) return;
   let updateObj = {};
   updateObj[campo] = valor;
   await supabaseClient.from('alunos').update(updateObj).eq('id', id);
   
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
+}
+
+function abrirModalEditarAluno(id) {
+  const aluno = alunosCache.find(a => a.id == id);
+  if (!aluno) return;
+
+  document.getElementById("edit-id").value = aluno.id;
+  document.getElementById("edit-nome").value = aluno.nome || '';
+  document.getElementById("edit-turno").value = aluno.turno || 'Manhã (07h às 11h)';
+  document.getElementById("edit-wsp").value = aluno.whatsapp || '';
+  document.getElementById("edit-horario-busca").value = aluno.horario_busca || '';
+  document.getElementById("edit-horario-escola").value = aluno.horario_escola || '';
+  document.getElementById("edit-endereco-casa").value = aluno.endereco_casa || '';
+  document.getElementById("edit-escola").value = aluno.escola || '';
+  document.getElementById("edit-email-mae").value = (aluno.email_mae && !aluno.email_mae.includes('@transporte.local')) ? aluno.email_mae : '';
+  document.getElementById("edit-pin").value = aluno.pin_pais || '1234';
+  document.getElementById("edit-valor").value = aluno.valor || 180;
+  document.getElementById("edit-vencimento").value = aluno.vencimento || 10;
+
+  document.getElementById("modal-editar-aluno")?.classList.remove("hidden");
+}
+
+async function salvarEdicaoAluno(e) {
+  e.preventDefault();
+  if (!supabaseClient) return;
+
+  const id = document.getElementById("edit-id").value;
+  const emailMae = document.getElementById("edit-email-mae")?.value.trim() || "";
+
+  const updateData = {
+    nome: document.getElementById("edit-nome").value,
+    turno: document.getElementById("edit-turno").value,
+    whatsapp: document.getElementById("edit-wsp").value,
+    horario_busca: document.getElementById("edit-horario-busca").value,
+    horario_escola: document.getElementById("edit-horario-escola").value,
+    endereco_casa: document.getElementById("edit-endereco-casa").value,
+    escola: document.getElementById("edit-escola").value,
+    email_mae: emailMae || `aluno_${Date.now()}@transporte.local`,
+    pin_pais: document.getElementById("edit-pin").value,
+    valor: parseFloat(document.getElementById("edit-valor").value),
+    vencimento: parseInt(document.getElementById("edit-vencimento").value)
+  };
+
+  const { error } = await supabaseClient.from('alunos').update(updateData).eq('id', id);
+
+  if (error) {
+    alert("Erro ao salvar alterações: " + error.message);
+    return;
+  }
+
+  alert("✓ Cadastro atualizado com sucesso!");
+  document.getElementById("modal-editar-aluno")?.classList.add("hidden");
+
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
@@ -1600,6 +1826,37 @@ async function darBaixaAdmin(id, stP, forma) {
   carregarDadosAdmin();
 }
 
+async function encerrarMesFinanceiro() {
+  if (!supabaseClient) return;
+  const confirmou = confirm("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?");
+  if (confirmou) {
+    const mesAno = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' });
+    
+    for (let a of alunosCache) {
+      await supabaseClient.from('historico_financeiro').insert([{
+        aluno_id: a.id,
+        mes_ano: mesAno,
+        valor: a.valor || 180,
+        status_pagamento: a.status_pagamento || 'Pendente'
+      }]);
+
+      await supabaseClient.from('alunos').update({
+        status_pagamento: 'Pendente',
+        forma_pagamento: null,
+        tem_horario_especial: false,
+        horario_busca_hoje: "",
+        horario_volta_hoje: "",
+        levado_hoje: false,
+        vai_hoje: true
+      }).eq('id', a.id);
+    }
+
+    alert("Mês encerrado com sucesso!");
+    if (currentRole === 'rafa') carregarDadosRafa();
+    if (currentRole === 'admin') carregarDadosAdmin();
+  }
+}
+
 function exportarRelatorioFinanceiroCSV() {
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
   if (!aprovados || aprovados.length === 0) {
@@ -1641,277 +1898,70 @@ function exportarRelatorioFinanceiroCSV() {
   document.body.removeChild(link);
 }
 
-function inicializarTema() {
-  const temaSalvo = localStorage.getItem("theme");
-  const themeIcon = document.getElementById("theme-icon");
-  if (temaSalvo === "light") {
-    document.documentElement.classList.add("light-mode");
-    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-xs";
-  } else {
-    document.documentElement.classList.remove("light-mode");
-    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-xs";
+function tocarSomSirene() {
+  if (audioContext) return;
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    audioOscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    audioOscillator.type = 'sawtooth';
+    audioOscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+    audioOscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.5);
+
+    audioOscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    audioOscillator.start();
+  } catch (e) {}
+}
+
+function pararSomSirene() {
+  if (audioOscillator) {
+    audioOscillator.stop();
+    audioOscillator.disconnect();
+    audioOscillator = null;
+  }
+  if (audioContext) {
+    audioContext.close();
+    audioContext = null;
   }
 }
 
-function alternarTema() {
-  const htmlEl = document.documentElement;
-  const themeIcon = document.getElementById("theme-icon");
-  if (htmlEl.classList.contains("light-mode")) {
-    htmlEl.classList.remove("light-mode");
-    localStorage.setItem("theme", "dark");
-    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-xs";
-  } else {
-    htmlEl.classList.add("light-mode");
-    localStorage.setItem("theme", "light");
-    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-xs";
+async function verificarEmergenciaAdmin() {
+  if (!supabaseClient || currentRole !== "admin") {
+    pararSomSirene();
+    return;
   }
-}
 
-function mostrarFormLogin(role) {
-  currentRole = role;
-  if (authTitle) authTitle.innerText = role === "rafa" ? "Senha Tia Rafa" : "Senha Admin";
-  if (authForm) authForm.classList.remove("hidden");
-  if (mainButtons) mainButtons.classList.add("hidden");
-}
+  const { data } = await supabaseClient
+    .from('alertas')
+    .select('*')
+    .eq('tipo', 'EMERGENCIA_ADMIN')
+    .eq('ativo', true)
+    .order('id', { ascending: false })
+    .limit(1);
 
-function resetLogin() {
-  if (authForm) authForm.classList.add("hidden");
-  if (mainButtons) mainButtons.className = "space-y-3";
-  if (inputPassword) inputPassword.value = "";
-}
+  const modal = document.getElementById("modal-emergencia-admin");
+  const detalhes = document.getElementById("detalhes-emergencia-admin");
+  const btnMaps = document.getElementById("btn-rota-maps-emergencia");
 
-function voltarHome() {
-  document.getElementById("dashboard-pais")?.classList.add("hidden");
-  document.getElementById("dashboard-rafa")?.classList.add("hidden");
-  document.getElementById("dashboard-admin")?.classList.add("hidden");
-  bottomBar?.classList.add("hidden");
-  btnTopBack?.classList.add("hidden");
-  loginSection?.classList.remove("hidden");
-  
-  if (isGpsTransmitting) alternarTransmissaoGps();
-  pararSomSirene();
-  resetLogin();
-  atualizarBadgeHeader(null);
-}
-
-function entrarPerfil(role, isRestoring = false) {
-  currentRole = role;
-  localStorage.setItem("app_role", role);
-
-  loginSection?.classList.add("hidden");
-  bottomBar?.classList.remove("hidden");
-  btnTopBack?.classList.remove("hidden");
-
-  atualizarBadgeHeader(role);
-
-  if (role === "pais") {
-    document.getElementById("dashboard-pais")?.classList.remove("hidden");
-    carregarDadosPais();
-  } else if (role === "rafa") {
-    document.getElementById("dashboard-rafa")?.classList.remove("hidden");
-    carregarDadosRafa();
-    if (!isGpsTransmitting) alternarTransmissaoGps();
-  } else if (role === "admin") {
-    document.getElementById("dashboard-admin")?.classList.remove("hidden");
-    carregarDadosAdmin();
-  }
-}
-
-async function verificarAlertaGlobal() {
-  if (!supabaseClient) return;
-  const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN').order('id', { ascending: false }).limit(1);
-  const banner = document.getElementById("banner-alerta-global");
-  const txt = document.getElementById("texto-alerta-global");
-  
   if (data && data.length > 0) {
-    if (txt) txt.innerText = data[0].mensagem;
-    banner?.classList.remove("hidden");
-  } else {
-    banner?.classList.add("hidden");
-  }
-}
-
-async function dispararAviso(msg) {
-  if (!supabaseClient) return;
-  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
-  await supabaseClient.from('alertas').insert([{ tipo: 'Aviso', mensagem: msg, ativo: true }]);
-  alert("Aviso publicado!");
-  verificarAlertaGlobal();
-}
-
-async function limparAvisos() {
-  if (!supabaseClient) return;
-  await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
-  alert("Avisos encerrados!");
-  verificarAlertaGlobal();
-}
-
-async function carregarDadosPais(isBackground = false) {
-  if (!supabaseClient) return;
-  const select = document.getElementById("select-email-pais");
-  
-  if (!isBackground) await carregarConfiguracoesGlobais();
-
-  const { data } = await supabaseClient.from('alunos').select('*');
-  if (!data) return;
-  alunosCache = data;
-
-  const aprovados = data.filter(a => !a.pendente_aprovacao);
-  const nomesUnicos = [...new Set(aprovados.map(a => a.nome).filter(Boolean))];
-  
-  if (select && select.children.length <= 1) {
-    select.innerHTML = '<option value="">-- Selecione seu Cadastro --</option>' + 
-      nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
-  }
-
-  const selecionado = select?.value || localStorage.getItem("app_pai_email");
-  if (selecionado) {
-    renderizarPaisFilho(selecionado);
-  }
-}
-
-async function carregarDadosRafa(isBackground = false) {
-  if (!supabaseClient) return;
-
-  if (!isBackground) await carregarConfiguracoesGlobais();
-
-  const { data } = await supabaseClient.from('alunos').select('*');
-  if (!data) return;
-  alunosCache = data;
-
-  renderizarPendentesAprovacao();
-  renderizarRotaRafa();
-  renderizarPassageirosGeralRafa();
-  renderizarFinanceiroRafa();
-}
-
-function aplicarFiltroTurno(turno) {
-  filtroTurnoAtual = turno;
-  document.getElementById("btn-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
-  document.getElementById("btn-filtro-manha7").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã (07h às 11h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
-  document.getElementById("btn-filtro-manha8").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã (08h às 12h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
-  document.getElementById("btn-filtro-tarde").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Tarde' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
-  renderizarRotaRafa();
-}
-
-function aplicarFiltroFin(status) {
-  filtroFinStatus = status;
-  document.getElementById("btn-fin-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-fin-filtro-pendentes").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Pendente' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-fin-filtro-pagos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Pago' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  renderizarFinanceiroRafa();
-}
-
-function renderizarFinanceiroRafa() {
-  const container = document.getElementById("lista-financeiro-rafa-cards");
-  if (!container) return;
-
-  let faturamentoTotal = 0;
-  let recebido = 0;
-  let pendente = 0;
-  const diaHoje = new Date().getDate();
-
-  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
-
-  aprovados.forEach(a => {
-    const val = parseFloat(a.valor || 180);
-    faturamentoTotal += val;
-    if (a.status_pagamento === "Pago") recebido += val;
-    else pendente += val;
-  });
-
-  const mTot = document.getElementById("metrica-faturamento-total");
-  const mRec = document.getElementById("metrica-recebido");
-  const mPen = document.getElementById("metrica-pendente");
-  const progTexto = document.getElementById("progresso-percentual");
-  const progBarra = document.getElementById("barra-progresso-financeiro");
-
-  if (mTot) mTot.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
-  if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
-  if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
-
-  const porc = faturamentoTotal > 0 ? Math.round((recebido / faturamentoTotal) * 100) : 0;
-  if (progTexto) progTexto.innerText = `${porc}%`;
-  if (progBarra) progBarra.style.width = `${porc}%`;
-
-  let filtrados = aprovados;
-  if (filtroFinStatus === "Pendente") filtrados = aprovados.filter(a => a.status_pagamento !== "Pago");
-  if (filtroFinStatus === "Pago") filtrados = aprovados.filter(a => a.status_pagamento === "Pago");
-
-  container.innerHTML = filtrados.map(aluno => {
-    const stP = aluno.status_pagamento || 'Pendente';
-    const val = parseFloat(aluno.valor || 180);
-    const venc = parseInt(aluno.vencimento || 10);
-    const emAtraso = stP !== "Pago" && diaHoje > venc;
-    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
-
-    const msgCobranca = encodeURIComponent(`Olá! Passando para lembrar sobre a mensalidade do transporte escolar do(a) *${aluno.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 Chave PIX: ${pixChaveGlobal}\n\nQualquer dúvida estou à disposição! 😊`);
-
-    return `
-      <div class="bg-slate-800/80 border ${emAtraso ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-700'} p-3.5 rounded-2xl space-y-2">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="flex items-center gap-2">
-              <p class="text-xs font-bold text-white">${aluno.nome}</p>
-              ${emAtraso ? '<span class="text-[9px] bg-rose-500 text-white font-extrabold px-1.5 py-0.5 rounded">Em Atraso</span>' : ''}
-            </div>
-            <p class="text-[10px] text-slate-400 mt-0.5">Mensalidade: <strong>R$ ${val.toFixed(2)}</strong> | Vencimento: Dia ${venc}</p>
-          </div>
-          <span class="text-xs font-bold ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Quitado' : '🔴 Devendo'}</span>
-        </div>
-
-        <div class="flex items-center gap-2 pt-1 border-t border-slate-700/50">
-          ${stP === 'Pago' ? `
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pendente', null)" class="w-full py-1.5 text-xs bg-slate-700 text-slate-300 font-bold rounded-lg">Desfazer Pagamento</button>
-          ` : `
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'PIX')" class="flex-1 py-1.5 text-xs bg-teal-500 text-slate-950 font-bold rounded-lg">PIX</button>
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Dinheiro')" class="flex-1 py-1.5 text-xs bg-amber-500 text-slate-950 font-bold rounded-lg">Dinheiro</button>
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Cartão')" class="flex-1 py-1.5 text-xs bg-slate-600 text-white font-bold rounded-lg">Cartão</button>
-            ${wsp ? `
-              <a href="https://wa.me/55${wsp}?text=${msgCobranca}" target="_blank" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg flex items-center justify-center shrink-0 shadow">
-                <i class="fa-brands fa-whatsapp text-sm"></i>
-              </a>
-            ` : ''}
-          `}
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-async function darBaixaRafa(id, stP, forma) {
-  if (!supabaseClient) return;
-  await supabaseClient.from('alunos').update({ status_pagamento: stP, forma_pagamento: forma }).eq('id', id);
-  carregarDadosRafa();
-}
-
-async function encerrarMesFinanceiro() {
-  if (!supabaseClient) return;
-  const confirmou = confirm("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?");
-  if (confirmou) {
-    const mesAno = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' });
-    
-    for (let a of alunosCache) {
-      await supabaseClient.from('historico_financeiro').insert([{
-        aluno_id: a.id,
-        mes_ano: mesAno,
-        valor: a.valor || 180,
-        status_pagamento: a.status_pagamento || 'Pendente'
-      }]);
-
-      await supabaseClient.from('alunos').update({
-        status_pagamento: 'Pendente',
-        forma_pagamento: null,
-        tem_horario_especial: false,
-        horario_busca_hoje: "",
-        horario_volta_hoje: "",
-        levado_hoje: false,
-        vai_hoje: true
-      }).eq('id', a.id);
+    if (detalhes) detalhes.innerText = data[0].mensagem;
+    if (data[0].mensagem.includes("Pos:")) {
+      const posPart = data[0].mensagem.split("Pos:")[1].trim();
+      if (btnMaps) btnMaps.href = `https://www.google.com/maps/search/?api=1&query=${posPart}`;
     }
-
-    alert("Mês encerrado com sucesso!");
-    if (currentRole === 'rafa') carregarDadosRafa();
-    if (currentRole === 'admin') carregarDadosAdmin();
+    modal?.classList.remove("hidden");
+    tocarSomSirene();
+  } else {
+    modal?.classList.add("hidden");
+    pararSomSirene();
   }
+}
+
+async function atenderEmergenciaAdmin() {
+  if (!supabaseClient) return;
+  await supabaseClient.from('alertas').update({ ativo: false }).eq('tipo', 'EMERGENCIA_ADMIN');
+  pararSomSirene();
+  document.getElementById("modal-emergencia-admin")?.classList.add("hidden");
 }
