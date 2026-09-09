@@ -446,11 +446,14 @@ async function logout() {
 
 async function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
+  
+  // Se não houver perfil salvo, volta para a Tela Inicial com os 3 botões
   if (!roleSalva) {
     voltarHome();
     return;
   }
 
+  // Valida autenticação no Supabase se for Tia Rafa ou Admin
   if (roleSalva === "rafa" || roleSalva === "admin") {
     if (!supabaseClient) {
       localStorage.removeItem("app_role");
@@ -467,22 +470,50 @@ async function restaurarSessaoAnterior() {
     }
   }
 
+  // Restaura o perfil salvo
   currentRole = roleSalva;
   entrarPerfil(roleSalva, true);
 
+  // Se o perfil for Pais, restaura o painel do filho sem pedir PIN novamente após o refresh
   if (roleSalva === "pais") {
+    const wspSalvo = localStorage.getItem("app_pai_wsp");
+    const pinSalvo = localStorage.getItem("app_pai_pin");
     const emailSalvo = localStorage.getItem("app_pai_email");
-    if (emailSalvo) {
-      setTimeout(() => {
-        const select = document.getElementById("select-email-pais");
-        if (select) select.value = emailSalvo;
-        document.getElementById("box-pin-pais")?.classList.add("hidden");
+
+    setTimeout(async () => {
+      // 1. Tenta restaurar pelo novo modelo (WhatsApp + PIN)
+      if (wspSalvo && pinSalvo) {
+        if (!alunosCache || alunosCache.length === 0) {
+          const { data } = await supabaseClient.from('alunos').select('*');
+          if (data) alunosCache = data;
+        }
+
+        const aluno = alunosCache.find(a => 
+          (a.whatsapp || '').replace(/\D/g, '') === wspSalvo && 
+          (a.pin_pais || '1234') === pinSalvo && 
+          !a.pendente_aprovacao
+        );
+
+        if (aluno) {
+          document.getElementById("box-login-pais-direto")?.classList.add("hidden");
+          renderizarPaisFilhoPorObjeto(aluno);
+          return;
+        }
+      }
+
+      // 2. Fallback: Tenta restaurar pelo modelo anterior (Nome/E-mail) caso esteja salvo
+      if (emailSalvo) {
+        document.getElementById("box-login-pais-direto")?.classList.add("hidden");
         renderizarPaisFilho(emailSalvo);
-      }, 500);
-    }
+        return;
+      }
+
+      // Se não encontrou nenhuma sessão válida de pais, mostra a tela de login dos pais
+      document.getElementById("box-login-pais-direto")?.classList.remove("hidden");
+      document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
+    }, 300);
   }
 }
-
 /* ==========================================================================
    5. CONFIGURAÇÕES GLOBAIS DE PAGAMENTO (PIX & CARTÃO)
    ========================================================================== */
