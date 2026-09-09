@@ -437,17 +437,30 @@ async function logout() {
 
 async function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
-  if (!roleSalva) return;
+  if (!roleSalva) {
+    voltarHome();
+    return;
+  }
 
+  // Se for Tia Rafa ou Admin, verifica se existe uma sessão real no Supabase
   if (roleSalva === "rafa" || roleSalva === "admin") {
-    if (!supabaseClient) return;
+    if (!supabaseClient) {
+      localStorage.removeItem("app_role");
+      voltarHome();
+      return;
+    }
+
     const { data: { session } } = await supabaseClient.auth.getSession();
+    
+    // Se não houver sessão ativa (ex: após fechar navegador ou dar Ctrl+Shift+R sem login permanente), volta pra Home
     if (!session) {
       localStorage.removeItem("app_role");
+      voltarHome();
       return;
     }
   }
 
+  // Se passou na validação, restaura a tela
   currentRole = roleSalva;
   entrarPerfil(roleSalva, true);
 
