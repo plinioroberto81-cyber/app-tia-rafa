@@ -207,6 +207,30 @@ document.addEventListener("DOMContentLoaded", async () => {
   await restaurarSessaoAnterior();
 });
 
+// ATUALIZA O INDICADOR DE PERFIL NO CABEÇALHO
+function atualizarBadgeHeader(role) {
+  const badge = document.getElementById("badge-perfil-header");
+  if (!badge) return;
+
+  if (!role) {
+    badge.classList.add("hidden");
+    return;
+  }
+
+  badge.classList.remove("hidden");
+
+  if (role === "pais") {
+    badge.innerText = "Área dos Pais";
+    badge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30";
+  } else if (role === "rafa") {
+    badge.innerText = "Tia Rafa";
+    badge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+  } else if (role === "admin") {
+    badge.innerText = "Gestão Admin";
+    badge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/30";
+  }
+}
+
 // ALTERNAR VISIBILIDADE DO MAPA TIA RAFA
 function toggleMapaRafa() {
   const wrapper = document.getElementById("wrapper-mapa-rafa");
@@ -1667,6 +1691,7 @@ function voltarHome() {
   if (isGpsTransmitting) alternarTransmissaoGps();
   pararSomSirene();
   resetLogin();
+  atualizarBadgeHeader(null);
 }
 
 function entrarPerfil(role, isRestoring = false) {
@@ -1676,6 +1701,8 @@ function entrarPerfil(role, isRestoring = false) {
   loginSection?.classList.add("hidden");
   bottomBar?.classList.remove("hidden");
   btnTopBack?.classList.remove("hidden");
+
+  atualizarBadgeHeader(role);
 
   if (role === "pais") {
     document.getElementById("dashboard-pais")?.classList.remove("hidden");
