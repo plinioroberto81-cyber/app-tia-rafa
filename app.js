@@ -52,21 +52,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   verificarAlertaGlobal();
   carregarConfiguracoesGlobais();
   
-  setInterval(verificarEmergenciaAdmin, 3000);
+  // 1. Checa emergência a cada 10 segundos APENAS se estiver logado como Suporte/Admin
   setInterval(() => {
-    carregarGpsAdmin();
-    carregarGpsRafa();
-  }, 5000);
+    if (currentRole === "admin") verificarEmergenciaAdmin();
+  }, 10000);
 
+  // 2. Atualiza os mapas a cada 8 segundos APENAS para quem está com o mapa aberto
   setInterval(() => {
-    if (currentRole === "pais") {
-      carregarDadosPais(true);
-    } else if (currentRole === "rafa") {
-      carregarDadosRafa(true);
-    } else if (currentRole === "admin") {
-      carregarDadosAdmin(true);
-    }
-  }, 4000);
+    if (currentRole === "rafa") carregarGpsRafa();
+    if (currentRole === "admin") carregarGpsAdmin();
+  }, 8000);
+
+  // 3. Atualiza os dados das abas com espaço de 12 segundos (Sinaliza leveza ao celular)
+  setInterval(() => {
+    if (currentRole === "pais") carregarDadosPais(true);
+    if (currentRole === "rafa") carregarDadosRafa(true);
+    if (currentRole === "admin") carregarDadosAdmin(true);
+  }, 12000);
 
   // Escutadores Globais
   btnTopBack?.addEventListener("click", voltarHome);
@@ -110,16 +112,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
 
-  // Área dos Pais (Login por WhatsApp + PIN)
+  // Área dos Pais
   document.getElementById("btn-entrar-pais-direto")?.addEventListener("click", validarLoginWhatsAppPais);
 
-  // Abas da Área dos Pais
-  document.getElementById("tab-pais-filho")?.addEventListener("click", () => {
-    document.getElementById("aba-pais-filho")?.classList.remove("hidden");
-    document.getElementById("aba-pais-financeiro")?.classList.add("hidden");
-    document.getElementById("tab-pais-filho").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
-    document.getElementById("tab-pais-financeiro").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
-  });
+  await restaurarSessaoAnterior();
+});
 
   document.getElementById("tab-pais-financeiro")?.addEventListener("click", () => {
     document.getElementById("aba-pais-filho")?.classList.add("hidden");
