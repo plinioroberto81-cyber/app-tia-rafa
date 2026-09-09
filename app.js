@@ -116,14 +116,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     const boxPin = document.getElementById("box-pin-pais");
     const containerFilho = document.getElementById("conteudo-filho-pais");
     
+    // Sempre esconde os dados do filho ao trocar de nome ou selecionar um novo
+    containerFilho?.classList.add("hidden");
+    localStorage.removeItem("app_pai_pin_validado");
+
     if (val) {
       boxPin?.classList.remove("hidden");
-      containerFilho?.classList.add("hidden");
       const pinInp = document.getElementById("input-pin-pais");
       if (pinInp) pinInp.value = "";
     } else {
       boxPin?.classList.add("hidden");
-      containerFilho?.classList.add("hidden");
     }
   });
 
@@ -772,9 +774,17 @@ async function carregarDadosPais(isBackground = false) {
       nomesUnicos.map(n => `<option value="${n}">${n}</option>`).join('');
   }
 
-  const selecionado = select?.value || localStorage.getItem("app_pai_email");
-  if (selecionado) {
-    renderizarPaisFilho(selecionado);
+  // PRIVACIDADE: Só restaura os dados se houver uma sessão de PIN já validada previamente no localStorage
+  const alunoSalvo = localStorage.getItem("app_pai_email");
+  const pinValidado = localStorage.getItem("app_pai_pin_validado");
+
+  if (alunoSalvo && pinValidado === "true") {
+    if (select) select.value = alunoSalvo;
+    document.getElementById("box-pin-pais")?.classList.add("hidden");
+    renderizarPaisFilho(alunoSalvo);
+  } else {
+    // Garante que o conteúdo do filho permaneça escondido
+    document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
   }
 }
 
@@ -783,28 +793,37 @@ function validarLoginPinPais() {
   const pinInput = document.getElementById("input-pin-pais")?.value;
 
   if (!emailSelect) {
-    alert("Selecione seu cadastro.");
+    alert("Por favor, selecione o seu cadastro na lista.");
+    return;
+  }
+
+  if (!pinInput) {
+    alert("Por favor, digite o seu PIN de 4 dígitos.");
     return;
   }
 
   const aluno = alunosCache.find(a => (a.email_mae === emailSelect || a.nome === emailSelect) && !a.pendente_aprovacao);
 
   if (!aluno) {
-    alert("Cadastro não encontrado ou pendente de aprovação.");
+    alert("Cadastro não encontrado ou pendente de aprovação pela Tia Rafa.");
     return;
   }
 
   const pinCorreto = aluno.pin_pais || "1234";
 
   if (pinInput === pinCorreto) {
+    // Salva a validação na memória para não pedir PIN a cada clique
     localStorage.setItem("app_pai_email", emailSelect);
+    localStorage.setItem("app_pai_pin_validado", "true");
+
+    // Esconde a caixa do PIN e mostra as informações do filho
     document.getElementById("box-pin-pais")?.classList.add("hidden");
     renderizarPaisFilho(emailSelect);
   } else {
-    alert("PIN incorreto.");
+    alert("⚠️ PIN incorreto! Verifique o código digitado.");
+    document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
   }
 }
-
 function renderizarPaisFilho(emailOuNome) {
   const container = document.getElementById("conteudo-filho-pais");
   const abaFilho = document.getElementById("aba-pais-filho");
