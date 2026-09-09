@@ -265,7 +265,7 @@ function atualizarBadgeHeader(role) {
     badge.innerText = "Tia Rafa";
     badge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
   } else if (role === "admin") {
-    badge.innerText = "Gestão Admin";
+    badge.innerText = "Suporte";
     badge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/30";
   }
 }
