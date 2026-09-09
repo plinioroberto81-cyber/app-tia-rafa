@@ -346,11 +346,10 @@ async function limparAvisos() {
 
 function mostrarFormLogin(role) {
   currentRole = role;
-  if (authTitle) authTitle.innerText = role === "rafa" ? "Senha Tia Rafa" : "Senha Admin";
+  if (authTitle) authTitle.innerText = role === "rafa" ? "Senha Tia Rafa" : "Senha Suporte";
   if (authForm) authForm.classList.remove("hidden");
   if (mainButtons) mainButtons.classList.add("hidden");
 }
-
 function resetLogin() {
   if (authForm) authForm.classList.add("hidden");
   if (mainButtons) mainButtons.className = "space-y-3";
