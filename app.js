@@ -32,18 +32,17 @@ let markerVanAdmin = null;
 let mapRafa = null;
 let markerVanRafa = null;
 
-// Ícone Oficial da Zafira para o Leaflet (Criado uma única vez)
+// Ícone Oficial da Zafira apontando para o arquivo local do projeto
 const iconeZafiraGps = L.divIcon({
   className: 'custom-van-marker',
   html: `
     <div style="width:55px; height:55px; border-radius:50%; border:3px solid #f59e0b; background:#0f172a; padding:2px; box-shadow:0 6px 16px rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; overflow:hidden;">
-      <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" referrerpolicy="no-referrer" crossorigin="anonymous" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
+      <img src="zafira-removebg-preview.png" style="width:100%; height:100%; object-fit:contain; display:block;" alt="Zafira Tia Rafa">
     </div>
   `,
   iconSize: [55, 55],
   iconAnchor: [27, 27]
 });
-
 // Elementos Globais da Interface
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
