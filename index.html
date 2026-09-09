@@ -100,7 +100,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
   
-  <!-- BARRA SUPERIOR / CABEÇALHO -->
+  <!-- BARRA SUPERIOR / CABEÇALHO COM INDICADOR DE PERFIL -->
   <header class="w-full bg-slate-900 border-b border-slate-800 relative z-40 py-3 px-4 shadow-md">
     <div class="max-w-md mx-auto flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
@@ -108,7 +108,12 @@
           <img src="https://i.ibb.co/B2qsQ1pK/zafira-removebg-preview.png" alt="Zafira Tia Rafa" class="w-full h-full object-contain p-0.5" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3202/3202926.png'">
         </div>
         <div>
-          <h1 class="text-sm font-black text-white tracking-wide leading-none">Tia Rafa</h1>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm font-black text-white tracking-wide leading-none">Tia Rafa</h1>
+            <span id="badge-perfil-header" class="hidden text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              Início
+            </span>
+          </div>
           <p class="text-[11px] font-bold text-amber-400 mt-0.5">Transporte Escolar</p>
         </div>
       </div>
@@ -324,7 +329,7 @@
           </div>
         </div>
 
-        <!-- ENVIAR AVISOS RÁPIDOS AOS PAIS (SEM OPÇÃO 10 MIN) -->
+        <!-- ENVIAR AVISOS RÁPIDOS AOS PAIS -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mural de Avisos (Para os Pais)</h3>
           <div class="grid grid-cols-2 gap-2">
@@ -489,7 +494,7 @@
           </div>
         </div>
 
-        <!-- MURAL DE AVISOS ADMIN (SEM OPÇÃO 10 MIN) -->
+        <!-- MURAL DE AVISOS ADMIN -->
         <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
           <h3 class="text-xs font-bold text-amber-400 uppercase tracking-wider">Mural de Avisos (Para os Pais)</h3>
           <div class="grid grid-cols-2 gap-2">
