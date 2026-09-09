@@ -113,7 +113,7 @@ function mostrarConfirmacaoCustom(mensagem, titulo = "Confirmação") {
   });
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   loginSection = document.getElementById("login-section");
   authForm = document.getElementById("auth-form");
   authTitle = document.getElementById("auth-title");
@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 
-  restaurarSessaoAnterior();
+  await restaurarSessaoAnterior();
 });
 
 // EXIBIR / OCULTAR MAPA NA ROTA DA TIA RAFA
@@ -316,14 +316,11 @@ async function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
   if (!roleSalva) return;
 
-  // Se o perfil salvo for Tia Rafa ou Admin, confirma se o token do Supabase ainda é válido
   if (roleSalva === "rafa" || roleSalva === "admin") {
     if (!supabaseClient) return;
     const { data: { session } } = await supabaseClient.auth.getSession();
-    
-    // Se a sessão expirou ou o usuário deslogou, não entra automaticamente
     if (!session) {
-      localStorage.removeItem("app_role");
+      localStorage.clear();
       return;
     }
   }
@@ -381,12 +378,11 @@ async function logout() {
   if (supabaseClient) {
     await supabaseClient.auth.signOut();
   }
-  // Limpa completamente os dados salvos no navegador
-  localStorage.removeItem("app_role");
-  localStorage.removeItem("app_pai_email");
+  localStorage.clear();
   currentRole = null;
   voltarHome();
 }
+
 async function carregarConfiguracoesGlobais() {
   if (!supabaseClient) return;
 
@@ -610,7 +606,7 @@ async function aprovarCadastroAluno(id) {
       return;
     }
 
-    await mostrarAlertaCustom("✓ Cadastro approved e horário definido!", "Aprovado");
+    await mostrarAlertaCustom("✓ Cadastro aprovado e horário definido!", "Aprovado");
     if (currentRole === 'rafa') carregarDadosRafa();
     if (currentRole === 'admin') carregarDadosAdmin();
 
