@@ -1350,7 +1350,7 @@ async function dispararEmergenciaRafa() {
 }
 
 /* ==========================================================================
-   9. PAINEL SUPORTE (ADMIN)
+   9. PAINEL SUPORTE (ADMIN - 100% IGUAL À TIA RAFA)
    ========================================================================== */
 
 async function carregarDadosAdmin(isBackground = false) {
@@ -1701,76 +1701,6 @@ function renderizarFinanceiroAdmin() {
   if (mTot) mTot.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
   if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
   if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
-}
-
-async function encerrarMesFinanceiro() {
-  if (!supabaseClient) return;
-  if (confirm("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?")) {
-    const mesAno = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' });
-
-    for (let a of alunosCache) {
-      await supabaseClient.from('historico_financeiro').insert([{
-        aluno_id: a.id,
-        mes_ano: mesAno,
-        valor: a.valor || 180,
-        status_pagamento: a.status_pagamento || 'Pendente'
-      }]);
-
-      await supabaseClient.from('alunos').update({
-        status_pagamento: 'Pendente',
-        forma_pagamento: null,
-        tem_horario_especial: false,
-        horario_busca_hoje: "",
-        horario_volta_hoje: "",
-        levado_hoje: false,
-        vai_hoje: true
-      }).eq('id', a.id);
-    }
-
-    alert("Mês encerrado com sucesso!");
-    if (currentRole === 'rafa') carregarDadosRafa();
-    if (currentRole === 'admin') carregarDadosAdmin();
-  }
-}
-
-function exportarRelatorioFinanceiroCSV() {
-  const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
-  if (!aprovados || aprovados.length === 0) {
-    alert("Não há dados para exportar.");
-    return;
-  }
-
-  let csvContent = "\uFEFF";
-  csvContent += "Nome do Passageiro;Escola;Turno;Horario Busca;Horario Entrada;Valor Mensalidade;Dia Vencimento;Status Pagamento;Forma Pagamento;WhatsApp;PIN Pais\n";
-
-  aprovados.forEach(a => {
-    const nome = (a.nome || "-").replace(/;/g, ",");
-    const escola = (a.escola || "-").replace(/;/g, ",");
-    const turno = a.turno || "Manhã";
-    const hBusca = a.horario_busca || "-";
-    const hEscola = a.horario_escola || "-";
-    const valor = parseFloat(a.valor || 180).toFixed(2);
-    const vencimento = a.vencimento || 10;
-    const statusPag = a.status_pagamento || "Pendente";
-    const formaPag = a.forma_pagamento || "-";
-    const whats = a.whatsapp || "-";
-    const pin = a.pin_pais || "1234";
-
-    csvContent += `${nome};${escola};${turno};${hBusca};${hEscola};R$ ${valor};Dia ${vencimento};${statusPag};${formaPag};${whats};${pin}\n`;
-  });
-
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const dataHoje = new Date().toISOString().slice(0, 10);
-  const fileName = `Backup_Financeiro_TiaRafa_${dataHoje}.csv`;
-
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", fileName);
-  link.style.visibility = "hidden";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
 }
 
 function tocarSomSirene() {
