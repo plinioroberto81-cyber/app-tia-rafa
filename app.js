@@ -298,10 +298,10 @@ function toggleFormCadastro(role) {
 
   if (container.classList.contains("hidden")) {
     container.classList.remove("hidden");
-    if (icon) icon.className = "fa-solid fa-chevron-up text-amber-400";
+    if (icon) icon.className = "fa-solid fa-chevron-up text-slate-950";
   } else {
     container.classList.add("hidden");
-    if (icon) icon.className = "fa-solid fa-chevron-down text-amber-400";
+    if (icon) icon.className = "fa-solid fa-chevron-down text-slate-950";
   }
 }
 
@@ -313,11 +313,11 @@ function toggleListaPassageirosRafa() {
 
   if (container.classList.contains("hidden")) {
     container.classList.remove("hidden");
-    if (icon) icon.className = "fa-solid fa-chevron-down text-amber-400";
+    if (icon) icon.className = "fa-solid fa-chevron-down text-slate-950";
     renderizarPassageirosGeralRafa();
   } else {
     container.classList.add("hidden");
-    if (icon) icon.className = "fa-solid fa-chevron-right text-amber-400";
+    if (icon) icon.className = "fa-solid fa-chevron-right text-slate-950";
   }
 }
 
@@ -329,11 +329,11 @@ function toggleListaPassageirosAdmin() {
 
   if (container.classList.contains("hidden")) {
     container.classList.remove("hidden");
-    if (icon) icon.className = "fa-solid fa-chevron-down text-amber-400";
+    if (icon) icon.className = "fa-solid fa-chevron-down text-slate-950";
     carregarDadosAdmin();
   } else {
     container.classList.add("hidden");
-    if (icon) icon.className = "fa-solid fa-chevron-right text-amber-400";
+    if (icon) icon.className = "fa-solid fa-chevron-right text-slate-950";
   }
 }
 
@@ -365,7 +365,6 @@ async function limparAvisos() {
   alert("Avisos encerrados!");
   verificarAlertaGlobal();
 }
-
 /* ==========================================================================
    4. AUTENTICAÇÃO E SESSÃO (RESTAURAÇÃO SEGURA)
    ========================================================================== */
