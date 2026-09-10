@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-toggle-mapa-rafa")?.addEventListener("click", toggleMapaRafa);
   document.getElementById("btn-toggle-mapa-admin")?.addEventListener("click", toggleMapaAdmin);
 
-  // Cadastro Accordions
+  // Accordions de Cadastro e Exibição de Alunos na Gestão
   document.getElementById("btn-toggle-form-rafa")?.addEventListener("click", () => toggleFormCadastro('rafa'));
   document.getElementById("btn-toggle-form-admin")?.addEventListener("click", () => toggleFormCadastro('admin'));
   document.getElementById("btn-toggle-lista-alunos-rafa")?.addEventListener("click", toggleListaPassageirosRafa);
@@ -140,13 +140,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("tab-pais-filho").className = "flex-1 py-3 text-sm font-bold text-slate-400 border-b-2 border-transparent";
   });
 
-  // Alternador Rota Ida/Volta
+  // Alternador Rota Ida/Volta (Aba Chamada - Sem Alteração)
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
-  // ==========================================================================
-  // NAVEGAÇÃO DAS 3 ABAS TIA RAFA
-  // ==========================================================================
+  // Navegação das 3 Abas Principais da Tia Rafa
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
     document.getElementById("aba-suporte-rafa")?.classList.add("hidden");
@@ -198,15 +196,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-filtro-manha8")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (08h às 12h)"));
   document.getElementById("btn-filtro-tarde")?.addEventListener("click", () => aplicarFiltroTurno("Tarde"));
 
-  document.getElementById("btn-fin-filtro-todos")?.addEventListener("click", () => aplicarFiltroFin("Todos"));
-  document.getElementById("btn-fin-filtro-pendentes")?.addEventListener("click", () => aplicarFiltroFin("Pendente"));
-  document.getElementById("btn-fin-filtro-pagos")?.addEventListener("click", () => aplicarFiltroFin("Pago"));
-
   document.getElementById("btn-admin-fin-todos")?.addEventListener("click", () => aplicarFiltroFinAdmin("Todos"));
   document.getElementById("btn-admin-fin-pendentes")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pendente"));
   document.getElementById("btn-admin-fin-pagos")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pago"));
 
-  // CSV
+  // CSV & Encerrar Mês
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
@@ -441,7 +435,6 @@ async function logout() {
     console.error("Erro no logout Supabase:", err);
   }
 
-  // Limpa completamente o navegador para não manter login salvo
   localStorage.clear();
   currentRole = null;
   alunosCache = [];
@@ -450,7 +443,6 @@ async function logout() {
   pararSomSirene();
   voltarHome();
 
-  // Recarrega a página de forma limpa
   window.location.reload();
 }
 
@@ -1090,7 +1082,7 @@ function aplicarFiltroTurno(turno) {
   renderizarRotaRafa();
 }
 
-// ABA CHAMADA: EXIBE APENAS NOME, ESCOLA, HORÁRIO, ENDEREÇO E OS 3 BOTÕES DE STATUS
+// ABA 1: CHAMADA (INTACTA PARA OPERAÇÃO DA VAN)
 function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
@@ -1185,41 +1177,49 @@ async function resetarStatusDoDia() {
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
-// ABA GESTÃO: FICHA COMPLETA DOS PASSAGEIROS E EDIÇÕES
+// ABA 3: FICHA UNIFICADA DOS ALUNOS NA GESTÃO
 function renderizarPassageirosGeralRafa() {
   const container = document.getElementById("lista-passageiros-geral-rafa");
   const countEl = document.getElementById("count-rafa-alunos");
   if (!container) return;
 
+  const diaHoje = new Date().getDate();
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
+
   if (countEl) countEl.innerText = `${aprovados.length} Alunos Cadastrados`;
 
   if (aprovados.length === 0) {
-    container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum aluno cadastrado.</p>`;
+    container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum aluno cadastrado no momento.</p>`;
     return;
   }
 
   container.innerHTML = aprovados.map(a => {
-    const st = a.status || 'Em Casa';
     const stP = a.status_pagamento || 'Pendente';
+    const val = parseFloat(a.valor || 180);
+    const venc = parseInt(a.vencimento || 10);
+    const emAtraso = stP !== "Pago" && diaHoje > venc;
     const vaiHoje = a.vai_hoje !== false;
     const wsp = (a.whatsapp || '').replace(/\D/g, '');
+    const msgCobranca = encodeURIComponent(`Olá! Lembrete da mensalidade do transporte do(a) *${a.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 PIX: ${pixChaveGlobal}`);
 
     return `
-      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
+      <div class="bg-slate-900 border ${emAtraso ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-800'} p-4 rounded-2xl space-y-3 shadow-lg">
+        <!-- IDENTIFICAÇÃO DO ALUNO -->
         <div class="flex justify-between items-start">
           <div class="space-y-1">
             <div class="flex items-center gap-2">
-              <h4 class="text-sm font-extrabold text-white">${a.nome}</h4>
-              <span class="text-xs font-bold px-2 py-0.5 rounded-md ${vaiHoje ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+              <h4 class="text-base font-black text-white">${a.nome}</h4>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${vaiHoje ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
                 ${vaiHoje ? '✓ Vai Hoje' : '✕ Ausente'}
               </span>
+              ${emAtraso ? '<span class="text-[10px] bg-rose-500 text-white font-black px-1.5 py-0.5 rounded">Atrasado</span>' : ''}
             </div>
-            <p class="text-xs text-slate-300"><i class="fa-solid fa-school text-amber-400"></i> ${a.escola || '-'} • ${a.turno || 'Manhã'}</p>
-            <p class="text-xs text-amber-400 font-bold">📍 Horário Busca: ${a.horario_busca || '-'} | Escola: ${a.horario_escola || '-'}</p>
-            <p class="text-xs text-slate-400">PIN Pais: <strong>${a.pin_pais || '1234'}</strong> | Contato: ${a.whatsapp || 'S/ Whats'}</p>
+            <p class="text-xs text-slate-300"><i class="fa-solid fa-school text-amber-400"></i> ${a.escola || '-'} (${a.turno || 'Manhã'})</p>
+            <p class="text-xs text-amber-400 font-bold">📍 Busca: ${a.horario_busca || '-'} | Escola: ${a.horario_escola || '-'}</p>
+            <p class="text-xs text-slate-400">PIN Pais: <strong>${a.pin_pais || '1234'}</strong> | Endereço: ${a.endereco_casa || 'S/ endereço'}</p>
           </div>
 
+          <!-- BOTÕES DE GESTÃO E WHATSAPP -->
           <div class="flex flex-col gap-1.5 shrink-0">
             <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2.5 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold rounded-xl hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
             <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2.5 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold rounded-xl hover:bg-rose-600 hover:text-white transition-all">🗑️ Excluir</button>
@@ -1227,22 +1227,26 @@ function renderizarPassageirosGeralRafa() {
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-          <div>
-            <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Status Rota</span>
-            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
-              <option value="Em Casa" ${st === 'Em Casa' ? 'selected' : ''}>🏡 Em Casa</option>
-              <option value="Na Van" ${st === 'Na Van' ? 'selected' : ''}>🚌 Na Van</option>
-              <option value="Na Escola" ${st === 'Na Escola' ? 'selected' : ''}>🏫 Na Escola</option>
-            </select>
+        <!-- FINANCEIRO INTEGRADO DO ALUNO -->
+        <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-300">Mensalidade: <strong>R$ ${val.toFixed(2)}</strong> (Venc: Dia ${venc})</span>
+            <span class="text-xs font-black ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Quitado' : '🔴 Devendo'}</span>
           </div>
 
-          <div>
-            <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Status Financeiro</span>
-            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
-              <option value="Pendente" ${stP === 'Pendente' ? 'selected' : ''}>🔴 Pendente</option>
-              <option value="Pago" ${stP === 'Pago' ? 'selected' : ''}>🟢 Quitado</option>
-            </select>
+          <div class="flex items-center gap-1.5 pt-1 border-t border-slate-800/80">
+            ${stP === 'Pago' ? `
+              <button onclick="darBaixaRafa('${a.id}', 'Pendente', null)" class="w-full py-2 text-xs bg-slate-800 text-slate-300 font-bold rounded-lg border border-slate-700">Desfazer Pagamento</button>
+            ` : `
+              <button onclick="darBaixaRafa('${a.id}', 'Pago', 'PIX')" class="flex-1 py-2 text-xs bg-teal-500 text-slate-950 font-bold rounded-lg">PIX</button>
+              <button onclick="darBaixaRafa('${a.id}', 'Pago', 'Dinheiro')" class="flex-1 py-2 text-xs bg-amber-500 text-slate-950 font-bold rounded-lg">Dinheiro</button>
+              <button onclick="darBaixaRafa('${a.id}', 'Pago', 'Cartão')" class="flex-1 py-2 text-xs bg-slate-700 text-white font-bold rounded-lg">Cartão</button>
+              ${wsp ? `
+                <a href="https://wa.me/55${wsp}?text=${msgCobranca}" target="_blank" class="px-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg flex items-center justify-center shrink-0">
+                  <i class="fa-brands fa-whatsapp text-sm"></i>
+                </a>
+              ` : ''}
+            `}
           </div>
         </div>
       </div>
@@ -1283,20 +1287,8 @@ async function cadastrarAlunoRafa(e) {
   carregarDadosRafa();
 }
 
-function aplicarFiltroFin(status) {
-  filtroFinStatus = status;
-  document.getElementById("btn-fin-filtro-todos").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-fin-filtro-pendentes").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Pendente' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-fin-filtro-pagos").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Pago' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  renderizarFinanceiroRafa();
-}
-
 function renderizarFinanceiroRafa() {
-  const container = document.getElementById("lista-financeiro-rafa-cards");
-  if (!container) return;
-
   let faturamentoTotal = 0, recebido = 0, pendente = 0;
-  const diaHoje = new Date().getDate();
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
 
   aprovados.forEach(a => {
@@ -1313,49 +1305,6 @@ function renderizarFinanceiroRafa() {
   if (mTot) mTot.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
   if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
   if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
-
-  let filtrados = aprovados;
-  if (filtroFinStatus === "Pendente") filtrados = aprovados.filter(a => a.status_pagamento !== "Pago");
-  if (filtroFinStatus === "Pago") filtrados = aprovados.filter(a => a.status_pagamento === "Pago");
-
-  container.innerHTML = filtrados.map(aluno => {
-    const stP = aluno.status_pagamento || 'Pendente';
-    const val = parseFloat(aluno.valor || 180);
-    const venc = parseInt(aluno.vencimento || 10);
-    const emAtraso = stP !== "Pago" && diaHoje > venc;
-    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
-    const msgCobranca = encodeURIComponent(`Olá! Lembrete da mensalidade do transporte do(a) *${aluno.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 PIX: ${pixChaveGlobal}`);
-
-    return `
-      <div class="bg-slate-800/90 border ${emAtraso ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-700'} p-3.5 rounded-2xl space-y-2">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="flex items-center gap-2">
-              <p class="text-sm font-bold text-white">${aluno.nome}</p>
-              ${emAtraso ? '<span class="text-xs bg-rose-500 text-white font-black px-2 py-0.5 rounded">Atrasado</span>' : ''}
-            </div>
-            <p class="text-xs text-slate-300 mt-0.5">Valor: <strong>R$ ${val.toFixed(2)}</strong> | Vencimento: Dia ${venc}</p>
-          </div>
-          <span class="text-xs font-black ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Quitado' : '🔴 Devendo'}</span>
-        </div>
-
-        <div class="flex items-center gap-2 pt-1 border-t border-slate-700/50">
-          ${stP === 'Pago' ? `
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pendente', null)" class="w-full py-2 text-xs bg-slate-700 text-slate-300 font-bold rounded-xl">Desfazer Pagamento</button>
-          ` : `
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'PIX')" class="flex-1 py-2 text-xs bg-teal-500 text-slate-950 font-bold rounded-xl">PIX</button>
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Dinheiro')" class="flex-1 py-2 text-xs bg-amber-500 text-slate-950 font-bold rounded-xl">Dinheiro</button>
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Cartão')" class="flex-1 py-2 text-xs bg-slate-600 text-white font-bold rounded-xl">Cartão</button>
-            ${wsp ? `
-              <a href="https://wa.me/55${wsp}?text=${msgCobranca}" target="_blank" class="px-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl flex items-center justify-center shrink-0">
-                <i class="fa-brands fa-whatsapp text-sm"></i>
-              </a>
-            ` : ''}
-          `}
-        </div>
-      </div>
-    `;
-  }).join('');
 }
 
 async function darBaixaRafa(id, stP, forma) {
