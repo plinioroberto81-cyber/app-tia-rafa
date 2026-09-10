@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
   // ==========================================================================
-  // NAVEGAÇÃO DAS 3 ABAS TIA RAFA (CORRIGIDO)
+  // NAVEGAÇÃO DAS 3 ABAS TIA RAFA
   // ==========================================================================
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
@@ -329,7 +329,7 @@ async function limparAvisos() {
 }
 
 /* ==========================================================================
-   4. AUTENTICAÇÃO E SESSÃO
+   4. AUTENTICAÇÃO E SESSÃO (LOGOUT DEFINITIVO CORRIGIDO)
    ========================================================================== */
 
 function mostrarFormLogin(role) {
@@ -416,20 +416,30 @@ async function efetuarLoginComSupabase() {
 }
 
 async function logout() {
-  if (supabaseClient) await supabaseClient.auth.signOut();
+  try {
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut();
+    }
+  } catch (err) {
+    console.error("Erro no logout Supabase:", err);
+  }
 
-  localStorage.removeItem("app_role");
-  localStorage.removeItem("app_pai_wsp");
-  localStorage.removeItem("app_pai_pin");
-  localStorage.removeItem("app_pai_email");
-
+  // Limpa completamente o navegador para não manter login salvo
+  localStorage.clear();
   currentRole = null;
+  alunosCache = [];
+
+  if (isGpsTransmitting) alternarTransmissaoGps();
+  pararSomSirene();
   voltarHome();
+
+  // Recarrega a página de forma limpa
+  window.location.reload();
 }
 
 async function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
-  
+
   if (!roleSalva) {
     voltarHome();
     return;
@@ -437,15 +447,26 @@ async function restaurarSessaoAnterior() {
 
   if (roleSalva === "rafa" || roleSalva === "admin") {
     if (!supabaseClient) {
-      localStorage.removeItem("app_role");
+      localStorage.clear();
       voltarHome();
       return;
     }
 
     const { data: { session } } = await supabaseClient.auth.getSession();
-    
+
     if (!session) {
-      localStorage.removeItem("app_role");
+      localStorage.clear();
+      voltarHome();
+      return;
+    }
+  }
+
+  if (roleSalva === "pais") {
+    const wspSalvo = localStorage.getItem("app_pai_wsp");
+    const pinSalvo = localStorage.getItem("app_pai_pin");
+
+    if (!wspSalvo || !pinSalvo) {
+      localStorage.clear();
       voltarHome();
       return;
     }
@@ -453,35 +474,6 @@ async function restaurarSessaoAnterior() {
 
   currentRole = roleSalva;
   entrarPerfil(roleSalva, true);
-
-  if (roleSalva === "pais") {
-    const wspSalvo = localStorage.getItem("app_pai_wsp");
-    const pinSalvo = localStorage.getItem("app_pai_pin");
-
-    setTimeout(async () => {
-      if (wspSalvo && pinSalvo) {
-        if (!alunosCache || alunosCache.length === 0) {
-          const { data } = await supabaseClient.from('alunos').select('*');
-          if (data) alunosCache = data;
-        }
-
-        const aluno = alunosCache.find(a => 
-          (a.whatsapp || '').replace(/\D/g, '') === wspSalvo && 
-          (a.pin_pais || '1234') === pinSalvo && 
-          !a.pendente_aprovacao
-        );
-
-        if (aluno) {
-          document.getElementById("box-login-pais-direto")?.classList.add("hidden");
-          renderizarPaisFilhoPorObjeto(aluno);
-          return;
-        }
-      }
-
-      document.getElementById("box-login-pais-direto")?.classList.remove("hidden");
-      document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
-    }, 300);
-  }
 }
 
 /* ==========================================================================
@@ -1541,7 +1533,7 @@ async function aprovarCadastroAluno(id) {
     return;
   }
 
-  alert("✓ Cadastro aprovado e horário definido!");
+  alert("✓ Cadastro approved e horário definido!");
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
