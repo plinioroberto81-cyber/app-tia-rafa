@@ -10,7 +10,7 @@ if (window.supabase && window.supabase.createClient) {
   supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 }
 
-// Estados Globais da Aplicação
+// Estados Globais
 let pixChaveGlobal = "11999998888";
 let linkCartaoGlobal = "https://mpago.la/";
 let currentRole = null;
@@ -32,7 +32,7 @@ let markerVanAdmin = null;
 let mapRafa = null;
 let markerVanRafa = null;
 
-// Ícone Oficial da Zafira apontando para o arquivo local do projeto
+// Ícone Oficial da Zafira para o Leaflet
 const iconeZafiraGps = L.divIcon({
   className: 'custom-van-marker',
   html: `
@@ -43,6 +43,7 @@ const iconeZafiraGps = L.divIcon({
   iconSize: [55, 55],
   iconAnchor: [27, 27]
 });
+
 // Elementos Globais da Interface
 let loginSection, authForm, authTitle, inputPassword, mainButtons, bottomBar, btnTopBack;
 
@@ -62,8 +63,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   inicializarTema();
   verificarAlertaGlobal();
   carregarConfiguracoesGlobais();
-  
-  // Loops de atualização com prazos seguros para não travar o celular
+
+  // Loops de atualização do sistema
   setInterval(() => {
     if (currentRole === "admin") verificarEmergenciaAdmin();
   }, 10000);
@@ -85,7 +86,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("nav-btn-logout")?.addEventListener("click", logout);
   document.getElementById("btn-theme-toggle")?.addEventListener("click", alternarTema);
 
-  // Seleção de Perfis
+  // Perfis
   document.getElementById("btn-pais")?.addEventListener("click", () => entrarPerfil("pais"));
   document.getElementById("btn-rafa")?.addEventListener("click", () => mostrarFormLogin("rafa"));
   document.getElementById("btn-admin")?.addEventListener("click", () => mostrarFormLogin("admin"));
@@ -96,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-toggle-mapa-rafa")?.addEventListener("click", toggleMapaRafa);
   document.getElementById("btn-toggle-mapa-admin")?.addEventListener("click", toggleMapaAdmin);
 
-  // Sanfonas
+  // Cadastro Accordions
   document.getElementById("btn-toggle-form-rafa")?.addEventListener("click", () => toggleFormCadastro('rafa'));
   document.getElementById("btn-toggle-form-admin")?.addEventListener("click", () => toggleFormCadastro('admin'));
 
@@ -112,7 +113,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-salvar-configs")?.addEventListener("click", () => salvarConfigsGlobais('admin'));
   document.getElementById("btn-salvar-configs-rafa")?.addEventListener("click", () => salvarConfigsGlobais('rafa'));
 
-  // Auto Cadastro
+  // Auto Cadastro Pais
   document.getElementById("btn-abrir-auto-cadastro")?.addEventListener("click", () => {
     document.getElementById("form-auto-cadastro-container")?.classList.remove("hidden");
   });
@@ -121,67 +122,69 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   document.getElementById("form-auto-cadastro-pais")?.addEventListener("submit", enviarAutoCadastroPais);
 
-  // Área dos Pais
+  // Login Direto Pais
   document.getElementById("btn-entrar-pais-direto")?.addEventListener("click", validarLoginWhatsAppPais);
 
   document.getElementById("tab-pais-financeiro")?.addEventListener("click", () => {
     document.getElementById("aba-pais-filho")?.classList.add("hidden");
     document.getElementById("aba-pais-financeiro")?.classList.remove("hidden");
-    document.getElementById("tab-pais-financeiro").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
-    document.getElementById("tab-pais-filho").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    document.getElementById("tab-pais-financeiro").className = "flex-1 py-3 text-sm font-bold text-amber-400 border-b-2 border-amber-400";
+    document.getElementById("tab-pais-filho").className = "flex-1 py-3 text-sm font-bold text-slate-400 border-b-2 border-transparent";
   });
 
-  // Alternador de Rota Ida/Volta
+  // Alternador Rota Ida/Volta
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
-  // Abas Tia Rafa
+  // ==========================================================================
+  // NAVEGAÇÃO REESTRUTURADA DAS 3 ABAS TIA RAFA
+  // ==========================================================================
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
-    document.getElementById("aba-passageiros-rafa")?.classList.add("hidden");
-    document.getElementById("aba-financeiro-rafa")?.classList.add("hidden");
-    document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
-    document.getElementById("tab-btn-passageiros").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
-    document.getElementById("tab-btn-financeiro").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    document.getElementById("aba-suporte-rafa")?.classList.add("hidden");
+    document.getElementById("aba-gestao-rafa")?.classList.add("hidden");
+    document.getElementById("tab-btn-chamada").className = "flex-1 py-3 text-xs sm:text-sm font-black text-amber-400 border-b-2 border-amber-400 transition-all";
+    document.getElementById("tab-btn-suporte").className = "flex-1 py-3 text-xs sm:text-sm font-black text-slate-400 border-b-2 border-transparent transition-all";
+    document.getElementById("tab-btn-gestao").className = "flex-1 py-3 text-xs sm:text-sm font-black text-slate-400 border-b-2 border-transparent transition-all";
   });
 
-  document.getElementById("tab-btn-passageiros")?.addEventListener("click", () => {
+  document.getElementById("tab-btn-suporte")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.add("hidden");
-    document.getElementById("aba-passageiros-rafa")?.classList.remove("hidden");
-    document.getElementById("aba-financeiro-rafa")?.classList.add("hidden");
-    document.getElementById("tab-btn-passageiros").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
-    document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
-    document.getElementById("tab-btn-financeiro").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    document.getElementById("aba-suporte-rafa")?.classList.remove("hidden");
+    document.getElementById("aba-gestao-rafa")?.classList.add("hidden");
+    document.getElementById("tab-btn-suporte").className = "flex-1 py-3 text-xs sm:text-sm font-black text-amber-400 border-b-2 border-amber-400 transition-all";
+    document.getElementById("tab-btn-chamada").className = "flex-1 py-3 text-xs sm:text-sm font-black text-slate-400 border-b-2 border-transparent transition-all";
+    document.getElementById("tab-btn-gestao").className = "flex-1 py-3 text-xs sm:text-sm font-black text-slate-400 border-b-2 border-transparent transition-all";
+  });
+
+  document.getElementById("tab-btn-gestao")?.addEventListener("click", () => {
+    document.getElementById("aba-chamada-rafa")?.classList.add("hidden");
+    document.getElementById("aba-suporte-rafa")?.classList.add("hidden");
+    document.getElementById("aba-gestao-rafa")?.classList.remove("hidden");
+    document.getElementById("tab-btn-gestao").className = "flex-1 py-3 text-xs sm:text-sm font-black text-amber-400 border-b-2 border-amber-400 transition-all";
+    document.getElementById("tab-btn-chamada").className = "flex-1 py-3 text-xs sm:text-sm font-black text-slate-400 border-b-2 border-transparent transition-all";
+    document.getElementById("tab-btn-suporte").className = "flex-1 py-3 text-xs sm:text-sm font-black text-slate-400 border-b-2 border-transparent transition-all";
     renderizarPassageirosGeralRafa();
-  });
-
-  document.getElementById("tab-btn-financeiro")?.addEventListener("click", () => {
-    document.getElementById("aba-chamada-rafa")?.classList.add("hidden");
-    document.getElementById("aba-passageiros-rafa")?.classList.add("hidden");
-    document.getElementById("aba-financeiro-rafa")?.classList.remove("hidden");
-    document.getElementById("tab-btn-financeiro").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
-    document.getElementById("tab-btn-chamada").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
-    document.getElementById("tab-btn-passageiros").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
     renderizarFinanceiroRafa();
   });
 
-  // Abas Suporte (Admin)
+  // Abas Admin
   document.getElementById("tab-admin-alunos")?.addEventListener("click", () => {
     document.getElementById("aba-admin-alunos")?.classList.remove("hidden");
     document.getElementById("aba-admin-financeiro")?.classList.add("hidden");
-    document.getElementById("tab-admin-alunos").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
-    document.getElementById("tab-admin-financeiro").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    document.getElementById("tab-admin-alunos").className = "flex-1 py-2.5 text-xs sm:text-sm font-bold text-amber-400 border-b-2 border-amber-400";
+    document.getElementById("tab-admin-financeiro").className = "flex-1 py-2.5 text-xs sm:text-sm font-bold text-slate-400 border-b-2 border-transparent";
   });
 
   document.getElementById("tab-admin-financeiro")?.addEventListener("click", () => {
     document.getElementById("aba-admin-alunos")?.classList.add("hidden");
     document.getElementById("aba-admin-financeiro")?.classList.remove("hidden");
-    document.getElementById("tab-admin-financeiro").className = "flex-1 py-2 text-xs font-bold text-amber-400 border-b-2 border-amber-400";
-    document.getElementById("tab-admin-alunos").className = "flex-1 py-2 text-xs font-bold text-slate-400 border-b-2 border-transparent";
+    document.getElementById("tab-admin-financeiro").className = "flex-1 py-2.5 text-xs sm:text-sm font-bold text-amber-400 border-b-2 border-amber-400";
+    document.getElementById("tab-admin-alunos").className = "flex-1 py-2.5 text-xs sm:text-sm font-bold text-slate-400 border-b-2 border-transparent";
     renderizarFinanceiroAdmin();
   });
 
-  // Filtros
+  // Filtros de Rota
   document.getElementById("btn-filtro-todos")?.addEventListener("click", () => aplicarFiltroTurno("Todos"));
   document.getElementById("btn-filtro-manha7")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (07h às 11h)"));
   document.getElementById("btn-filtro-manha8")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (08h às 12h)"));
@@ -195,33 +198,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-admin-fin-pendentes")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pendente"));
   document.getElementById("btn-admin-fin-pagos")?.addEventListener("click", () => aplicarFiltroFinAdmin("Pago"));
 
-  // Exportar Relatórios CSV
+  // CSV
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
-  // Mural de Avisos
-  document.getElementById("btn-aviso-transito")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
+  // Botões de Avisos Rápidos pros Pais
   document.getElementById("btn-aviso-transito-rafa")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
-  document.getElementById("btn-aviso-chuva")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
   document.getElementById("btn-aviso-chuva-rafa")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
+  document.getElementById("btn-aviso-pneu-rafa")?.addEventListener("click", () => dispararAviso("🛞 Pneu furado. Paramos com segurança para a troca rápida!"));
+  document.getElementById("btn-aviso-pane-rafa")?.addEventListener("click", () => dispararAviso("🛠️ Pequeno ajuste mecânico em andamento. Já voltaremos à rota normal!"));
 
-  document.getElementById("btn-enviar-aviso-custom")?.addEventListener("click", () => {
-    const txt = document.getElementById("input-aviso-custom")?.value;
-    if (txt) { dispararAviso(`📢 ${txt}`); document.getElementById("input-aviso-custom").value = ""; }
-  });
   document.getElementById("btn-enviar-aviso-custom-rafa")?.addEventListener("click", () => {
     const txt = document.getElementById("input-aviso-custom-rafa")?.value;
     if (txt) { dispararAviso(`📢 ${txt}`); document.getElementById("input-aviso-custom-rafa").value = ""; }
   });
-
-  document.getElementById("btn-limpar-aviso")?.addEventListener("click", limparAvisos);
   document.getElementById("btn-limpar-aviso-rafa")?.addEventListener("click", limparAvisos);
 
-  // Formulários de Cadastro de Passageiro
+  // Forms
   document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("form-cadastrar-aluno-rafa")?.addEventListener("submit", cadastrarAlunoRafa);
-  
-  // Encerrar Mês
+
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
   document.getElementById("btn-encerrar-mes-rafa")?.addEventListener("click", encerrarMesFinanceiro);
 
@@ -229,7 +225,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /* ==========================================================================
-   3. INTERFACE, TEMA CLARO/ESCURO & COMPONENTES VISUAIS
+   3. INTERFACE, TEMA & MURAL
    ========================================================================== */
 
 function atualizarBadgeHeader(role) {
@@ -245,13 +241,13 @@ function atualizarBadgeHeader(role) {
 
   if (role === "pais") {
     badge.innerText = "Área dos Pais";
-    badge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30";
+    badge.className = "text-xs font-black uppercase px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30";
   } else if (role === "rafa") {
     badge.innerText = "Tia Rafa";
-    badge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+    badge.className = "text-xs font-black uppercase px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
   } else if (role === "admin") {
     badge.innerText = "Suporte";
-    badge.className = "text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/30";
+    badge.className = "text-xs font-black uppercase px-2.5 py-1 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/30";
   }
 }
 
@@ -260,10 +256,10 @@ function inicializarTema() {
   const themeIcon = document.getElementById("theme-icon");
   if (temaSalvo === "light") {
     document.documentElement.classList.add("light-mode");
-    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-xs";
+    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-sm";
   } else {
     document.documentElement.classList.remove("light-mode");
-    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-xs";
+    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-sm";
   }
 }
 
@@ -273,18 +269,18 @@ function alternarTema() {
   if (htmlEl.classList.contains("light-mode")) {
     htmlEl.classList.remove("light-mode");
     localStorage.setItem("theme", "dark");
-    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-xs";
+    if (themeIcon) themeIcon.className = "fa-solid fa-sun text-sm";
   } else {
     htmlEl.classList.add("light-mode");
     localStorage.setItem("theme", "light");
-    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-xs";
+    if (themeIcon) themeIcon.className = "fa-solid fa-moon text-sm";
   }
 }
 
 function toggleFormCadastro(role) {
   const container = role === 'rafa' ? document.getElementById("container-form-cadastrar-rafa") : document.getElementById("container-form-cadastrar-admin");
   const icon = role === 'rafa' ? document.getElementById("icon-toggle-form-rafa") : document.getElementById("icon-toggle-form-admin");
-  
+
   if (!container) return;
 
   if (container.classList.contains("hidden")) {
@@ -301,7 +297,7 @@ async function verificarAlertaGlobal() {
   const { data } = await supabaseClient.from('alertas').select('*').eq('ativo', true).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN').order('id', { ascending: false }).limit(1);
   const banner = document.getElementById("banner-alerta-global");
   const txt = document.getElementById("texto-alerta-global");
-  
+
   if (data && data.length > 0) {
     if (txt) txt.innerText = data[0].mensagem;
     banner?.classList.remove("hidden");
@@ -314,7 +310,7 @@ async function dispararAviso(msg) {
   if (!supabaseClient) return;
   await supabaseClient.from('alertas').update({ ativo: false }).neq('tipo', 'EMERGENCIA_ADMIN').neq('tipo', 'GPS_VAN');
   await supabaseClient.from('alertas').insert([{ tipo: 'Aviso', mensagem: msg, ativo: true }]);
-  alert("Aviso publicado!");
+  alert("Aviso publicado no aplicativo dos pais!");
   verificarAlertaGlobal();
 }
 
@@ -326,7 +322,7 @@ async function limparAvisos() {
 }
 
 /* ==========================================================================
-   4. AUTENTICAÇÃO, TROCA DE PERFIL E GERENCIAMENTO DE SESSÃO
+   4. AUTENTICAÇÃO E SESSÃO
    ========================================================================== */
 
 function mostrarFormLogin(role) {
@@ -372,7 +368,7 @@ function voltarHome() {
   bottomBar?.classList.add("hidden");
   btnTopBack?.classList.add("hidden");
   loginSection?.classList.remove("hidden");
-  
+
   if (isGpsTransmitting) alternarTransmissaoGps();
   pararSomSirene();
   resetLogin();
@@ -413,15 +409,12 @@ async function efetuarLoginComSupabase() {
 }
 
 async function logout() {
-  if (supabaseClient) {
-    await supabaseClient.auth.signOut();
-  }
+  if (supabaseClient) await supabaseClient.auth.signOut();
 
   localStorage.removeItem("app_role");
   localStorage.removeItem("app_pai_wsp");
   localStorage.removeItem("app_pai_pin");
   localStorage.removeItem("app_pai_email");
-  localStorage.removeItem("app_pai_pin_validado");
 
   currentRole = null;
   voltarHome();
@@ -457,7 +450,6 @@ async function restaurarSessaoAnterior() {
   if (roleSalva === "pais") {
     const wspSalvo = localStorage.getItem("app_pai_wsp");
     const pinSalvo = localStorage.getItem("app_pai_pin");
-    const emailSalvo = localStorage.getItem("app_pai_email");
 
     setTimeout(async () => {
       if (wspSalvo && pinSalvo) {
@@ -479,12 +471,6 @@ async function restaurarSessaoAnterior() {
         }
       }
 
-      if (emailSalvo) {
-        document.getElementById("box-login-pais-direto")?.classList.add("hidden");
-        renderizarPaisFilho(emailSalvo);
-        return;
-      }
-
       document.getElementById("box-login-pais-direto")?.classList.remove("hidden");
       document.getElementById("conteudo-filho-pais")?.classList.add("hidden");
     }, 300);
@@ -492,7 +478,7 @@ async function restaurarSessaoAnterior() {
 }
 
 /* ==========================================================================
-   5. CONFIGURAÇÕES GLOBAIS DE PAGAMENTO (PIX & CARTÃO)
+   5. CONFIGURAÇÕES GLOBAIS DE PAGAMENTO
    ========================================================================== */
 
 async function carregarConfiguracoesGlobais() {
@@ -545,7 +531,6 @@ async function salvarConfigsGlobais(origem) {
   }
 
   alert("✓ Configurações salvas com sucesso!");
-  
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
@@ -586,7 +571,6 @@ function toggleMapaAdmin() {
   }
 }
 
-// TRANSMISSÃO DO GPS VIA SENSOR DO DISPOSITIVO
 function alternarTransmissaoGps() {
   const btn = document.getElementById("btn-toggle-gps");
   if (!isGpsTransmitting) {
@@ -607,21 +591,21 @@ function alternarTransmissaoGps() {
                 ativo: true 
               }]);
             } catch (err) {
-              console.error("Erro ao enviar posição GPS ao Supabase:", err);
+              console.error("Erro GPS Supabase:", err);
             }
           }
-          
+
           isGpsTransmitting = true;
           if (btn) {
             btn.innerHTML = `🟢 GPS Transmitindo (~${Math.round(precisao)}m)`;
-            btn.className = "px-3 py-1 bg-emerald-500 text-slate-950 font-bold text-[11px] rounded-lg transition-all animate-pulse";
+            btn.className = "px-4 py-2 bg-emerald-500 text-slate-950 font-bold text-xs rounded-xl transition-all animate-pulse";
           }
         },
         (err) => {
-          console.error("Erro no sensor GPS:", err);
+          console.error("Erro sensor GPS:", err);
           if (btn) {
             btn.innerHTML = "⚪ GPS Desligado";
-            btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
+            btn.className = "px-4 py-2 bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all";
           }
           isGpsTransmitting = false;
         },
@@ -635,12 +619,11 @@ function alternarTransmissaoGps() {
     isGpsTransmitting = false;
     if (btn) {
       btn.innerHTML = "⚪ GPS Desligado";
-      btn.className = "px-3 py-1 bg-slate-700 text-slate-300 font-bold text-[11px] rounded-lg transition-all";
+      btn.className = "px-4 py-2 bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all";
     }
   }
 }
 
-// RECEBIMENTO E EXIBIÇÃO NO MAPA TIA RAFA
 async function carregarGpsRafa() {
   if (currentRole !== "rafa" || !supabaseClient) return;
 
@@ -659,9 +642,7 @@ async function carregarGpsRafa() {
       .order('id', { ascending: false })
       .limit(1);
 
-    let lat = -22.7681; 
-    let lng = -43.5591;
-    let temSinal = false;
+    let lat = -22.7681, lng = -43.5591, temSinal = false;
 
     if (data && data.length > 0 && data[0].mensagem) {
       const coords = data[0].mensagem.split(',');
@@ -691,7 +672,6 @@ async function carregarGpsRafa() {
   }
 }
 
-// RECEBIMENTO E EXIBIÇÃO NO MAPA SUPORTE (ADMIN)
 async function carregarGpsAdmin() {
   if (currentRole !== "admin" || !supabaseClient) return;
 
@@ -710,9 +690,7 @@ async function carregarGpsAdmin() {
       .order('id', { ascending: false })
       .limit(1);
 
-    let lat = -22.7681; 
-    let lng = -43.5591;
-    let temSinal = false;
+    let lat = -22.7681, lng = -43.5591, temSinal = false;
 
     if (data && data.length > 0 && data[0].mensagem) {
       const coords = data[0].mensagem.split(',');
@@ -743,12 +721,11 @@ async function carregarGpsAdmin() {
 }
 
 /* ==========================================================================
-   7. MÓDULO ÁREA DOS PAIS
+   7. ÁREA DOS PAIS
    ========================================================================== */
 
 async function carregarDadosPais(isBackground = false) {
   if (!supabaseClient) return;
-
   if (!isBackground) await carregarConfiguracoesGlobais();
 
   const { data } = await supabaseClient.from('alunos').select('*');
@@ -796,42 +773,35 @@ function validarLoginWhatsAppPais() {
   );
 
   if (!aluno) {
-    alert("⚠️ Nenhum aluno encontrado para esse WhatsApp ou o cadastro ainda aguarda aprovação da Tia Rafa.");
+    alert("⚠️ Nenhum aluno encontrado para esse WhatsApp ou cadastro pendente.");
     return;
   }
 
-  const pinCorreto = aluno.pin_pais || "1234";
-
-  if (pinInput === pinCorreto) {
+  if (pinInput === (aluno.pin_pais || "1234")) {
     localStorage.setItem("app_pai_wsp", wspInput);
     localStorage.setItem("app_pai_pin", pinInput);
-
     document.getElementById("box-login-pais-direto")?.classList.add("hidden");
     renderizarPaisFilhoPorObjeto(aluno);
   } else {
-    alert("⚠️ PIN incorreto! Verifique o número digitado.");
+    alert("⚠️ PIN incorreto!");
   }
 }
 
 function renderizarPaisFilhoPorObjeto(filho) {
   const container = document.getElementById("conteudo-filho-pais");
   if (!container || !filho) return;
-
   renderizarPaisFilho(filho.nome);
   container.classList.remove("hidden");
 }
 
-function renderizarPaisFilho(emailOuNome) {
+function renderizarPaisFilho(nomeOuEmail) {
   const container = document.getElementById("conteudo-filho-pais");
   const abaFilho = document.getElementById("aba-pais-filho");
   const abaFin = document.getElementById("aba-pais-financeiro");
 
-  if (!emailOuNome || !container) {
-    container?.classList.add("hidden");
-    return;
-  }
+  if (!nomeOuEmail || !container) return;
 
-  const filho = alunosCache.find(a => (a.email_mae === emailOuNome || a.nome === emailOuNome) && !a.pendente_aprovacao);
+  const filho = alunosCache.find(a => (a.email_mae === nomeOuEmail || a.nome === nomeOuEmail) && !a.pendente_aprovacao);
   if (!filho) return;
 
   const st = filho.status || 'Em Casa';
@@ -861,23 +831,23 @@ function renderizarPaisFilho(emailOuNome) {
       <div class="bg-slate-800/90 border border-slate-700 p-5 rounded-2xl space-y-4">
         <div class="flex justify-between items-start">
           <div>
-            <h3 class="text-base font-extrabold text-white">${filho.nome}</h3>
-            <p class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-graduation-cap"></i> ${filho.escola || '-'} (${filho.turno || 'Manhã'})</p>
-            <p class="text-[11px] text-amber-400 font-medium mt-1"><i class="fa-regular fa-clock"></i> Horário Fixo: Busca ${filho.horario_busca || 'A definir'} | Entrada ${filho.horario_escola || '-'}</p>
+            <h3 class="text-lg font-black text-white">${filho.nome}</h3>
+            <p class="text-xs text-slate-300 mt-1"><i class="fa-solid fa-graduation-cap text-amber-400"></i> ${filho.escola || '-'} (${filho.turno || 'Manhã'})</p>
+            <p class="text-xs text-amber-400 font-bold mt-1.5"><i class="fa-regular fa-clock"></i> Busca Casa: ${filho.horario_busca || 'A definir'} | Entrada: ${filho.horario_escola || '-'}</p>
           </div>
-          <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor} flex items-center gap-1.5">
+          <span class="px-3 py-1.5 rounded-full text-xs font-black border ${badgeColor} flex items-center gap-1.5 shrink-0">
             <i class="fa-solid ${icon}"></i> ${st}
           </span>
         </div>
 
-        <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs text-slate-300">
+        <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-700/50 text-xs text-slate-300 font-medium">
           ${desc}
         </div>
 
-        <div class="bg-slate-900/80 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
+        <div class="bg-slate-900/80 border border-amber-500/30 p-4 rounded-xl space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-amber-400"><i class="fa-solid fa-clock"></i> Informar Exceção / Ausência</span>
-            <button id="btn-toggle-excecao-${filho.id}" onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-2.5 py-1 text-[11px] font-bold rounded-lg ${temEspecial || !vaiHoje ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
+            <span class="text-xs font-extrabold text-amber-400"><i class="fa-solid fa-clock"></i> Informar Exceção / Ausência</span>
+            <button id="btn-toggle-excecao-${filho.id}" onclick="toggleBoxHorarioEspecial('${filho.id}')" class="px-3 py-1.5 text-xs font-bold rounded-lg ${temEspecial || !vaiHoje ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}">
               ${temEspecial || !vaiHoje ? '⚡ Exceção Ativa' : '+ Informar Exceção'}
             </button>
           </div>
@@ -885,26 +855,26 @@ function renderizarPaisFilho(emailOuNome) {
           <div id="box-horario-especial-${filho.id}" class="${temEspecial || !vaiHoje ? '' : 'hidden'} space-y-3 pt-2 border-t border-slate-800">
             <div class="grid grid-cols-2 gap-2">
               <div>
-                <label class="text-[9px] text-slate-400 block font-bold">Busca Ida Hoje:</label>
-                <input type="text" id="esp-ida-${filho.id}" value="${filho.horario_busca_hoje || ''}" placeholder="Ex: 09:30" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
+                <label class="text-xs text-slate-400 block font-bold mb-1">Busca Ida Hoje:</label>
+                <input type="text" id="esp-ida-${filho.id}" value="${filho.horario_busca_hoje || ''}" placeholder="Ex: 09:30" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
               </div>
               <div>
-                <label class="text-[9px] text-slate-400 block font-bold">Volta Hoje:</label>
-                <input type="text" id="esp-volta-${filho.id}" value="${filho.horario_volta_hoje || ''}" placeholder="Ex: 15:00" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-xs text-white">
+                <label class="text-xs text-slate-400 block font-bold mb-1">Volta Hoje:</label>
+                <input type="text" id="esp-volta-${filho.id}" value="${filho.horario_volta_hoje || ''}" placeholder="Ex: 15:00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
               </div>
             </div>
-            
-            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+
+            <button onclick="salvarHorarioEspecialPais('${filho.id}')" class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all">
               💾 Salvar Horário Especial pra Tia Rafa
             </button>
 
             <div class="pt-2 border-t border-slate-800 flex flex-col gap-2">
-              <button onclick="marcarAusenciaPais('${filho.id}', '${filho.nome.replace(/'/g, "\\'")}')" class="w-full py-2 bg-rose-500/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-xs rounded-lg transition-all">
+              <button onclick="marcarAusenciaPais('${filho.id}', '${filho.nome.replace(/'/g, "\\'")}')" class="w-full py-2.5 bg-rose-500/20 border border-rose-500/30 text-rose-400 font-bold text-xs rounded-xl transition-all">
                 🔴 Marcar que NÃO VAI no transporte hoje
               </button>
 
               ${temEspecial || !vaiHoje ? `
-                <button onclick="restaurarPadraoPais('${filho.id}')" class="w-full py-1.5 bg-slate-800 text-emerald-400 hover:text-emerald-300 font-bold text-[11px] rounded-lg transition-all border border-slate-700">
+                <button onclick="restaurarPadraoPais('${filho.id}')" class="w-full py-2 bg-slate-800 text-emerald-400 font-bold text-xs rounded-xl transition-all border border-slate-700">
                   ✓ Cancelar Exceção / Voltar ao Horário Fixo
                 </button>
               ` : ''}
@@ -914,7 +884,7 @@ function renderizarPaisFilho(emailOuNome) {
 
         <div class="flex items-center justify-between pt-2 border-t border-slate-700/60">
           <span class="text-xs font-bold text-slate-300">Status de Transporte Hoje:</span>
-          <span class="px-3 py-1.5 rounded-xl text-xs font-bold ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white shadow-lg border border-rose-400'}">
+          <span class="px-3 py-1.5 rounded-xl text-xs font-black ${vaiHoje ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white shadow-lg border border-rose-400'}">
             ${vaiHoje ? '🟢 Confirmado (Vai Hoje)' : '🔴 Ausente Informado'}
           </span>
         </div>
@@ -931,28 +901,24 @@ function renderizarPaisFilho(emailOuNome) {
         </div>
 
         <div class="flex justify-between items-baseline">
-          <p class="text-2xl font-extrabold text-white">R$ ${val.toFixed(2)}</p>
-          <p class="text-xs text-slate-400">Vencimento: Dia ${venc}</p>
+          <p class="text-2xl font-black text-white">R$ ${val.toFixed(2)}</p>
+          <p class="text-xs text-slate-300 font-bold">Vencimento: Dia ${venc}</p>
         </div>
 
         ${stPag !== 'Pago' ? `
           <div class="space-y-3 pt-2">
-            <div class="p-3 bg-teal-950/40 border border-teal-500/30 rounded-xl space-y-1.5">
+            <div class="p-3.5 bg-teal-950/40 border border-teal-500/30 rounded-xl space-y-2">
               <p class="text-xs font-bold text-teal-300"><i class="fa-brands fa-pix"></i> Pagamento via PIX</p>
-              <p class="text-xs font-mono bg-slate-900 p-2 rounded border border-slate-700 text-teal-200 select-all">${pixChaveGlobal}</p>
+              <p class="text-xs font-mono bg-slate-900 p-2.5 rounded-lg border border-slate-700 text-teal-200 select-all">${pixChaveGlobal}</p>
             </div>
 
-            <div class="p-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-xs text-slate-400">
-              <i class="fa-solid fa-money-bill-wave text-amber-400"></i> <strong>Dinheiro:</strong> Entregar diretamente para a Tia Rafa no embarque.
-            </div>
-
-            <a href="${linkCartaoGlobal}" target="_blank" class="block w-full py-3 bg-slate-700 hover:bg-slate-600 text-white text-center font-bold text-xs rounded-xl transition-all">
+            <a href="${linkCartaoGlobal}" target="_blank" class="block w-full py-3 bg-slate-700 text-white text-center font-bold text-xs rounded-xl">
               <i class="fa-solid fa-credit-card"></i> Pagar no Cartão de Crédito/Débito
             </a>
           </div>
         ` : `
-          <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-semibold text-center">
-            ✓ Obrigado! A mensalidade deste mês está quitada.
+          <div class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-xs text-emerald-400 font-bold text-center">
+            ✓ Obrigado! Mensalidade deste mês quitada.
           </div>
         `}
       </div>
@@ -967,9 +933,7 @@ function toggleBoxHorarioEspecial(id) {
   const btn = document.getElementById(`btn-toggle-excecao-${id}`);
   if (!box) return;
 
-  const estaEscondido = box.classList.contains("hidden");
-
-  if (estaEscondido) {
+  if (box.classList.contains("hidden")) {
     box.classList.remove("hidden");
     if (btn) btn.innerText = "✕ Fechar";
   } else {
@@ -984,30 +948,16 @@ async function enviarAutoCadastroPais(e) {
   e.preventDefault();
   if (!supabaseClient) return;
 
-  const nomeEl = document.getElementById("auto-nome");
-  const turnoEl = document.getElementById("auto-turno");
-  const wspEl = document.getElementById("auto-wsp");
-  const endEl = document.getElementById("auto-endereco-casa");
-  const escolaEl = document.getElementById("auto-escola");
-  const pinEl = document.getElementById("auto-pin");
-
-  const pin = pinEl ? pinEl.value.trim() : "";
-  if (pin.length !== 4 || isNaN(pin)) {
-    alert("O PIN de acesso deve conter exatamente 4 números.");
-    if (pinEl) pinEl.focus();
-    return;
-  }
-
   const novoAluno = {
-    nome: nomeEl ? nomeEl.value.trim() : "",
-    turno: turnoEl ? turnoEl.value : "Manhã (07h às 11h)",
-    whatsapp: wspEl ? wspEl.value.trim() : "",
-    horario_escola: turnoEl ? turnoEl.value : "",
+    nome: document.getElementById("auto-nome")?.value.trim(),
+    turno: document.getElementById("auto-turno")?.value,
+    whatsapp: document.getElementById("auto-wsp")?.value.trim(),
+    horario_escola: document.getElementById("auto-turno")?.value,
     horario_busca: "",
-    endereco_casa: endEl ? endEl.value.trim() : "",
-    escola: escolaEl ? escolaEl.value.trim() : "",
+    endereco_casa: document.getElementById("auto-endereco-casa")?.value.trim(),
+    escola: document.getElementById("auto-escola")?.value.trim(),
     email_mae: `aluno_${Date.now()}@transporte.local`,
-    pin_pais: pin,
+    pin_pais: document.getElementById("auto-pin")?.value.trim(),
     valor: 180,
     vencimento: 10,
     status: 'Em Casa',
@@ -1027,7 +977,7 @@ async function enviarAutoCadastroPais(e) {
     return;
   }
 
-  alert("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca e aprovará o acesso.");
+  alert("✓ Cadastro enviado com sucesso!\n\nA Tia Rafa definirá o horário da busca.");
   document.getElementById("form-auto-cadastro-pais")?.reset();
   document.getElementById("form-auto-cadastro-container")?.classList.add("hidden");
   carregarDadosPais();
@@ -1035,21 +985,10 @@ async function enviarAutoCadastroPais(e) {
 
 async function marcarAusenciaPais(id, nomeAluno) {
   if (!supabaseClient) return;
+  if (!confirm(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`)) return;
 
-  const confirmou = confirm(`Tem certeza que o(a) ${nomeAluno} NÃO vai no transporte hoje?`);
-  if (!confirmou) return;
-
-  const { error } = await supabaseClient.from('alunos').update({ 
-    vai_hoje: false 
-  }).eq('id', id);
-
-  if (error) {
-    alert("Erro ao registrar ausência: " + error.message);
-    return;
-  }
-
-  alert(`✓ Avisado com sucesso! A Tia Rafa já sabe que ${nomeAluno} não irá hoje.`);
-  
+  await supabaseClient.from('alunos').update({ vai_hoje: false }).eq('id', id);
+  alert(`✓ Avisado! A Tia Rafa já sabe que ${nomeAluno} não irá hoje.`);
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
 }
@@ -1065,55 +1004,40 @@ async function salvarHorarioEspecialPais(id) {
     return;
   }
 
-  const { error } = await supabaseClient.from('alunos').update({
+  await supabaseClient.from('alunos').update({
     tem_horario_especial: true,
     horario_busca_hoje: hIda,
     horario_volta_hoje: hVolta,
     vai_hoje: true
   }).eq('id', id);
 
-  if (error) {
-    alert("Erro ao salvar: " + error.message);
-    return;
-  }
-
   alert("✓ Horário especial enviado para a Tia Rafa!");
-  
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
 }
 
 async function restaurarPadraoPais(id) {
   if (!supabaseClient) return;
+  if (!confirm("Deseja cancelar as exceções e voltar ao horário normal?")) return;
 
-  const confirmou = confirm("Deseja cancelar todas as exceções e voltar ao horário e presença normais?");
-  if (!confirmou) return;
-
-  const { error } = await supabaseClient.from('alunos').update({
+  await supabaseClient.from('alunos').update({
     tem_horario_especial: false,
     horario_busca_hoje: "",
     horario_volta_hoje: "",
     vai_hoje: true
   }).eq('id', id);
 
-  if (error) {
-    alert("Erro ao restaurar: " + error.message);
-    return;
-  }
-
-  alert("✓ Status restaurado ao padrão normal!");
-  
+  alert("✓ Status restaurado!");
   await carregarDadosPais();
   if (currentRole === 'rafa') carregarDadosRafa();
 }
 
 /* ==========================================================================
-   8. MÓDULO PAINEL TIA RAFA (MOTORISTA)
+   8. PAINEL TIA RAFA (MOTORISTA)
    ========================================================================== */
 
 async function carregarDadosRafa(isBackground = false) {
   if (!supabaseClient) return;
-
   if (!isBackground) await carregarConfiguracoesGlobais();
 
   const { data } = await supabaseClient.from('alunos').select('*');
@@ -1132,24 +1056,25 @@ function alternarModoRota(modo) {
   const btnVolta = document.getElementById("btn-rota-volta");
 
   if (modo === "IDA") {
-    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
-    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+    btnIda.className = "py-3 text-xs sm:text-sm font-bold rounded-xl bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnVolta.className = "py-3 text-xs sm:text-sm font-bold rounded-xl bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
   } else {
-    btnVolta.className = "py-2 text-xs font-bold rounded-lg bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
-    btnIda.className = "py-2 text-xs font-bold rounded-lg bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+    btnVolta.className = "py-3 text-xs sm:text-sm font-bold rounded-xl bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnIda.className = "py-3 text-xs sm:text-sm font-bold rounded-xl bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
   }
   renderizarRotaRafa();
 }
 
 function aplicarFiltroTurno(turno) {
   filtroTurnoAtual = turno;
-  document.getElementById("btn-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
-  document.getElementById("btn-filtro-manha7").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã (07h às 11h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
-  document.getElementById("btn-filtro-manha8").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Manhã (08h às 12h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
-  document.getElementById("btn-filtro-tarde").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${turno === 'Tarde' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-todos").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${turno === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha7").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${turno === 'Manhã (07h às 11h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha8").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${turno === 'Manhã (08h às 12h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-tarde").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${turno === 'Tarde' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
   renderizarRotaRafa();
 }
 
+// ABA CHAMADA: EXIBE APENAS NOME, ESCOLA, HORÁRIO, ENDEREÇO E OS 3 BOTÕES DE STATUS
 function renderizarRotaRafa() {
   const container = document.getElementById("lista-chamada-rafa-cards");
   if (!container) return;
@@ -1168,22 +1093,18 @@ function renderizarRotaRafa() {
   filtrados.sort((a, b) => {
     let hA = a.horario_busca || '99:99';
     let hB = b.horario_busca || '99:99';
-
     if (modoRotaAtual === "IDA" && a.horario_busca_hoje) hA = a.horario_busca_hoje;
     if (modoRotaAtual === "IDA" && b.horario_busca_hoje) hB = b.horario_busca_hoje;
-
     if (modoRotaAtual === "VOLTA" && a.horario_volta_hoje) hA = a.horario_volta_hoje;
     if (modoRotaAtual === "VOLTA" && b.horario_volta_hoje) hB = b.horario_volta_hoje;
-
     return hA.localeCompare(hB);
   });
 
   if (filtrados.length === 0) {
     container.innerHTML = `
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2">
-        <i class="fa-solid fa-van-shuttle text-2xl text-amber-400"></i>
-        <p class="text-xs font-bold text-white">Nenhum passageiro nesta rota no momento.</p>
-        <p class="text-[10px] text-slate-400">${modoRotaAtual === 'VOLTA' ? 'As crianças trazidas na ida aparecerão automaticamente aqui.' : 'Todos os alunos estão ausentes ou sem rota no momento.'}</p>
+        <i class="fa-solid fa-van-shuttle text-3xl text-amber-400"></i>
+        <p class="text-sm font-bold text-white">Nenhum passageiro nesta rota no momento.</p>
       </div>
     `;
     return;
@@ -1191,40 +1112,29 @@ function renderizarRotaRafa() {
 
   container.innerHTML = filtrados.map(aluno => {
     const st = aluno.status || 'Em Casa';
-    const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
     const temEspecial = aluno.tem_horario_especial;
-    
     const horBuscaExibicao = (aluno.horario_busca_hoje) ? `${aluno.horario_busca_hoje} (Especial)` : (aluno.horario_busca || 'S/ hor.');
     const horVoltaExibicao = (aluno.horario_volta_hoje) ? `${aluno.horario_volta_hoje} (Especial)` : (aluno.horario_escola || '-');
 
     return `
-      <div class="bg-slate-800/80 border ${temEspecial ? 'border-amber-400 bg-amber-500/10' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
+      <div class="bg-slate-800/90 border ${temEspecial ? 'border-amber-400 bg-amber-500/10' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-start">
-          <div>
+          <div class="space-y-1">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 ${temEspecial ? 'bg-amber-400 text-slate-950 font-black' : 'bg-slate-700 text-amber-400 font-bold'} text-xs rounded-lg">
+              <span class="px-2.5 py-1 ${temEspecial ? 'bg-amber-400 text-slate-950' : 'bg-slate-700 text-amber-400'} text-xs font-black rounded-lg">
                 ${modoRotaAtual === 'IDA' ? horBuscaExibicao : horVoltaExibicao}
               </span>
-              <h4 class="text-sm font-bold text-white">${aluno.nome}</h4>
+              <h4 class="text-base font-black text-white">${aluno.nome}</h4>
             </div>
-            
-            ${temEspecial ? '<p class="text-[10px] font-bold text-amber-300 mt-1"><i class="fa-solid fa-clock-rotate-left"></i> ⚡ ATENÇÃO: Horário alterado para hoje!</p>' : ''}
-
-            <p class="text-xs text-slate-400 mt-1">${aluno.escola || ''} (${aluno.turno || 'Manhã'})</p>
-            <p class="text-[10px] text-slate-300 mt-0.5"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Endereço não informado'}</p>
-          </div>
-          
-          <div class="flex items-center gap-1.5 shrink-0">
-            <button onclick="abrirModalEditarAluno('${aluno.id}')" class="text-amber-400 text-xs bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️</button>
-            <button onclick="deletarAlunoAdmin('${aluno.id}')" class="text-rose-400 text-xs bg-rose-500/10 border border-rose-500/20 px-2 py-1 rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️</button>
-            ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="text-emerald-400 text-xs bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
+            <p class="text-xs font-bold text-slate-300"><i class="fa-solid fa-school text-amber-400"></i> ${aluno.escola || '-'}</p>
+            <p class="text-xs text-slate-300 font-medium"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Sem endereço informado'}</p>
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Em Casa')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Em Casa' ? 'bg-slate-600 text-white' : 'bg-slate-900/60 text-slate-400'}">🏡 Casa</button>
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Van')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Van' ? 'bg-amber-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🚌 Na Van</button>
-          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Escola')" class="py-2.5 rounded-xl text-xs font-bold transition-all ${st === 'Na Escola' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900/60 text-slate-400'}">🏫 Na Escola</button>
+        <div class="grid grid-cols-3 gap-2 pt-1">
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Em Casa')" class="py-3 rounded-xl text-xs font-black transition-all ${st === 'Em Casa' ? 'bg-slate-600 text-white shadow' : 'bg-slate-900/80 text-slate-400'}">🏡 Casa</button>
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Van')" class="py-3 rounded-xl text-xs font-black transition-all ${st === 'Na Van' ? 'bg-amber-500 text-slate-950 shadow' : 'bg-slate-900/80 text-slate-400'}">🚌 Na Van</button>
+          <button onclick="atualizarStatusRafa('${aluno.id}', 'Na Escola')" class="py-3 rounded-xl text-xs font-black transition-all ${st === 'Na Escola' ? 'bg-emerald-500 text-slate-950 shadow' : 'bg-slate-900/80 text-slate-400'}">🏫 Escola</button>
         </div>
       </div>
     `;
@@ -1235,9 +1145,7 @@ async function atualizarStatusRafa(id, st) {
   if (!supabaseClient) return;
 
   let updateData = { status: st };
-  if (st === 'Na Van' || st === 'Na Escola') {
-    updateData.levado_hoje = true;
-  }
+  if (st === 'Na Van' || st === 'Na Escola') updateData.levado_hoje = true;
 
   await supabaseClient.from('alunos').update(updateData).eq('id', id);
   carregarDadosRafa();
@@ -1245,8 +1153,7 @@ async function atualizarStatusRafa(id, st) {
 
 async function resetarStatusDoDia() {
   if (!supabaseClient) return;
-  const res = confirm("Deseja resetar a chamada de todos os alunos para 'Em Casa' e restaurar a presença normal do dia?");
-  if (!res) return;
+  if (!confirm("Deseja resetar a chamada de todos os alunos para 'Em Casa'?")) return;
 
   await supabaseClient.from('alunos').update({
     status: 'Em Casa',
@@ -1262,13 +1169,14 @@ async function resetarStatusDoDia() {
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
+// ABA GESTÃO: FICHA COMPLETA DOS PASSAGEIROS E EDITIONS
 function renderizarPassageirosGeralRafa() {
   const container = document.getElementById("lista-passageiros-geral-rafa");
   const countEl = document.getElementById("count-rafa-alunos");
   if (!container) return;
 
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
-  if (countEl) countEl.innerText = `${aprovados.length} Alunos`;
+  if (countEl) countEl.innerText = `${aprovados.length} Alunos Cadastrados`;
 
   if (aprovados.length === 0) {
     container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum aluno cadastrado.</p>`;
@@ -1279,31 +1187,34 @@ function renderizarPassageirosGeralRafa() {
     const st = a.status || 'Em Casa';
     const stP = a.status_pagamento || 'Pendente';
     const vaiHoje = a.vai_hoje !== false;
+    const wsp = (a.whatsapp || '').replace(/\D/g, '');
 
     return `
-      <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2.5">
+      <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-start">
-          <div>
+          <div class="space-y-1">
             <div class="flex items-center gap-2">
-              <h4 class="text-xs font-bold text-white">${a.nome}</h4>
-              <span class="text-[9px] font-bold px-2 py-0.5 rounded-md ${vaiHoje ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+              <h4 class="text-sm font-extrabold text-white">${a.nome}</h4>
+              <span class="text-xs font-bold px-2 py-0.5 rounded-md ${vaiHoje ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
                 ${vaiHoje ? '✓ Vai Hoje' : '✕ Ausente'}
               </span>
             </div>
-            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
-            <p class="text-[10px] text-amber-400 font-medium">📍 Busca Casa: ${a.horario_busca || '-'} | Entrada: ${a.horario_escola || '-'}</p>
-            <p class="text-[10px] text-slate-400">Contato: ${a.whatsapp || 'S/ Whats'}</p>
+            <p class="text-xs text-slate-300"><i class="fa-solid fa-school text-amber-400"></i> ${a.escola || '-'} • ${a.turno || 'Manhã'}</p>
+            <p class="text-xs text-amber-400 font-bold">📍 Horário Busca: ${a.horario_busca || '-'} | Escola: ${a.horario_escola || '-'}</p>
+            <p class="text-xs text-slate-400">PIN Pais: <strong>${a.pin_pais || '1234'}</strong> | Contato: ${a.whatsapp || 'S/ Whats'}</p>
           </div>
-          <div class="flex gap-1 shrink-0">
-            <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
-            <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️ Deletar</button>
+
+          <div class="flex flex-col gap-1.5 shrink-0">
+            <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2.5 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold rounded-xl hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
+            <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2.5 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold rounded-xl hover:bg-rose-600 hover:text-white transition-all">🗑️ Excluir</button>
+            ${wsp ? `<a href="https://wa.me/55${wsp}" target="_blank" class="px-2.5 py-1.5 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold rounded-xl text-center"><i class="fa-brands fa-whatsapp"></i> Whats</a>` : ''}
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
           <div>
-            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Rota</span>
-            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+            <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Status Rota</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
               <option value="Em Casa" ${st === 'Em Casa' ? 'selected' : ''}>🏡 Em Casa</option>
               <option value="Na Van" ${st === 'Na Van' ? 'selected' : ''}>🚌 Na Van</option>
               <option value="Na Escola" ${st === 'Na Escola' ? 'selected' : ''}>🏫 Na Escola</option>
@@ -1311,8 +1222,8 @@ function renderizarPassageirosGeralRafa() {
           </div>
 
           <div>
-            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Financeiro</span>
-            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+            <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Status Financeiro</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
               <option value="Pendente" ${stP === 'Pendente' ? 'selected' : ''}>🔴 Pendente</option>
               <option value="Pago" ${stP === 'Pago' ? 'selected' : ''}>🟢 Quitado</option>
             </select>
@@ -1358,9 +1269,9 @@ async function cadastrarAlunoRafa(e) {
 
 function aplicarFiltroFin(status) {
   filtroFinStatus = status;
-  document.getElementById("btn-fin-filtro-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-fin-filtro-pendentes").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Pendente' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-fin-filtro-pagos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Pago' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-fin-filtro-todos").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-fin-filtro-pendentes").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Pendente' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-fin-filtro-pagos").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Pago' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
   renderizarFinanceiroRafa();
 }
 
@@ -1368,11 +1279,8 @@ function renderizarFinanceiroRafa() {
   const container = document.getElementById("lista-financeiro-rafa-cards");
   if (!container) return;
 
-  let faturamentoTotal = 0;
-  let recebido = 0;
-  let pendente = 0;
+  let faturamentoTotal = 0, recebido = 0, pendente = 0;
   const diaHoje = new Date().getDate();
-
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
 
   aprovados.forEach(a => {
@@ -1385,16 +1293,10 @@ function renderizarFinanceiroRafa() {
   const mTot = document.getElementById("metrica-faturamento-total");
   const mRec = document.getElementById("metrica-recebido");
   const mPen = document.getElementById("metrica-pendente");
-  const progTexto = document.getElementById("progresso-percentual");
-  const progBarra = document.getElementById("barra-progresso-financeiro");
 
   if (mTot) mTot.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
   if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
   if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
-
-  const porc = faturamentoTotal > 0 ? Math.round((recebido / faturamentoTotal) * 100) : 0;
-  if (progTexto) progTexto.innerText = `${porc}%`;
-  if (progBarra) progBarra.style.width = `${porc}%`;
 
   let filtrados = aprovados;
   if (filtroFinStatus === "Pendente") filtrados = aprovados.filter(a => a.status_pagamento !== "Pago");
@@ -1406,31 +1308,30 @@ function renderizarFinanceiroRafa() {
     const venc = parseInt(aluno.vencimento || 10);
     const emAtraso = stP !== "Pago" && diaHoje > venc;
     const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
-
-    const msgCobranca = encodeURIComponent(`Olá! Passando para lembrar sobre a mensalidade do transporte escolar do(a) *${aluno.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 Chave PIX: ${pixChaveGlobal}\n\nQualquer dúvida estou à disposição! 😊`);
+    const msgCobranca = encodeURIComponent(`Olá! Lembrete da mensalidade do transporte do(a) *${aluno.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 PIX: ${pixChaveGlobal}`);
 
     return `
-      <div class="bg-slate-800/80 border ${emAtraso ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-700'} p-3.5 rounded-2xl space-y-2">
+      <div class="bg-slate-800/90 border ${emAtraso ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-700'} p-3.5 rounded-2xl space-y-2">
         <div class="flex justify-between items-start">
           <div>
             <div class="flex items-center gap-2">
-              <p class="text-xs font-bold text-white">${aluno.nome}</p>
-              ${emAtraso ? '<span class="text-[9px] bg-rose-500 text-white font-extrabold px-1.5 py-0.5 rounded">Em Atraso</span>' : ''}
+              <p class="text-sm font-bold text-white">${aluno.nome}</p>
+              ${emAtraso ? '<span class="text-xs bg-rose-500 text-white font-black px-2 py-0.5 rounded">Atrasado</span>' : ''}
             </div>
-            <p class="text-[10px] text-slate-400 mt-0.5">Mensalidade: <strong>R$ ${val.toFixed(2)}</strong> | Vencimento: Dia ${venc}</p>
+            <p class="text-xs text-slate-300 mt-0.5">Valor: <strong>R$ ${val.toFixed(2)}</strong> | Vencimento: Dia ${venc}</p>
           </div>
-          <span class="text-xs font-bold ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Quitado' : '🔴 Devendo'}</span>
+          <span class="text-xs font-black ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Quitado' : '🔴 Devendo'}</span>
         </div>
 
         <div class="flex items-center gap-2 pt-1 border-t border-slate-700/50">
           ${stP === 'Pago' ? `
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pendente', null)" class="w-full py-1.5 text-xs bg-slate-700 text-slate-300 font-bold rounded-lg">Desfazer Pagamento</button>
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pendente', null)" class="w-full py-2 text-xs bg-slate-700 text-slate-300 font-bold rounded-xl">Desfazer Pagamento</button>
           ` : `
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'PIX')" class="flex-1 py-1.5 text-xs bg-teal-500 text-slate-950 font-bold rounded-lg">PIX</button>
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Dinheiro')" class="flex-1 py-1.5 text-xs bg-amber-500 text-slate-950 font-bold rounded-lg">Dinheiro</button>
-            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Cartão')" class="flex-1 py-1.5 text-xs bg-slate-600 text-white font-bold rounded-lg">Cartão</button>
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'PIX')" class="flex-1 py-2 text-xs bg-teal-500 text-slate-950 font-bold rounded-xl">PIX</button>
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Dinheiro')" class="flex-1 py-2 text-xs bg-amber-500 text-slate-950 font-bold rounded-xl">Dinheiro</button>
+            <button onclick="darBaixaRafa('${aluno.id}', 'Pago', 'Cartão')" class="flex-1 py-2 text-xs bg-slate-600 text-white font-bold rounded-xl">Cartão</button>
             ${wsp ? `
-              <a href="https://wa.me/55${wsp}?text=${msgCobranca}" target="_blank" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg flex items-center justify-center shrink-0 shadow">
+              <a href="https://wa.me/55${wsp}?text=${msgCobranca}" target="_blank" class="px-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl flex items-center justify-center shrink-0">
                 <i class="fa-brands fa-whatsapp text-sm"></i>
               </a>
             ` : ''}
@@ -1449,7 +1350,7 @@ async function darBaixaRafa(id, stP, forma) {
 
 async function dispararEmergenciaRafa() {
   if (!supabaseClient) return;
-  const motivo = prompt("Digite o motivo da emergência:", "Problema Mecânico / Saúde na Rota");
+  const motivo = prompt("Digite o motivo do pedido de suporte:", "Pane Mecânica / Problema de Saúde na Rota");
   if (!motivo) return;
 
   navigator.geolocation.getCurrentPosition(async (pos) => {
@@ -1462,7 +1363,7 @@ async function dispararEmergenciaRafa() {
       ativo: true
     }]);
 
-    alert("Alerta enviado para o Suporte!");
+    alert("Alerta crítico enviado ao suporte!");
   }, async () => {
     await supabaseClient.from('alertas').insert([{
       tipo: 'EMERGENCIA_ADMIN',
@@ -1473,12 +1374,11 @@ async function dispararEmergenciaRafa() {
 }
 
 /* ==========================================================================
-   9. MÓDULO PAINEL SUPORTE (GESTAO)
+   9. PAINEL SUPORTE (ADMIN)
    ========================================================================== */
 
 async function carregarDadosAdmin(isBackground = false) {
   if (!supabaseClient) return;
-
   if (!isBackground) await carregarConfiguracoesGlobais();
 
   const { data } = await supabaseClient.from('alunos').select('*').order('nome', { ascending: true });
@@ -1497,23 +1397,24 @@ async function carregarDadosAdmin(isBackground = false) {
     const stP = a.status_pagamento || 'Pendente';
 
     return `
-      <div class="bg-slate-900/80 border border-slate-700/80 p-3.5 rounded-2xl space-y-2.5">
+      <div class="bg-slate-900/80 border border-slate-700/80 p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-start">
-          <div>
-            <h4 class="text-xs font-bold text-white">${a.nome}</h4>
-            <p class="text-[10px] text-slate-400 mt-0.5">${a.escola || '-'} • ${a.turno || 'Manhã'} | PIN: <strong>${a.pin_pais || '1234'}</strong></p>
-            <p class="text-[10px] text-amber-400 font-medium">📍 Busca Casa: ${a.horario_busca || '-'} | Entrada: ${a.horario_escola || '-'}</p>
+          <div class="space-y-1">
+            <h4 class="text-sm font-extrabold text-white">${a.nome}</h4>
+            <p class="text-xs text-slate-300"><i class="fa-solid fa-school text-amber-400"></i> ${a.escola || '-'} • ${a.turno || 'Manhã'}</p>
+            <p class="text-xs text-amber-400 font-bold">📍 Horário Busca: ${a.horario_busca || '-'} | Escola: ${a.horario_escola || '-'}</p>
+            <p class="text-xs text-slate-400">PIN: <strong>${a.pin_pais || '1234'}</strong></p>
           </div>
           <div class="flex gap-1 shrink-0">
-            <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-bold rounded-lg hover:bg-amber-500 hover:text-slate-950 transition-all">✏️ Editar</button>
-            <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-bold rounded-lg hover:bg-rose-600 hover:text-white transition-all">🗑️ Deletar</button>
+            <button onclick="abrirModalEditarAluno('${a.id}')" class="px-2.5 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold rounded-xl">✏️ Editar</button>
+            <button onclick="deletarAlunoAdmin('${a.id}')" class="px-2.5 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold rounded-xl">🗑️ Excluir</button>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+        <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
           <div>
-            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Rota</span>
-            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+            <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Status Rota</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
               <option value="Em Casa" ${st === 'Em Casa' ? 'selected' : ''}>🏡 Em Casa</option>
               <option value="Na Van" ${st === 'Na Van' ? 'selected' : ''}>🚌 Na Van</option>
               <option value="Na Escola" ${st === 'Na Escola' ? 'selected' : ''}>🏫 Na Escola</option>
@@ -1521,8 +1422,8 @@ async function carregarDadosAdmin(isBackground = false) {
           </div>
 
           <div>
-            <span class="text-[9px] font-bold text-slate-500 uppercase block mb-1">Status Financeiro</span>
-            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-1.5 text-[10px] text-white">
+            <span class="text-xs font-bold text-slate-400 uppercase block mb-1">Status Financeiro</span>
+            <select onchange="alterarStatusAdmin('${a.id}', 'status_pagamento', this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
               <option value="Pendente" ${stP === 'Pendente' ? 'selected' : ''}>🔴 Pendente</option>
               <option value="Pago" ${stP === 'Pago' ? 'selected' : ''}>🟢 Quitado</option>
             </select>
@@ -1557,38 +1458,36 @@ function renderizarPendentesAprovacao() {
   if (countAdmin) countAdmin.innerText = pendentes.length;
 
   const htmlContent = pendentes.map(a => `
-    <div class="bg-slate-900 border border-amber-500/30 p-3.5 rounded-xl space-y-2.5">
-      <div class="flex justify-between items-start">
-        <div>
-          <h4 class="text-xs font-bold text-white">${a.nome}</h4>
-          <p class="text-[10px] text-amber-300 font-semibold">${a.escola || '-'} • ${a.turno}</p>
-          <p class="text-[10px] text-slate-400 mt-0.5">Contato: ${a.whatsapp || 'S/ Whats'}</p>
-          <p class="text-[10px] text-slate-400">Endereço: ${a.endereco_casa || '-'}</p>
-        </div>
+    <div class="bg-slate-900 border border-amber-500/30 p-4 rounded-xl space-y-3">
+      <div class="space-y-1">
+        <h4 class="text-sm font-bold text-white">${a.nome}</h4>
+        <p class="text-xs text-amber-300 font-semibold">${a.escola || '-'} • ${a.turno}</p>
+        <p class="text-xs text-slate-300">Contato: ${a.whatsapp || 'S/ Whats'}</p>
+        <p class="text-xs text-slate-400">Endereço: ${a.endereco_casa || '-'}</p>
       </div>
 
-      <div class="space-y-2 bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+      <div class="space-y-2 bg-slate-950 p-3 rounded-lg border border-slate-800">
         <div>
-          <label class="text-[10px] text-amber-400 block font-bold">⏰ Horário que vai passar pra buscar:</label>
-          <input type="text" id="hor-busca-aprov-${a.id}" placeholder="Ex: 06:40" class="w-full bg-slate-900 border border-amber-500/50 rounded p-1.5 text-xs text-white font-bold">
+          <label class="text-xs text-amber-400 block font-bold mb-1">Horário de busca da Van:</label>
+          <input type="text" id="hor-busca-aprov-${a.id}" placeholder="Ex: 06:40" class="w-full bg-slate-900 border border-amber-500/50 rounded p-2 text-xs text-white font-bold">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[9px] text-slate-400 block font-bold">Mensalidade (R$)</label>
-            <input type="number" id="val-aprov-${a.id}" value="${a.valor || 180}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+            <label class="text-xs text-slate-400 block font-bold">Mensalidade (R$)</label>
+            <input type="number" id="val-aprov-${a.id}" value="${a.valor || 180}" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white">
           </div>
           <div>
-            <label class="text-[9px] text-slate-400 block font-bold">Vencimento (Dia)</label>
-            <input type="number" id="venc-aprov-${a.id}" value="${a.vencimento || 10}" class="w-full bg-slate-900 border border-slate-700 rounded p-1 text-xs text-white">
+            <label class="text-xs text-slate-400 block font-bold">Vencimento (Dia)</label>
+            <input type="number" id="venc-aprov-${a.id}" value="${a.vencimento || 10}" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-white">
           </div>
         </div>
       </div>
 
       <div class="flex gap-2">
-        <button onclick="aprovarCadastroAluno('${a.id}')" class="flex-1 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition-all">
+        <button onclick="aprovarCadastroAluno('${a.id}')" class="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl">
           ✓ Aprovar & Definir Horário
         </button>
-        <button onclick="deletarAlunoAdmin('${a.id}')" class="px-3 py-2 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-lg hover:bg-rose-600 hover:text-white transition-all">
+        <button onclick="deletarAlunoAdmin('${a.id}')" class="px-3 py-2.5 bg-rose-500/20 text-rose-400 font-bold text-xs rounded-xl">
           ✕ Recusar
         </button>
       </div>
@@ -1610,7 +1509,7 @@ async function aprovarCadastroAluno(id) {
   const inputVenc = document.getElementById(`venc-aprov-${id}`);
 
   const horarioBusca = inputBusca ? inputBusca.value.trim() : "";
-  
+
   if (!horarioBusca) {
     alert("Por favor, preencha o horário de busca da van antes de aprovar!");
     if (inputBusca) inputBusca.focus();
@@ -1642,16 +1541,8 @@ async function aprovarCadastroAluno(id) {
 
 async function deletarAlunoAdmin(id) {
   if (!supabaseClient) return;
-
-  const confirmou = confirm("Deseja realmente apagar este cadastro?");
-  if (confirmou) {
-    const { error } = await supabaseClient.from('alunos').delete().eq('id', id);
-
-    if (error) {
-      alert("Erro ao excluir: " + error.message);
-      return;
-    }
-
+  if (confirm("Deseja realmente apagar este cadastro?")) {
+    await supabaseClient.from('alunos').delete().eq('id', id);
     alert("Cadastro removido!");
     alunosCache = alunosCache.filter(a => a.id != id);
     renderizarPendentesAprovacao();
@@ -1699,7 +1590,7 @@ async function alterarStatusAdmin(id, campo, valor) {
   let updateObj = {};
   updateObj[campo] = valor;
   await supabaseClient.from('alunos').update(updateObj).eq('id', id);
-  
+
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
@@ -1758,9 +1649,9 @@ async function salvarEdicaoAluno(e) {
 
 function aplicarFiltroFinAdmin(status) {
   filtroFinAdminStatus = status;
-  document.getElementById("btn-admin-fin-todos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-admin-fin-pendentes").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Pendente' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
-  document.getElementById("btn-admin-fin-pagos").className = `px-2.5 py-1 text-[11px] font-bold rounded-lg ${status === 'Pago' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-admin-fin-todos").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-admin-fin-pendentes").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Pendente' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
+  document.getElementById("btn-admin-fin-pagos").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${status === 'Pago' ? 'bg-amber-500 text-slate-950' : 'bg-slate-700 text-slate-300'}`;
   renderizarFinanceiroAdmin();
 }
 
@@ -1768,11 +1659,8 @@ function renderizarFinanceiroAdmin() {
   const container = document.getElementById("lista-financeiro-admin-cards");
   if (!container) return;
 
-  let faturamentoTotal = 0;
-  let recebido = 0;
-  let pendente = 0;
+  let faturamentoTotal = 0, recebido = 0, pendente = 0;
   const diaHoje = new Date().getDate();
-
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao);
 
   aprovados.forEach(a => {
@@ -1785,16 +1673,10 @@ function renderizarFinanceiroAdmin() {
   const mTot = document.getElementById("admin-metrica-total");
   const mRec = document.getElementById("admin-metrica-recebido");
   const mPen = document.getElementById("admin-metrica-pendente");
-  const progTexto = document.getElementById("admin-progresso-percentual");
-  const progBarra = document.getElementById("admin-barra-progresso");
 
   if (mTot) mTot.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
   if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
   if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
-
-  const porc = faturamentoTotal > 0 ? Math.round((recebido / faturamentoTotal) * 100) : 0;
-  if (progTexto) progTexto.innerText = `${porc}%`;
-  if (progBarra) progBarra.style.width = `${porc}%`;
 
   let filtrados = aprovados;
   if (filtroFinAdminStatus === "Pendente") filtrados = aprovados.filter(a => a.status_pagamento !== "Pago");
@@ -1806,31 +1688,30 @@ function renderizarFinanceiroAdmin() {
     const venc = parseInt(aluno.vencimento || 10);
     const emAtraso = stP !== "Pago" && diaHoje > venc;
     const wsp = (aluno.whatsapp || '').replace(/\D/g, '');
-
-    const msgCobranca = encodeURIComponent(`Olá! Passando para lembrar sobre a mensalidade do transporte escolar do(a) *${aluno.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 Chave PIX: ${pixChaveGlobal}\n\nQualquer dúvida estou à disposição! 😊`);
+    const msgCobranca = encodeURIComponent(`Olá! Lembrete da mensalidade do transporte do(a) *${aluno.nome}* no valor de R$ ${val.toFixed(2)}.\n\n🔑 PIX: ${pixChaveGlobal}`);
 
     return `
       <div class="bg-slate-900/80 border ${emAtraso ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-700/80'} p-3.5 rounded-2xl space-y-2">
         <div class="flex justify-between items-start">
           <div>
             <div class="flex items-center gap-2">
-              <p class="text-xs font-bold text-white">${aluno.nome}</p>
-              ${emAtraso ? '<span class="text-[9px] bg-rose-500 text-white font-extrabold px-1.5 py-0.5 rounded">Em Atraso</span>' : ''}
+              <p class="text-sm font-bold text-white">${aluno.nome}</p>
+              ${emAtraso ? '<span class="text-xs bg-rose-500 text-white font-black px-1.5 py-0.5 rounded">Atrasado</span>' : ''}
             </div>
-            <p class="text-[10px] text-slate-400 mt-0.5">Mensalidade: <strong>R$ ${val.toFixed(2)}</strong> | Vencimento: Dia ${venc}</p>
+            <p class="text-xs text-slate-300 mt-0.5">Mensalidade: <strong>R$ ${val.toFixed(2)}</strong> | Vencimento: Dia ${venc}</p>
           </div>
-          <span class="text-xs font-bold ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Quitado' : '🔴 Devendo'}</span>
+          <span class="text-xs font-black ${stP === 'Pago' ? 'text-emerald-400' : 'text-rose-400'}">${stP === 'Pago' ? '🟢 Quitado' : '🔴 Devendo'}</span>
         </div>
 
         <div class="flex items-center gap-2 pt-1 border-t border-slate-800">
           ${stP === 'Pago' ? `
-            <button onclick="darBaixaAdmin('${aluno.id}', 'Pendente', null)" class="w-full py-1.5 text-xs bg-slate-700 text-slate-300 font-bold rounded-lg">Desfazer Pagamento</button>
+            <button onclick="darBaixaAdmin('${aluno.id}', 'Pendente', null)" class="w-full py-2 text-xs bg-slate-700 text-slate-300 font-bold rounded-xl">Desfazer Pagamento</button>
           ` : `
-            <button onclick="darBaixaAdmin('${aluno.id}', 'Pago', 'PIX')" class="flex-1 py-1.5 text-xs bg-teal-500 text-slate-950 font-bold rounded-lg">PIX</button>
-            <button onclick="darBaixaAdmin('${aluno.id}', 'Pago', 'Dinheiro')" class="flex-1 py-1.5 text-xs bg-amber-500 text-slate-950 font-bold rounded-lg">Dinheiro</button>
-            <button onclick="darBaixaAdmin('${aluno.id}', 'Pago', 'Cartão')" class="flex-1 py-1.5 text-xs bg-slate-600 text-white font-bold rounded-lg">Cartão</button>
+            <button onclick="darBaixaAdmin('${aluno.id}', 'Pago', 'PIX')" class="flex-1 py-2 text-xs bg-teal-500 text-slate-950 font-bold rounded-xl">PIX</button>
+            <button onclick="darBaixaAdmin('${aluno.id}', 'Pago', 'Dinheiro')" class="flex-1 py-2 text-xs bg-amber-500 text-slate-950 font-bold rounded-xl">Dinheiro</button>
+            <button onclick="darBaixaAdmin('${aluno.id}', 'Pago', 'Cartão')" class="flex-1 py-2 text-xs bg-slate-600 text-white font-bold rounded-xl">Cartão</button>
             ${wsp ? `
-              <a href="https://wa.me/55${wsp}?text=${msgCobranca}" target="_blank" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg flex items-center justify-center shrink-0 shadow">
+              <a href="https://wa.me/55${wsp}?text=${msgCobranca}" target="_blank" class="px-3 py-2 bg-emerald-600 text-white text-xs font-bold rounded-xl flex items-center justify-center shrink-0">
                 <i class="fa-brands fa-whatsapp text-sm"></i>
               </a>
             ` : ''}
@@ -1849,10 +1730,9 @@ async function darBaixaAdmin(id, stP, forma) {
 
 async function encerrarMesFinanceiro() {
   if (!supabaseClient) return;
-  const confirmou = confirm("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?");
-  if (confirmou) {
+  if (confirm("Deseja fechar o mês atual e resetar os pagamentos para 'Pendente'?")) {
     const mesAno = new Date().toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' });
-    
+
     for (let a of alunosCache) {
       await supabaseClient.from('historico_financeiro').insert([{
         aluno_id: a.id,
