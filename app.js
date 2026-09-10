@@ -100,6 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Cadastro Accordions
   document.getElementById("btn-toggle-form-rafa")?.addEventListener("click", () => toggleFormCadastro('rafa'));
   document.getElementById("btn-toggle-form-admin")?.addEventListener("click", () => toggleFormCadastro('admin'));
+  document.getElementById("btn-toggle-lista-alunos-rafa")?.addEventListener("click", toggleListaPassageirosRafa);
 
   // Emergências & Modais
   document.getElementById("btn-disparar-emergencia")?.addEventListener("click", dispararEmergenciaRafa);
@@ -296,6 +297,22 @@ function toggleFormCadastro(role) {
   } else {
     container.classList.add("hidden");
     if (icon) icon.className = "fa-solid fa-chevron-down text-amber-400";
+  }
+}
+
+function toggleListaPassageirosRafa() {
+  const container = document.getElementById("container-lista-passageiros-rafa");
+  const icon = document.getElementById("icon-toggle-lista-rafa");
+
+  if (!container) return;
+
+  if (container.classList.contains("hidden")) {
+    container.classList.remove("hidden");
+    if (icon) icon.className = "fa-solid fa-chevron-down text-amber-400";
+    renderizarPassageirosGeralRafa();
+  } else {
+    container.classList.add("hidden");
+    if (icon) icon.className = "fa-solid fa-chevron-right text-amber-400";
   }
 }
 
@@ -1168,7 +1185,7 @@ async function resetarStatusDoDia() {
   if (currentRole === 'admin') carregarDadosAdmin();
 }
 
-// ABA GESTÃO: FICHA COMPLETA DOS PASSAGEIROS E EDITIONS
+// ABA GESTÃO: FICHA COMPLETA DOS PASSAGEIROS E EDIÇÕES
 function renderizarPassageirosGeralRafa() {
   const container = document.getElementById("lista-passageiros-geral-rafa");
   const countEl = document.getElementById("count-rafa-alunos");
@@ -1533,7 +1550,7 @@ async function aprovarCadastroAluno(id) {
     return;
   }
 
-  alert("✓ Cadastro approved e horário definido!");
+  alert("✓ Cadastro aprovado e horário definido!");
   if (currentRole === 'rafa') carregarDadosRafa();
   if (currentRole === 'admin') carregarDadosAdmin();
 }
