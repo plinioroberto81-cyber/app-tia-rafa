@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-toggle-mapa-rafa")?.addEventListener("click", toggleMapaRafa);
   document.getElementById("btn-toggle-mapa-admin")?.addEventListener("click", toggleMapaAdmin);
 
-  // Accordions de Cadastro e Exibição de Alunos na Gestão (Tia Rafa & Suporte)
+  // Accordions de Cadastro e Exibição de Alunos
   document.getElementById("btn-toggle-form-rafa")?.addEventListener("click", () => toggleFormCadastro('rafa'));
   document.getElementById("btn-toggle-form-admin")?.addEventListener("click", () => toggleFormCadastro('admin'));
   document.getElementById("btn-toggle-lista-alunos-rafa")?.addEventListener("click", toggleListaPassageirosRafa);
@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("tab-pais-filho").className = "flex-1 py-3 text-sm font-bold text-slate-400 border-b-2 border-transparent";
   });
 
-  // Alternador Rota Ida/Volta
+  // Alternadores de Rota
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderizarFinanceiroRafa();
   });
 
-  // Navegação das 3 Abas do Suporte (Admin - Totalmente Igual à Tia Rafa)
+  // Navegação das 3 Abas do Suporte (Admin)
   document.getElementById("tab-admin-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-admin")?.classList.remove("hidden");
     document.getElementById("aba-suporte-admin")?.classList.add("hidden");
@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
   document.getElementById("btn-admin-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
 
-  // Botões de Avisos Rápidos pros Pais
+  // Avisos Rápidos aos Pais
   document.getElementById("btn-aviso-transito-rafa")?.addEventListener("click", () => dispararAviso("🚗 Trânsito intenso na via. Estamos avançando devagar e em segurança."));
   document.getElementById("btn-aviso-chuva-rafa")?.addEventListener("click", () => dispararAviso("🌧️ Chuva forte na região. Velocidade reduzida por segurança."));
   document.getElementById("btn-aviso-pneu-rafa")?.addEventListener("click", () => dispararAviso("🛞 Pneu furado. Paramos com segurança para a troca rápida!"));
@@ -227,8 +227,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
   document.getElementById("btn-limpar-aviso-rafa")?.addEventListener("click", limparAvisos);
 
-  // Forms
-  document.getElementById("form-cadastrar-aluno")?.addEventListener("submit", cadastrarAlunoAdmin);
+  // Forms de Cadastro
+  document.getElementById("form-cadastrar-aluno-admin")?.addEventListener("submit", cadastrarAlunoAdmin);
   document.getElementById("form-cadastrar-aluno-rafa")?.addEventListener("submit", cadastrarAlunoRafa);
 
   document.getElementById("btn-encerrar-mes")?.addEventListener("click", encerrarMesFinanceiro);
@@ -365,8 +365,9 @@ async function limparAvisos() {
   alert("Avisos encerrados!");
   verificarAlertaGlobal();
 }
+
 /* ==========================================================================
-   4. AUTENTICAÇÃO E SESSÃO (RESTAURAÇÃO SEGURA)
+   4. AUTENTICAÇÃO E SESSÃO
    ========================================================================== */
 
 function mostrarFormLogin(role) {
@@ -1277,8 +1278,8 @@ async function cadastrarAlunoRafa(e) {
     escola: document.getElementById("add-escola-rafa").value,
     email_mae: `aluno_${Date.now()}@transporte.local`,
     pin_pais: document.getElementById("add-pin-rafa").value || "1234",
-    valor: parseFloat(document.getElementById("add-valor-rafa").value),
-    vencimento: parseInt(document.getElementById("add-vencimento-rafa").value),
+    valor: parseFloat(document.getElementById("add-valor-rafa").value || 180),
+    vencimento: parseInt(document.getElementById("add-vencimento-rafa").value || 10),
     status: 'Em Casa',
     status_pagamento: 'Pendente',
     vai_hoje: true,
@@ -1290,7 +1291,7 @@ async function cadastrarAlunoRafa(e) {
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
-  alert("Aluno cadastrado com sucesso!");
+  alert("✓ Aluno cadastrado com sucesso!");
   document.getElementById("form-cadastrar-aluno-rafa").reset();
   toggleFormCadastro('rafa');
   carregarDadosRafa();
@@ -1349,7 +1350,7 @@ async function dispararEmergenciaRafa() {
 }
 
 /* ==========================================================================
-   9. PAINEL SUPORTE (ADMIN - 100% IGUAL À TIA RAFA)
+   9. PAINEL SUPORTE (ADMIN)
    ========================================================================== */
 
 async function carregarDadosAdmin(isBackground = false) {
@@ -1611,8 +1612,8 @@ async function cadastrarAlunoAdmin(e) {
     escola: document.getElementById("add-escola").value,
     email_mae: `aluno_${Date.now()}@transporte.local`,
     pin_pais: document.getElementById("add-pin").value || "1234",
-    valor: parseFloat(document.getElementById("add-valor").value),
-    vencimento: parseInt(document.getElementById("add-vencimento").value),
+    valor: parseFloat(document.getElementById("add-valor").value || 180),
+    vencimento: parseInt(document.getElementById("add-vencimento").value || 10),
     status: 'Em Casa',
     status_pagamento: 'Pendente',
     vai_hoje: true,
@@ -1624,8 +1625,8 @@ async function cadastrarAlunoAdmin(e) {
   };
 
   await supabaseClient.from('alunos').insert([novoAluno]);
-  alert("Aluno cadastrado com sucesso!");
-  document.getElementById("form-cadastrar-aluno").reset();
+  alert("✓ Aluno cadastrado com sucesso!");
+  document.getElementById("form-cadastrar-aluno-admin").reset();
   toggleFormCadastro('admin');
   carregarDadosAdmin();
 }
@@ -1700,6 +1701,50 @@ function renderizarFinanceiroAdmin() {
   if (mTot) mTot.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
   if (mRec) mRec.innerText = `R$ ${recebido.toFixed(2)}`;
   if (mPen) mPen.innerText = `R$ ${pendente.toFixed(2)}`;
+}
+
+/* ==========================================================================
+   10. RELATÓRIOS (CSV) E ENCERRAMENTO DE MÊS
+   ========================================================================== */
+
+function exportarRelatorioFinanceiroCSV() {
+  if (!alunosCache || alunosCache.length === 0) {
+    alert("Nenhum aluno disponível para exportação.");
+    return;
+  }
+
+  let csv = "Nome,Escola,Turno,Status Pagamento,Forma Pagamento,Valor,Vencimento,WhatsApp\n";
+  alunosCache.filter(a => !a.pendente_aprovacao).forEach(a => {
+    csv += `"${a.nome || ''}","${a.escola || ''}","${a.turno || ''}","${a.status_pagamento || 'Pendente'}","${a.forma_pagamento || '-'}","${a.valor || 180}","${a.vencimento || 10}","${a.whatsapp || ''}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", `financeiro_transporte_${Date.now()}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+async function encerrarMesFinanceiro() {
+  if (!supabaseClient) return;
+  if (!confirm("⚠️ ATENÇÃO: Deseja resetar todos os pagamentos para 'Pendente' para o novo mês?")) return;
+
+  const { error } = await supabaseClient
+    .from('alunos')
+    .update({ status_pagamento: 'Pendente', forma_pagamento: null })
+    .neq('id', '0');
+
+  if (error) {
+    alert("Erro ao encerrar mês: " + error.message);
+    return;
+  }
+
+  alert("✓ Mês encerrado! Todos os pagamentos foram resetados para o novo ciclo.");
+  if (currentRole === 'rafa') carregarDadosRafa();
+  if (currentRole === 'admin') carregarDadosAdmin();
 }
 
 function tocarSomSirene() {
