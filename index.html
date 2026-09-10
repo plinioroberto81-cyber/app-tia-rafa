@@ -279,20 +279,31 @@
 
       <!-- ABA 2: SUPORTE, GPS & AVISOS AOS PAIS -->
       <div id="aba-suporte-rafa" class="hidden space-y-4">
-        <!-- Controle de GPS -->
-        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3">
-          <h4 class="text-sm font-bold text-amber-400 uppercase tracking-wider"><i class="fa-solid fa-location-dot"></i> Sinal e Transmissão GPS</h4>
-          <div class="flex items-center justify-between gap-2">
-            <button id="btn-toggle-gps" class="px-4 py-2 bg-slate-700 text-slate-300 font-bold text-xs rounded-xl transition-all">
-              ⚪ GPS Desligado
+        <!-- Controle de Transmissão de Sinal GPS -->
+        <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 shadow-md">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-location-dot"></i> Transmissão de Localização
+            </h4>
+            <span class="text-[10px] text-slate-400 font-semibold bg-slate-950 px-2 py-0.5 rounded-full border border-slate-800">Sinal em Segundo Plano</span>
+          </div>
+          
+          <p class="text-xs text-slate-300">Ligue o GPS abaixo para enviar sua posição em tempo real para os pais, mesmo sem abrir o mapa:</p>
+          
+          <div class="flex flex-col sm:flex-row items-stretch gap-2 pt-1">
+            <!-- BOTÃO PRINCIPAL DE TRANSMISSÃO (NÃO PRECISA DO MAPA) -->
+            <button id="btn-toggle-gps" class="flex-1 py-3 bg-slate-800 text-slate-300 font-black text-xs rounded-xl transition-all shadow border border-slate-700 flex items-center justify-center gap-2">
+              ⚪ Ligar Transmissão GPS
             </button>
-            <button id="btn-toggle-mapa-rafa" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center gap-1.5">
-              <i class="fa-solid fa-map-location-dot"></i> Exibir Mapa
+
+            <!-- BOTÃO OPCIONAL PARA VER O MAPA -->
+            <button id="btn-toggle-mapa-rafa" class="px-4 py-3 bg-slate-950 hover:bg-slate-800 text-amber-400 font-bold text-xs rounded-xl border border-slate-800 transition-all flex items-center justify-center gap-1.5 shrink-0">
+              <i class="fa-solid fa-map-location-dot"></i> Visualizar Mapa
             </button>
           </div>
         </div>
 
-        <!-- Mapa Interativo -->
+        <!-- MAPA INTERATIVO (OPCIONAL E INDEPENDENTE) -->
         <div id="wrapper-mapa-rafa" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-2 space-y-2">
           <div class="flex justify-between items-center px-2">
             <span id="txt-status-gps-rafa" class="text-xs font-bold text-slate-400">Procurando Sinal...</span>
