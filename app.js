@@ -125,6 +125,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Login Direto Pais
   document.getElementById("btn-entrar-pais-direto")?.addEventListener("click", validarLoginWhatsAppPais);
 
+  document.getElementById("tab-pais-filho")?.addEventListener("click", () => {
+    document.getElementById("aba-pais-filho")?.classList.remove("hidden");
+    document.getElementById("aba-pais-financeiro")?.classList.add("hidden");
+    document.getElementById("tab-pais-filho").className = "flex-1 py-3 text-sm font-bold text-amber-400 border-b-2 border-amber-400";
+    document.getElementById("tab-pais-financeiro").className = "flex-1 py-3 text-sm font-bold text-slate-400 border-b-2 border-transparent";
+  });
+
   document.getElementById("tab-pais-financeiro")?.addEventListener("click", () => {
     document.getElementById("aba-pais-filho")?.classList.add("hidden");
     document.getElementById("aba-pais-financeiro")?.classList.remove("hidden");
@@ -137,7 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
 
   // ==========================================================================
-  // NAVEGAÇÃO REESTRUTURADA DAS 3 ABAS TIA RAFA
+  // NAVEGAÇÃO DAS 3 ABAS TIA RAFA (CORRIGIDO)
   // ==========================================================================
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
     document.getElementById("aba-chamada-rafa")?.classList.remove("hidden");
