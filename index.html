@@ -20,6 +20,12 @@
 
   <style>
     /* Estilos para Transições e Modo Claro */
+    input[type="time"] {
+      color-scheme: dark;
+    }
+    .light-mode input[type="time"] {
+      color-scheme: light;
+    }
     .light-mode {
       background-color: #f8fafc !important;
       color: #0f172a !important;
@@ -366,8 +372,14 @@
               <input type="tel" id="add-wsp-rafa" placeholder="WhatsApp Responsável" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
             </div>
             <div class="grid grid-cols-2 gap-2">
-              <input type="text" id="add-horario-busca-rafa" placeholder="Horário Busca Casa" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
-              <input type="text" id="add-horario-escola-rafa" placeholder="Horário Entrada Escola" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+              <div>
+                <label class="text-[10px] text-slate-400 block font-bold mb-0.5">Busca Casa:</label>
+                <input type="time" id="add-horario-busca-rafa" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block font-bold mb-0.5">Entrada Escola:</label>
+                <input type="time" id="add-horario-escola-rafa" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+              </div>
             </div>
             <input type="text" id="add-escola-rafa" placeholder="Nome da Escola" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
             <input type="text" id="add-endereco-casa-rafa" placeholder="Endereço Residencial" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
@@ -518,8 +530,14 @@
               <input type="tel" id="add-wsp" placeholder="WhatsApp Responsável" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
             </div>
             <div class="grid grid-cols-2 gap-2">
-              <input type="text" id="add-horario-busca" placeholder="Horário Busca Casa" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
-              <input type="text" id="add-horario-escola" placeholder="Horário Entrada Escola" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+              <div>
+                <label class="text-[10px] text-slate-400 block font-bold mb-0.5">Busca Casa:</label>
+                <input type="time" id="add-horario-busca" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block font-bold mb-0.5">Entrada Escola:</label>
+                <input type="time" id="add-horario-escola" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+              </div>
             </div>
             <input type="text" id="add-escola" placeholder="Nome da Escola" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
             <input type="text" id="add-endereco-casa" placeholder="Endereço Residencial" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
@@ -625,12 +643,12 @@
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-xs text-slate-400 block font-bold">Busca Casa:</label>
-            <input type="text" id="edit-horario-busca" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+            <label class="text-xs text-slate-400 block font-bold mb-0.5">Busca Casa:</label>
+            <input type="time" id="edit-horario-busca" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
           </div>
           <div>
-            <label class="text-xs text-slate-400 block font-bold">Entrada Escola:</label>
-            <input type="text" id="edit-horario-escola" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
+            <label class="text-xs text-slate-400 block font-bold mb-0.5">Entrada Escola:</label>
+            <input type="time" id="edit-horario-escola" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
           </div>
         </div>
         <div>
