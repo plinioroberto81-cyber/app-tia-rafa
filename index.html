@@ -59,7 +59,6 @@
        ========================================================================== -->
   <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex justify-between items-center shadow-lg">
     <div class="flex items-center gap-3">
-      <!-- Círculo do Header em tamanho visível -->
       <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-amber-400 bg-slate-950 overflow-hidden flex items-center justify-center shrink-0 shadow-md">
         <img src="zafira-removebg-preview.png" alt="Zafira Tia Rafa" class="w-full h-full object-contain transform scale-110">
       </div>
@@ -432,7 +431,7 @@
          ========================================================================== -->
     <section id="dashboard-admin" class="hidden space-y-4">
       
-      <!-- NAVEGAÇÃO DAS 3 ABAS DO SUPORTE (IGUAL À TIA RAFA) -->
+      <!-- NAVEGAÇÃO DAS 3 ABAS DO SUPORTE -->
       <div class="flex border-b border-slate-800 text-center bg-slate-900 p-1 rounded-xl">
         <button id="tab-admin-chamada" class="flex-1 py-3 text-xs sm:text-sm font-black text-amber-400 border-b-2 border-amber-400 transition-all">
           <i class="fa-solid fa-list-check text-sm"></i> Chamada
@@ -491,7 +490,9 @@
         </div>
       </div>
 
-      <!-- MINI CABEÇALHO NO TOPO DA ABA DE GESTÃO (SUPORTE) -->
+      <!-- ABA 3: GESTÃO & FINANCIAS DO SUPORTE -->
+      <div id="aba-gestao-admin" class="hidden space-y-4">
+        <!-- MINI CABEÇALHO NO TOPO DA ABA DE GESTÃO (SUPORTE) -->
         <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex justify-between items-center shadow-md">
           <button id="btn-toggle-lista-alunos-admin" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl flex items-center gap-1.5 transition-all shadow">
             <i id="icon-toggle-lista-admin" class="fa-solid fa-chevron-right text-slate-950"></i>
@@ -506,7 +507,7 @@
         <!-- FORMULÁRIO DE NOVO CADASTRO (RECOLHIDO POR PADRÃO) -->
         <div id="container-form-cadastrar-admin" class="hidden bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-3">
           <h4 class="text-xs font-bold text-amber-400 uppercase">Novo Cadastramento</h4>
-          <form id="form-cadastrar-aluno" class="space-y-2">
+          <form id="form-cadastrar-aluno-admin" class="space-y-2">
             <input type="text" id="add-nome" placeholder="Nome Completo" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
             <div class="grid grid-cols-2 gap-2">
               <select id="add-turno" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-white">
@@ -575,6 +576,9 @@
         </div>
       </div>
     </section>
+
+  </main>
+
   <!-- ==========================================================================
        BARRA INFERIOR DE NAVEGAÇÃO (BOTTOM BAR)
        ========================================================================== -->
