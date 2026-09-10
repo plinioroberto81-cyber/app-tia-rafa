@@ -446,43 +446,45 @@ async function logout() {
   window.location.reload();
 }
 
+/* ==========================================================================
+   4. AUTENTICAÇÃO E SESSÃO (RESTAURAÇÃO SEGURA)
+   ========================================================================== */
+
 async function restaurarSessaoAnterior() {
   const roleSalva = localStorage.getItem("app_role");
 
-  if (!roleSalva) {
+  // SE FOR PERFIL DE MOTORISTA OU ADMIN, FORÇA O LOGOUT AO ATUALIZAR/REFRESH
+  if (roleSalva === "rafa" || roleSalva === "admin") {
+    // Apaga credenciais salvas no dispositivo por segurança
+    localStorage.removeItem("app_role");
+    
+    if (supabaseClient) {
+      try {
+        await supabaseClient.auth.signOut();
+      } catch (err) {
+        console.error("Erro ao encerrar sessão temporária:", err);
+      }
+    }
+    
+    // Força o retorno para a tela de login inicial
     voltarHome();
     return;
   }
 
-  if (roleSalva === "rafa" || roleSalva === "admin") {
-    if (!supabaseClient) {
-      localStorage.clear();
-      voltarHome();
-      return;
-    }
-
-    const { data: { session } } = await supabaseClient.auth.getSession();
-
-    if (!session) {
-      localStorage.clear();
-      voltarHome();
-      return;
-    }
-  }
-
+  // APENAS A ÁREA DOS PAIS PODE RECONECTAR SE HOUVER WHATSAPP + PIN VALIDADOS
   if (roleSalva === "pais") {
     const wspSalvo = localStorage.getItem("app_pai_wsp");
     const pinSalvo = localStorage.getItem("app_pai_pin");
 
-    if (!wspSalvo || !pinSalvo) {
-      localStorage.clear();
-      voltarHome();
+    if (wspSalvo && pinSalvo) {
+      currentRole = "pais";
+      entrarPerfil("pais", true);
       return;
     }
   }
 
-  currentRole = roleSalva;
-  entrarPerfil(roleSalva, true);
+  // Padrão de segurança: volta para a tela inicial
+  voltarHome();
 }
 
 /* ==========================================================================
