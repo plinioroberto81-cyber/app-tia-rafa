@@ -878,11 +878,11 @@ function renderizarPaisFilho(nomeOuEmail) {
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="text-xs text-slate-400 block font-bold mb-1">Busca Ida Hoje:</label>
-                <input type="text" id="esp-ida-${filho.id}" value="${filho.horario_busca_hoje || ''}" placeholder="Ex: 09:30" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
+                <input type="time" id="esp-ida-${filho.id}" value="${filho.horario_busca_hoje || ''}" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
               </div>
               <div>
                 <label class="text-xs text-slate-400 block font-bold mb-1">Volta Hoje:</label>
-                <input type="text" id="esp-volta-${filho.id}" value="${filho.horario_volta_hoje || ''}" placeholder="Ex: 15:00" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
+                <input type="time" id="esp-volta-${filho.id}" value="${filho.horario_volta_hoje || ''}" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-white">
               </div>
             </div>
 
@@ -1515,7 +1515,7 @@ function renderizarPendentesAprovacao() {
       <div class="space-y-2 bg-slate-950 p-3 rounded-lg border border-slate-800">
         <div>
           <label class="text-xs text-amber-400 block font-bold mb-1">Horário de busca da Van:</label>
-          <input type="text" id="hor-busca-aprov-${a.id}" placeholder="Ex: 06:40" class="w-full bg-slate-900 border border-amber-500/50 rounded p-2 text-xs text-white font-bold">
+          <input type="time" id="hor-busca-aprov-${a.id}" class="w-full bg-slate-900 border border-amber-500/50 rounded p-2 text-xs text-white font-bold">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
