@@ -60,9 +60,7 @@
 </head>
 <body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
 
-  <!-- ==========================================================================
-       CABECALHO FIXO DA APLICAÇÃO (HEADER)
-       ========================================================================== -->
+  <!-- CABECALHO FIXO DA APLICAÇÃO (HEADER) -->
   <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex justify-between items-center shadow-lg">
     <div class="flex items-center gap-3">
       <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-amber-400 bg-slate-950 overflow-hidden flex items-center justify-center shrink-0 shadow-md">
@@ -102,9 +100,7 @@
   <!-- CONTAINER PRINCIPAL -->
   <main class="flex-1 max-w-md sm:max-w-xl w-full mx-auto p-4 space-y-4">
 
-    <!-- ==========================================================================
-         SEÇÃO 1: TELA INICIAL & LOGIN DE PERFIS
-         ========================================================================== -->
+    <!-- SEÇÃO 1: TELA INICIAL & LOGIN DE PERFIS -->
     <section id="login-section" class="space-y-6 text-center py-4">
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl space-y-4">
         <div class="w-36 h-36 sm:w-48 sm:h-48 mx-auto rounded-full border-4 border-amber-400 bg-slate-950 shadow-2xl overflow-hidden flex items-center justify-center p-1">
@@ -196,9 +192,7 @@
       </div>
     </section>
 
-    <!-- ==========================================================================
-         SEÇÃO 2: DASHBOARD ÁREA DOS PAIS
-         ========================================================================== -->
+    <!-- SEÇÃO 2: DASHBOARD ÁREA DOS PAIS -->
     <section id="dashboard-pais" class="hidden space-y-4">
       <div id="box-login-pais-direto" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl space-y-3">
         <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider"><i class="fa-solid fa-lock"></i> Acesso dos Pais</h3>
@@ -227,9 +221,7 @@
       </div>
     </section>
 
-    <!-- ==========================================================================
-         SEÇÃO 3: DASHBOARD PAINEL TIA RAFA (MOTORISTA)
-         ========================================================================== -->
+    <!-- SEÇÃO 3: DASHBOARD PAINEL TIA RAFA (MOTORISTA) -->
     <section id="dashboard-rafa" class="hidden space-y-4">
       
       <!-- NAVEGAÇÃO DAS 3 ABAS DA TIA RAFA -->
@@ -333,7 +325,7 @@
           </div>
         </div>
 
-        <!-- Botão Crítico de Emergência (Suporte Interno) -->
+        <!-- Botão Crítico de Emergência -->
         <div class="bg-rose-950/20 border-2 border-rose-500/50 p-4 rounded-2xl space-y-2 text-center">
           <h4 class="text-sm font-black text-rose-400 uppercase tracking-wider"><i class="fa-solid fa-triangle-exclamation"></i> Suporte de Emergência</h4>
           <p class="text-xs text-slate-300">Em caso de mal-estar do motorista ou pane imprevista grave na rota:</p>
@@ -346,7 +338,7 @@
       <!-- ABA 3: GESTÃO COMPLETA E FINANCEIRO TIA RAFA -->
       <div id="aba-gestao-rafa" class="hidden space-y-4">
 
-        <!-- MINI CABEÇALHO NO TOPO DA ABA DE GESTÃO (TIA RAFA) -->
+        <!-- MINI CABEÇALHO NO TOPO DA ABA DE GESTÃO -->
         <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex justify-between items-center shadow-md">
           <button id="btn-toggle-lista-alunos-rafa" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl flex items-center gap-1.5 transition-all shadow">
             <i id="icon-toggle-lista-rafa" class="fa-solid fa-chevron-right text-slate-950"></i>
@@ -358,7 +350,7 @@
           </button>
         </div>
 
-        <!-- FORMULÁRIO DE NOVO CADASTRO (RECOLHIDO POR PADRÃO) -->
+        <!-- FORMULÁRIO DE NOVO CADASTRO -->
         <div id="container-form-cadastrar-rafa" class="hidden bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-3">
           <h4 class="text-xs font-bold text-amber-400 uppercase">Novo Cadastramento</h4>
           <form id="form-cadastrar-aluno-rafa" class="space-y-2">
@@ -438,9 +430,7 @@
       </div>
     </section>
 
-    <!-- ==========================================================================
-         SEÇÃO 4: DASHBOARD PAINEL SUPORTE (ADMIN 100% IGUAL À TIA RAFA)
-         ========================================================================== -->
+    <!-- SEÇÃO 4: DASHBOARD PAINEL SUPORTE (ADMIN) -->
     <section id="dashboard-admin" class="hidden space-y-4">
       
       <!-- NAVEGAÇÃO DAS 3 ABAS DO SUPORTE -->
@@ -465,7 +455,7 @@
         <div id="lista-pendentes-admin" class="space-y-3"></div>
       </div>
 
-      <!-- ABA 1: CHAMADA DO SUPORTE (ACOMPANHAMENTO DA ROTA EM TEMPO REAL) -->
+      <!-- ABA 1: CHAMADA DO SUPORTE -->
       <div id="aba-chamada-admin" class="space-y-4">
         <!-- Alternador Rota Ida / Volta -->
         <div class="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-2xl border border-slate-800">
@@ -475,6 +465,14 @@
           <button id="btn-rota-volta-admin" class="py-3 text-xs sm:text-sm font-bold rounded-xl bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-moon text-sm"></i> Rota VOLTA (Casa)
           </button>
+        </div>
+
+        <!-- Filtros de Turno do Suporte -->
+        <div class="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          <button id="btn-filtro-todos-admin" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-amber-500 text-slate-950 shrink-0">Todos</button>
+          <button id="btn-filtro-manha7-admin" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 text-slate-300 shrink-0">Manhã (07h)</button>
+          <button id="btn-filtro-manha8-admin" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 text-slate-300 shrink-0">Manhã (08h)</button>
+          <button id="btn-filtro-tarde-admin" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 text-slate-300 shrink-0">Tarde</button>
         </div>
 
         <!-- Lista de Passageiros da Chamada -->
@@ -504,7 +502,7 @@
 
       <!-- ABA 3: GESTÃO & FINANCIAS DO SUPORTE -->
       <div id="aba-gestao-admin" class="hidden space-y-4">
-        <!-- MINI CABEÇALHO NO TOPO DA ABA DE GESTÃO (SUPORTE) -->
+        <!-- MINI CABEÇALHO NO TOPO DA ABA DE GESTÃO -->
         <div class="bg-slate-900 border border-slate-800 p-3 rounded-2xl flex justify-between items-center shadow-md">
           <button id="btn-toggle-lista-alunos-admin" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl flex items-center gap-1.5 transition-all shadow">
             <i id="icon-toggle-lista-admin" class="fa-solid fa-chevron-right text-slate-950"></i>
@@ -516,7 +514,7 @@
           </button>
         </div>
 
-        <!-- FORMULÁRIO DE NOVO CADASTRO (RECOLHIDO POR PADRÃO) -->
+        <!-- FORMULÁRIO DE NOVO CADASTRO -->
         <div id="container-form-cadastrar-admin" class="hidden bg-slate-900 border border-amber-500/30 p-4 rounded-2xl space-y-3">
           <h4 class="text-xs font-bold text-amber-400 uppercase">Novo Cadastramento</h4>
           <form id="form-cadastrar-aluno-admin" class="space-y-2">
@@ -597,9 +595,7 @@
 
   </main>
 
-  <!-- ==========================================================================
-       BARRA INFERIOR DE NAVEGAÇÃO (BOTTOM BAR)
-       ========================================================================== -->
+  <!-- BARRA INFERIOR DE NAVEGAÇÃO -->
   <div id="bottom-bar" class="hidden sticky bottom-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 p-3 shadow-2xl">
     <div class="max-w-md mx-auto flex justify-between items-center">
       <span class="text-xs text-slate-400 font-medium">Sincronizado via Supabase</span>
@@ -609,9 +605,7 @@
     </div>
   </div>
 
-  <!-- ==========================================================================
-       MODAIS E JANELAS FLUTUANTES DO SISTEMA
-       ========================================================================== -->
+  <!-- MODAIS DO SISTEMA -->
 
   <!-- MODAL DE EDIÇÃO DE ALUNO -->
   <div id="modal-editar-aluno" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -680,7 +674,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE ALERTA DE EMERGÊNCIA CRÍTICA (SIRENE ADMIN) -->
+  <!-- MODAL DE ALERTA DE EMERGÊNCIA CRÍTICA -->
   <div id="modal-emergencia-admin" class="hidden fixed inset-0 z-50 bg-rose-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-pulse">
     <div class="bg-slate-900 border-2 border-rose-500 w-full max-w-sm rounded-3xl p-6 text-center space-y-4 shadow-2xl">
       <div class="w-16 h-16 bg-rose-500/20 border-2 border-rose-500 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl">
