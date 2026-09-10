@@ -15,8 +15,13 @@ let pixChaveGlobal = "11999998888";
 let linkCartaoGlobal = "https://mpago.la/";
 let currentRole = null;
 let alunosCache = [];
+
 let modoRotaAtual = "IDA";
 let filtroTurnoAtual = "Todos";
+
+let modoRotaAdminAtual = "IDA";
+let filtroTurnoAdminAtual = "Todos";
+
 let filtroFinStatus = "Todos";
 let filtroFinAdminStatus = "Todos";
 
@@ -141,9 +146,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("tab-pais-filho").className = "flex-1 py-3 text-sm font-bold text-slate-400 border-b-2 border-transparent";
   });
 
-  // Alternadores de Rota
+  // Alternadores de Rota - Tia Rafa
   document.getElementById("btn-rota-ida")?.addEventListener("click", () => alternarModoRota("IDA"));
   document.getElementById("btn-rota-volta")?.addEventListener("click", () => alternarModoRota("VOLTA"));
+
+  // Alternadores de Rota - Suporte (Admin)
+  document.getElementById("btn-rota-ida-admin")?.addEventListener("click", () => alternarModoRotaAdmin("IDA"));
+  document.getElementById("btn-rota-volta-admin")?.addEventListener("click", () => alternarModoRotaAdmin("VOLTA"));
 
   // Navegação das 3 Abas Principais da Tia Rafa
   document.getElementById("tab-btn-chamada")?.addEventListener("click", () => {
@@ -205,11 +214,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     carregarDadosAdmin();
   });
 
-  // Filtros de Rota
+  // Filtros de Turno - Tia Rafa
   document.getElementById("btn-filtro-todos")?.addEventListener("click", () => aplicarFiltroTurno("Todos"));
   document.getElementById("btn-filtro-manha7")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (07h às 11h)"));
   document.getElementById("btn-filtro-manha8")?.addEventListener("click", () => aplicarFiltroTurno("Manhã (08h às 12h)"));
   document.getElementById("btn-filtro-tarde")?.addEventListener("click", () => aplicarFiltroTurno("Tarde"));
+
+  // Filtros de Turno - Suporte (Admin)
+  document.getElementById("btn-filtro-todos-admin")?.addEventListener("click", () => aplicarFiltroTurnoAdmin("Todos"));
+  document.getElementById("btn-filtro-manha7-admin")?.addEventListener("click", () => aplicarFiltroTurnoAdmin("Manhã (07h às 11h)"));
+  document.getElementById("btn-filtro-manha8-admin")?.addEventListener("click", () => aplicarFiltroTurnoAdmin("Manhã (08h às 12h)"));
+  document.getElementById("btn-filtro-tarde-admin")?.addEventListener("click", () => aplicarFiltroTurnoAdmin("Tarde"));
 
   // CSV & Encerrar Mês
   document.getElementById("btn-rafa-exportar-csv")?.addEventListener("click", exportarRelatorioFinanceiroCSV);
@@ -1438,38 +1453,83 @@ async function carregarDadosAdmin(isBackground = false) {
   if (!isBackground) carregarGpsAdmin();
 }
 
+function alternarModoRotaAdmin(modo) {
+  modoRotaAdminAtual = modo;
+  const btnIda = document.getElementById("btn-rota-ida-admin");
+  const btnVolta = document.getElementById("btn-rota-volta-admin");
+
+  if (modo === "IDA") {
+    btnIda.className = "py-3 text-xs sm:text-sm font-bold rounded-xl bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnVolta.className = "py-3 text-xs sm:text-sm font-bold rounded-xl bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+  } else {
+    btnVolta.className = "py-3 text-xs sm:text-sm font-bold rounded-xl bg-amber-500 text-slate-950 transition-all flex items-center justify-center gap-1.5";
+    btnIda.className = "py-3 text-xs sm:text-sm font-bold rounded-xl bg-slate-800 text-slate-400 transition-all flex items-center justify-center gap-1.5";
+  }
+  renderizarRotaAdmin();
+}
+
+function aplicarFiltroTurnoAdmin(turno) {
+  filtroTurnoAdminAtual = turno;
+  document.getElementById("btn-filtro-todos-admin").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${turno === 'Todos' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha7-admin").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${turno === 'Manhã (07h às 11h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-manha8-admin").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${turno === 'Manhã (08h às 12h)' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  document.getElementById("btn-filtro-tarde-admin").className = `px-3 py-1.5 text-xs font-bold rounded-xl ${turno === 'Tarde' ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-300'}`;
+  renderizarRotaAdmin();
+}
+
 function renderizarRotaAdmin() {
   const container = document.getElementById("lista-chamada-admin-cards");
   if (!container) return;
 
   const aprovados = alunosCache.filter(a => !a.pendente_aprovacao && a.vai_hoje !== false);
+  let filtrados = aprovados;
 
-  if (aprovados.length === 0) {
+  if (modoRotaAdminAtual === "VOLTA") {
+    filtrados = aprovados.filter(a => a.levado_hoje === true || a.status === 'Na Escola' || a.status === 'Na Van');
+  }
+
+  if (filtroTurnoAdminAtual !== "Todos") {
+    filtrados = filtrados.filter(a => a.turno === filtroTurnoAdminAtual);
+  }
+
+  filtrados.sort((a, b) => {
+    let hA = a.horario_busca || '99:99';
+    let hB = b.horario_busca || '99:99';
+    if (modoRotaAdminAtual === "IDA" && a.horario_busca_hoje) hA = a.horario_busca_hoje;
+    if (modoRotaAdminAtual === "IDA" && b.horario_busca_hoje) hB = b.horario_busca_hoje;
+    if (modoRotaAdminAtual === "VOLTA" && a.horario_volta_hoje) hA = a.horario_volta_hoje;
+    if (modoRotaAdminAtual === "VOLTA" && b.horario_volta_hoje) hB = b.horario_volta_hoje;
+    return hA.localeCompare(hB);
+  });
+
+  if (filtrados.length === 0) {
     container.innerHTML = `
       <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-center space-y-2">
         <i class="fa-solid fa-van-shuttle text-3xl text-amber-400"></i>
-        <p class="text-sm font-bold text-white">Nenhum passageiro na rota no momento.</p>
+        <p class="text-sm font-bold text-white">Nenhum passageiro nesta rota no momento.</p>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = aprovados.map(aluno => {
+  container.innerHTML = filtrados.map(aluno => {
     const st = aluno.status || 'Em Casa';
-    const horBuscaExibicao = aluno.horario_busca_hoje ? `${aluno.horario_busca_hoje} (Especial)` : (aluno.horario_busca || 'S/ hor.');
+    const temEspecial = aluno.tem_horario_especial;
+    const horBuscaExibicao = (aluno.horario_busca_hoje) ? `${aluno.horario_busca_hoje} (Especial)` : (aluno.horario_busca || 'S/ hor.');
+    const horVoltaExibicao = (aluno.horario_volta_hoje) ? `${aluno.horario_volta_hoje} (Especial)` : (aluno.horario_escola || '-');
 
     return `
-      <div class="bg-slate-800/90 border border-slate-700 p-4 rounded-2xl space-y-3">
+      <div class="bg-slate-800/90 border ${temEspecial ? 'border-amber-400 bg-amber-500/10' : 'border-slate-700'} p-4 rounded-2xl space-y-3">
         <div class="flex justify-between items-start">
           <div class="space-y-1">
             <div class="flex items-center gap-2">
-              <span class="px-2.5 py-1 bg-slate-700 text-amber-400 text-xs font-black rounded-lg">
-                ${horBuscaExibicao}
+              <span class="px-2.5 py-1 ${temEspecial ? 'bg-amber-400 text-slate-950' : 'bg-slate-700 text-amber-400'} text-xs font-black rounded-lg">
+                ${modoRotaAdminAtual === 'IDA' ? horBuscaExibicao : horVoltaExibicao}
               </span>
               <h4 class="text-base font-black text-white">${aluno.nome}</h4>
             </div>
             <p class="text-xs font-bold text-slate-300"><i class="fa-solid fa-school text-amber-400"></i> ${aluno.escola || '-'}</p>
-            <p class="text-xs text-slate-300 font-medium"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Sem endereço'}</p>
+            <p class="text-xs text-slate-300 font-medium"><i class="fa-solid fa-location-dot text-amber-400"></i> ${aluno.endereco_casa || 'Sem endereço informado'}</p>
           </div>
         </div>
 
